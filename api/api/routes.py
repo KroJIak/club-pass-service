@@ -1,7 +1,7 @@
 """Main API router."""
 from fastapi import APIRouter
 
-from api import health
+from api.api import health
 
 # Create main API router
 api_router = APIRouter()
