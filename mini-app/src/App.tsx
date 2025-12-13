@@ -1,0 +1,2 @@
+// Mini App main component
+

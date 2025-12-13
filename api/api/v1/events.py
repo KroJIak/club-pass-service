@@ -1,0 +1,2 @@
+# Events CRUD endpoints
+
