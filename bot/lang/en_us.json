@@ -61,6 +61,11 @@
       "confirm_order": "✅ <b>Order Confirmation</b>\n\n<b>Event:</b> {event_name}\n📅 <b>Date:</b> {event_date}\n🕐 <b>Time:</b> {event_time}\n\n<b>Ticket Type:</b> {ticket_type_name}\n🔢 <b>Quantity:</b> {quantity} pcs.\n💰 <b>Price per ticket:</b> {price_per_ticket} ₽\n\n💵 <b>Total:</b> {total_price} ₽\n\nConfirm your order:",
       "processing_payment": "💳 <b>Processing Payment</b>\n\nYour order is being processed. You will be redirected to the payment page shortly...",
       "order_cancelled": "❌ <b>Order Cancelled</b>\n\nYou have cancelled the order. You can start over anytime."
+    },
+    "tickets": {
+      "select_ticket": "🎟️ <b>My Tickets</b>\n\nSelect a ticket to view QR code:",
+      "no_tickets": "😔 <b>No Tickets</b>\n\nYou don't have any tickets yet.",
+      "ticket_info": "🎟️ <b>Your Ticket</b>\n\n🎧 <b>DJs:</b> {event_djs}\n📅 <b>Date:</b> {event_date}\n🕐 <b>Time:</b> {event_time}\n🎫 <b>Type:</b> {ticket_type}\n\n🔑 <b>Ticket Code:</b> <code>{ticket_token}</code>"
     }
   }
 }

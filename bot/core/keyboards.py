@@ -34,7 +34,12 @@ def get_events_keyboard(locale: str, events: list) -> InlineKeyboardMarkup:
     """Get events list keyboard."""
     builder = InlineKeyboardBuilder()
     for event in events:
-        event_text = f"🎉 {event.get('name', 'Event')}\n📅 {event.get('date', '')} {event.get('time', '')}"
+        djs = event.get('djs', [])
+        if djs:
+            djs_text = ", ".join(djs)
+            event_text = f"🎧 {djs_text}\n📅 {event.get('date', '')} {event.get('time', '')}"
+        else:
+            event_text = f"🎉 {event.get('name', 'Event')}\n📅 {event.get('date', '')} {event.get('time', '')}"
         builder.add(InlineKeyboardButton(
             text=event_text,
             callback_data=f"event_{event.get('id')}"

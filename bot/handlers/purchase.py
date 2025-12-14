@@ -65,16 +65,18 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
     
     # TODO: Fetch event details and ticket types from API
     # For now, use mock data
-    event = {"id": event_id, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"}
+    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
     ticket_types = [
         {"id": 1, "name": "Обычный", "price": 1500, "available": 50},
         {"id": 2, "name": "VIP", "price": 3000, "available": 20},
     ]
     
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
-        event_name=event.get("name", ""),
+        event_name=djs_text,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
     )
@@ -139,15 +141,17 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     
     # TODO: Fetch full details from API
     # For now, use mock data
-    event = {"id": event_id, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"}
+    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
     ticket_type = {"id": ticket_type_id, "name": "Обычный", "price": 1500}
     
     total_price = ticket_type.get("price", 0) * quantity
     
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
     text = t(
         locale,
         "messages.purchase.confirm_order",
-        event_name=event.get("name", ""),
+        event_name=djs_text,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
         ticket_type_name=ticket_type.get("name", ""),
@@ -303,16 +307,18 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     
     # TODO: Fetch event details and ticket types from API
     # For now, use mock data
-    event = {"id": event_id, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"}
+    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
     ticket_types = [
         {"id": 1, "name": "Обычный", "price": 1500, "available": 50},
         {"id": 2, "name": "VIP", "price": 3000, "available": 20},
     ]
     
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
-        event_name=event.get("name", ""),
+        event_name=djs_text,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
     )

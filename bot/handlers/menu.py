@@ -86,18 +86,12 @@ async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "menu_my_tickets")
-async def handle_my_tickets(callback: CallbackQuery):
-    """Handle 'My tickets' button."""
-    locale = get_user_locale(callback.from_user.language_code)
-    # My tickets: only image, no text
-    await safe_edit_message(
-        callback, 
-        "",  # No text
-        reply_markup=get_back_keyboard(locale),
-        locale=locale,
-        screen_key="my_tickets"
-    )
-    await callback.answer()
+async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
+    """Handle 'My tickets' button - redirect to tickets handler."""
+    from bot.handlers.tickets import handle_my_tickets as tickets_handler
+    
+    # Redirect to tickets handler
+    await tickets_handler(callback, state)
 
 
 @router.callback_query(F.data == "menu_events")
