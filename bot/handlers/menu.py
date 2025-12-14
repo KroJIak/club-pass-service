@@ -3,11 +3,14 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 
-from bot.core.keyboards import get_main_menu_keyboard, get_support_cancel_keyboard
+from bot.core.keyboards import (
+    get_back_keyboard,
+    get_main_menu_keyboard,
+    get_support_cancel_keyboard,
+)
 from bot.core.config import settings
 from bot.core.states import SupportStates
-from bot.core.message_manager import safe_edit_message
-from bot.core.middleware import temporary_messages_middleware
+from bot.core.message_manager import safe_edit_message, edit_last_system_message_or_send
 
 router = Router()
 
@@ -33,25 +36,41 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "menu_buy_ticket")
 async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
     """Handle 'Buy ticket' button."""
-    await callback.answer("🚧 Функция покупки билетов находится в разработке", show_alert=True)
+    text = (
+        "🎫 <b>Купить билет</b>\n\n"
+        "🚧 Раздел в разработке."
+    )
+    await safe_edit_message(callback, text, reply_markup=get_back_keyboard())
+    await callback.answer()
 
 
 @router.callback_query(F.data == "menu_my_tickets")
 async def handle_my_tickets(callback: CallbackQuery):
     """Handle 'My tickets' button."""
-    await callback.answer("🚧 Функция просмотра билетов находится в разработке", show_alert=True)
+    text = (
+        "🎟️ <b>Мои билеты</b>\n\n"
+        "🚧 Раздел в разработке."
+    )
+    await safe_edit_message(callback, text, reply_markup=get_back_keyboard())
+    await callback.answer()
 
 
 @router.callback_query(F.data == "menu_events")
 async def handle_upcoming_events(callback: CallbackQuery):
     """Handle 'Upcoming events' button."""
-    await callback.answer("🚧 Функция просмотра событий находится в разработке", show_alert=True)
+    text = (
+        "🎉 <b>Ближайшие вечеринки</b>\n\n"
+        "🚧 Раздел в разработке."
+    )
+    await safe_edit_message(callback, text, reply_markup=get_back_keyboard())
+    await callback.answer()
 
 
 @router.callback_query(F.data == "menu_club_info")
 async def handle_club_info(callback: CallbackQuery):
     """Handle 'Club info' button."""
     info_text = (
+        "ℹ️ <b>Инфо о клубе</b>\n\n"
         f"<b>{settings.CLUB_NAME}</b>\n\n"
         f"📍 Адрес: {settings.CLUB_ADDRESS}\n"
     )
@@ -67,7 +86,7 @@ async def handle_club_info(callback: CallbackQuery):
     await safe_edit_message(
         callback,
         info_text,
-        reply_markup=get_main_menu_keyboard()
+        reply_markup=get_back_keyboard()
     )
     await callback.answer()
 
@@ -114,7 +133,6 @@ async def handle_cancel_support(callback: CallbackQuery, state: FSMContext):
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
     support_message = message.text
-    user_id = message.from_user.id
     
     # TODO: Send message to support/admin
     # For now, just confirm receipt
@@ -124,20 +142,15 @@ async def handle_support_message(message: Message, state: FSMContext):
     
     confirmation_text = (
         "✅ <b>Сообщение получено</b>\n\n"
-        "Ваше сообщение отправлено в поддержку. Мы свяжемся с вами в ближайшее время.\n\n"
-        "Выберите действие:"
+        "Ваше сообщение отправлено в поддержку. Мы свяжемся с вами в ближайшее время."
     )
-    
-    # Send confirmation (don't delete user's message - it's feedback, not temporary)
-    new_message = await message.answer(
+
+    # Update the last system message (single-message UX); fallback to send new
+    await edit_last_system_message_or_send(
+        message,
         confirmation_text,
-        reply_markup=get_main_menu_keyboard(),
-        parse_mode="HTML"
-    )
-    
-    # Remember this system message ID
-    temporary_messages_middleware.set_last_system_message(
-        user_id, new_message.message_id
+        reply_markup=get_back_keyboard(),
+        parse_mode="HTML",
     )
     
     await state.clear()

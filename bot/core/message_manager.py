@@ -1,7 +1,11 @@
 """Message formatting and management."""
-from typing import Dict, Any, Optional
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional
+
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 from bot.core.middleware import temporary_messages_middleware
 
@@ -20,9 +24,10 @@ async def safe_edit_message(
     """
     user_id = callback.from_user.id
     bot = callback.bot
+    chat_id = callback.message.chat.id
     
     try:
-        # Try to edit text message
+        # Try to edit message
         if callback.message.photo:
             # If message has photo, try to edit caption
             await callback.message.edit_caption(
@@ -30,10 +35,7 @@ async def safe_edit_message(
                 reply_markup=reply_markup,
                 parse_mode=parse_mode
             )
-            # Update last system message ID
-            temporary_messages_middleware.set_last_system_message(
-                user_id, callback.message.message_id
-            )
+            temporary_messages_middleware.set_last_system_message(user_id, chat_id, callback.message.message_id)
         else:
             # Regular text message
             await callback.message.edit_text(
@@ -41,16 +43,18 @@ async def safe_edit_message(
                 reply_markup=reply_markup,
                 parse_mode=parse_mode
             )
-            # Update last system message ID
-            temporary_messages_middleware.set_last_system_message(
-                user_id, callback.message.message_id
-            )
+            temporary_messages_middleware.set_last_system_message(user_id, chat_id, callback.message.message_id)
+
+        # After bot system action -> delete ALL pending user messages
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return True
     except TelegramBadRequest as e:
         error_msg = str(e).lower()
         
         # If message is not modified, just leave it as is
         if "message is not modified" in error_msg:
+            # Still a system action attempt -> flush pending user messages
+            await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
             return True
         
         # If editing fails for other reasons (e.g., different content type),
@@ -68,15 +72,15 @@ async def safe_edit_message(
             parse_mode=parse_mode
         )
         
-        # Update last system message ID
-        temporary_messages_middleware.set_last_system_message(
-            user_id, new_message.message_id
-        )
+        temporary_messages_middleware.set_last_system_message(user_id, new_message.chat.id, new_message.message_id)
+
+        # After bot system action -> delete ALL pending user messages
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         
         # Delete old system message if it was different
         if old_message_id != new_message.message_id:
             try:
-                await bot.delete_message(chat_id=user_id, message_id=old_message_id)
+                await bot.delete_message(chat_id=chat_id, message_id=old_message_id)
             except:
                 pass
         
@@ -101,17 +105,81 @@ async def safe_edit_or_send(
             parse_mode
         )
     else:
-        # It's a Message, send new one
+        bot = message_or_callback.bot
+        user_id = message_or_callback.from_user.id
+
+        # It's a Message, send new system message
         new_message = await message_or_callback.answer(
             text=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode
         )
-        # Update last system message ID
-        temporary_messages_middleware.set_last_system_message(
-            message_or_callback.from_user.id, new_message.message_id
-        )
+        temporary_messages_middleware.set_last_system_message(user_id, new_message.chat.id, new_message.message_id)
+
+        # After bot system action -> delete ALL pending user messages
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return False
+
+
+async def edit_last_system_message_or_send(
+    message: Message,
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup] = None,
+    parse_mode: Optional[str] = "HTML",
+) -> None:
+    """
+    Edit the last remembered system message for this user, if possible.
+    Otherwise send a new system message.
+
+    Used for Message-handlers (where we don't have CallbackQuery.message to edit).
+    """
+    bot = message.bot
+    user_id = message.from_user.id
+
+    ref = temporary_messages_middleware.get_last_system_message(user_id)
+    if not ref:
+        await safe_edit_or_send(message, text, reply_markup=reply_markup, parse_mode=parse_mode)
+        return
+
+    chat_id, message_id = ref
+
+    try:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+        temporary_messages_middleware.set_last_system_message(user_id, chat_id, message_id)
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+        return
+    except TelegramBadRequest as e:
+        msg = str(e).lower()
+        if "message is not modified" in msg:
+            await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+            return
+        # If there is no text to edit (e.g. photo message), try caption
+        if "there is no text in the message to edit" in msg:
+            try:
+                await bot.edit_message_caption(
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    caption=text,
+                    reply_markup=reply_markup,
+                    parse_mode=parse_mode,
+                )
+                temporary_messages_middleware.set_last_system_message(user_id, chat_id, message_id)
+                await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+                return
+            except TelegramBadRequest:
+                pass
+
+    # Fallback: send new and delete old
+    new_msg = await message.answer(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+    temporary_messages_middleware.set_last_system_message(user_id, new_msg.chat.id, new_msg.message_id)
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+    await temporary_messages_middleware.delete_system_message(bot, chat_id, message_id)
 
 
 def format_event_message(event: Dict[str, Any]) -> str:

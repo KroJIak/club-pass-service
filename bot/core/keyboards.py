@@ -15,10 +15,15 @@ def get_main_menu_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
-    """Get back to menu button."""
+    """Get 'back to main menu' button."""
     builder = InlineKeyboardBuilder()
     builder.add(InlineKeyboardButton(text="◀️ Главное меню", callback_data="back_to_menu"))
     return builder.as_markup()
+
+
+def get_back_keyboard() -> InlineKeyboardMarkup:
+    """Generic back button for screens (goes to main menu)."""
+    return get_back_to_menu_keyboard()
 
 
 def get_events_keyboard(events: list) -> InlineKeyboardMarkup:
@@ -30,7 +35,7 @@ def get_events_keyboard(events: list) -> InlineKeyboardMarkup:
             callback_data=f"event_{event.get('id')}"
         ))
     builder.adjust(1)
-    builder.row(InlineKeyboardButton(text="◀️ Главное меню", callback_data="back_to_menu"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_menu"))
     return builder.as_markup()
 
 
@@ -66,7 +71,8 @@ def get_confirm_order_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_support_cancel_keyboard() -> InlineKeyboardMarkup:
-    """Get cancel support message keyboard."""
+    """Support screen keyboard."""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel_support"))
+    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_menu"))
     return builder.as_markup()

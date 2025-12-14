@@ -19,6 +19,7 @@ async def cmd_start(message: Message, state: FSMContext):
     
     user_id = message.from_user.id
     bot = message.bot
+    old_system = temporary_messages_middleware.get_last_system_message(user_id)
     
     # Welcome message
     welcome_text = (
@@ -27,17 +28,22 @@ async def cmd_start(message: Message, state: FSMContext):
         "Выберите действие:"
     )
     
-    # 1. Send new system message first
+    # 1) Send new system message first
     new_message = await message.answer(
         welcome_text,
         reply_markup=get_main_menu_keyboard(),
         parse_mode="HTML"
     )
     
-    # 2. Delete old system message if exists
-    await temporary_messages_middleware.delete_last_system_message(user_id, bot)
-    
-    # 3. Remember new system message ID
-    temporary_messages_middleware.set_last_system_message(
-        user_id, new_message.message_id
-    )
+    # 2) Delete old system message (only for /start)
+    if old_system:
+        old_chat_id, old_message_id = old_system
+        # Don't delete the message we just sent (paranoia)
+        if not (old_chat_id == new_message.chat.id and old_message_id == new_message.message_id):
+            await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
+
+    # 3) Remember new system message ID as current
+    temporary_messages_middleware.set_last_system_message(user_id, new_message.chat.id, new_message.message_id)
+
+    # 4) After system send -> delete all pending temporary user messages (including /start)
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
