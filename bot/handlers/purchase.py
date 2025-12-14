@@ -208,10 +208,81 @@ async def handle_cancel_order(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+@router.callback_query(F.data == "back_to_quantity")
+async def handle_back_to_quantity(callback: CallbackQuery, state: FSMContext):
+    """Go back to quantity selection."""
+    locale = get_user_locale(callback.from_user.language_code)
+    data = await state.get_data()
+    ticket_type_id = data.get("ticket_type_id")
+    
+    if not ticket_type_id:
+        # If no ticket_type_id, go back to ticket types
+        await handle_back_to_ticket_types(callback, state)
+        return
+    
+    await state.set_state(PurchaseStates.selecting_quantity)
+    # Clear quantity when going back
+    await state.update_data(quantity=None)
+    
+    # TODO: Fetch ticket type details from API
+    # For now, use mock data
+    ticket_type = {"id": ticket_type_id, "name": "Обычный", "price": 1500, "available": 50}
+    
+    text = t(
+        locale,
+        "messages.purchase.select_quantity",
+        ticket_type_name=ticket_type.get("name", ""),
+        price=ticket_type.get("price", 0),
+        available=ticket_type.get("available", 0),
+    )
+    
+    max_quantity = min(ticket_type.get("available", 5), 5)
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=get_quantity_keyboard(locale, max_quantity),
+        locale=locale,
+        screen_key="buy_ticket"
+    )
+    await callback.answer()
+
+
 @router.callback_query(F.data == "back_to_events")
 async def handle_back_to_events(callback: CallbackQuery, state: FSMContext):
     """Go back to events selection."""
-    await handle_select_event(callback, state)
+    locale = get_user_locale(callback.from_user.language_code)
+    await state.set_state(PurchaseStates.selecting_event)
+    # Clear event_id from state when going back
+    await state.update_data(event_id=None, ticket_type_id=None, quantity=None)
+    
+    # TODO: Fetch events from API
+    # For now, use mock data
+    events = [
+        {"id": 1, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"},
+        {"id": 2, "name": "House Music Night", "date": "05.01.2025", "time": "23:00"},
+    ]
+    
+    if not events:
+        text = t(locale, "messages.purchase.no_events")
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_back_keyboard(locale),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+        await callback.answer()
+        return
+    
+    text = t(locale, "messages.purchase.select_event")
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=get_events_keyboard(locale, events),
+        locale=locale,
+        screen_key="buy_ticket"
+    )
+    await callback.answer()
 
 
 @router.callback_query(F.data == "back_to_ticket_types")
@@ -222,9 +293,35 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     event_id = data.get("event_id")
     
     if not event_id:
-        await handle_select_event(callback, state)
+        # If no event_id, go back to events
+        await handle_back_to_events(callback, state)
         return
     
-    # Simulate event selection to show ticket types
-    callback.data = f"event_{event_id}"
-    await handle_event_selected(callback, state)
+    await state.set_state(PurchaseStates.selecting_ticket_type)
+    # Clear ticket_type_id and quantity when going back
+    await state.update_data(ticket_type_id=None, quantity=None)
+    
+    # TODO: Fetch event details and ticket types from API
+    # For now, use mock data
+    event = {"id": event_id, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"}
+    ticket_types = [
+        {"id": 1, "name": "Обычный", "price": 1500, "available": 50},
+        {"id": 2, "name": "VIP", "price": 3000, "available": 20},
+    ]
+    
+    text = t(
+        locale,
+        "messages.purchase.select_ticket_type",
+        event_name=event.get("name", ""),
+        event_date=event.get("date", ""),
+        event_time=event.get("time", ""),
+    )
+    
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=get_ticket_types_keyboard(locale, ticket_types),
+        locale=locale,
+        screen_key="buy_ticket"
+    )
+    await callback.answer()
