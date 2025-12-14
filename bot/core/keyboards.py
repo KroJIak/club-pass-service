@@ -7,8 +7,11 @@ from bot.core.i18n import t
 def get_main_menu_keyboard(locale: str) -> InlineKeyboardMarkup:
     """Get main menu keyboard."""
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.buy_ticket"), callback_data="menu_buy_ticket"))
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.my_tickets"), callback_data="menu_my_tickets"))
+    # Buy ticket and My tickets on the same row
+    builder.add(InlineKeyboardButton(text=t(locale, "buttons.buy_ticket"), callback_data="menu_buy_ticket"))
+    builder.add(InlineKeyboardButton(text=t(locale, "buttons.my_tickets"), callback_data="menu_my_tickets"))
+    builder.adjust(2)  # 2 buttons per row
+    # Other buttons on separate rows
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.events"), callback_data="menu_events"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.club_info"), callback_data="menu_club_info"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.support"), callback_data="menu_support"))
