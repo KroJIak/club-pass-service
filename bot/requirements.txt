@@ -1,2 +1,14 @@
-# Bot Service dependencies
+# Telegram Bot Framework
+aiogram==3.3.0
 
+# HTTP client for API
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Configuration
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# Utilities
+python-dateutil==2.8.2
