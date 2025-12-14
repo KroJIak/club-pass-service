@@ -2,9 +2,8 @@
 from typing import Any, Awaitable, Callable, Dict
 from collections import defaultdict
 from aiogram import BaseMiddleware
-from aiogram.types import Message, TelegramObject, Update
+from aiogram.types import Message, TelegramObject
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.base import BaseStorage
 
 from bot.core.states import SupportStates
 
@@ -20,15 +19,15 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-        event: Update,
+        event: Message,
         data: Dict[str, Any]
     ) -> Any:
         """Process update and track temporary messages."""
-        # Only process Message updates from users
-        if not isinstance(event.message, Message) or not event.message.from_user:
+        # Only process Message from users
+        if not isinstance(event, Message) or not event.from_user:
             return await handler(event, data)
         
-        message = event.message
+        message = event
         user_id = message.from_user.id
         
         # Get FSM context to check if user is in support state
@@ -62,4 +61,3 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
                     pass
         
         return result
-
