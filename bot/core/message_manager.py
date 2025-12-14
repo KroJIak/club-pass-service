@@ -3,6 +3,8 @@ from typing import Dict, Any, Optional
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
 from aiogram.exceptions import TelegramBadRequest
 
+from bot.core.middleware import temporary_messages_middleware
+
 
 async def safe_edit_message(
     callback: CallbackQuery,
@@ -14,8 +16,11 @@ async def safe_edit_message(
     Safely edit message. If editing fails (e.g., different content types),
     delete old message and send new one.
     
-    Returns True if message was edited or unchanged, False if new message was sent.
+    Returns True if message was edited, False if new message was sent.
     """
+    user_id = callback.from_user.id
+    bot = callback.bot
+    
     try:
         # Try to edit text message
         if callback.message.photo:
@@ -25,12 +30,20 @@ async def safe_edit_message(
                 reply_markup=reply_markup,
                 parse_mode=parse_mode
             )
+            # Update last system message ID
+            temporary_messages_middleware.set_last_system_message(
+                user_id, callback.message.message_id
+            )
         else:
             # Regular text message
             await callback.message.edit_text(
                 text=text,
                 reply_markup=reply_markup,
                 parse_mode=parse_mode
+            )
+            # Update last system message ID
+            temporary_messages_middleware.set_last_system_message(
+                user_id, callback.message.message_id
             )
         return True
     except TelegramBadRequest as e:
@@ -42,17 +55,31 @@ async def safe_edit_message(
         
         # If editing fails for other reasons (e.g., different content type),
         # delete old message and send new one
+        old_message_id = callback.message.message_id
         try:
             await callback.message.delete()
         except:
             pass
         
         # Send new message
-        await callback.message.answer(
+        new_message = await callback.message.answer(
             text=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode
         )
+        
+        # Update last system message ID
+        temporary_messages_middleware.set_last_system_message(
+            user_id, new_message.message_id
+        )
+        
+        # Delete old system message if it was different
+        if old_message_id != new_message.message_id:
+            try:
+                await bot.delete_message(chat_id=user_id, message_id=old_message_id)
+            except:
+                pass
+        
         return False
 
 
@@ -75,31 +102,16 @@ async def safe_edit_or_send(
         )
     else:
         # It's a Message, send new one
-        await message_or_callback.answer(
+        new_message = await message_or_callback.answer(
             text=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode
         )
+        # Update last system message ID
+        temporary_messages_middleware.set_last_system_message(
+            message_or_callback.from_user.id, new_message.message_id
+        )
         return False
-
-
-async def delete_temporary_user_messages(
-    user_id: int,
-    temporary_messages: list[Message]
-) -> None:
-    """
-    Delete temporary user messages after bot response.
-    
-    Args:
-        user_id: User ID
-        temporary_messages: List of temporary messages to delete
-    """
-    for msg in temporary_messages:
-        try:
-            await msg.delete()
-        except Exception:
-            # Ignore errors (message might be already deleted)
-            pass
 
 
 def format_event_message(event: Dict[str, Any]) -> str:

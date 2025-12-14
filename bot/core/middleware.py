@@ -1,5 +1,5 @@
 """Middleware for bot."""
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any, Awaitable, Callable, Dict, Optional
 from collections import defaultdict
 from aiogram import BaseMiddleware
 from aiogram.types import Message, TelegramObject
@@ -15,6 +15,10 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         # Store temporary messages per user
         # Format: {user_id: [list of messages]}
         self.temporary_messages: Dict[int, list] = defaultdict(list)
+        
+        # Store last system message ID per user
+        # Format: {user_id: message_id}
+        self.last_system_message: Dict[int, int] = {}
     
     async def __call__(
         self,
@@ -61,3 +65,27 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
                     pass
         
         return result
+    
+    def set_last_system_message(self, user_id: int, message_id: int):
+        """Set last system message ID for user."""
+        self.last_system_message[user_id] = message_id
+    
+    def get_last_system_message_id(self, user_id: int) -> Optional[int]:
+        """Get last system message ID for user."""
+        return self.last_system_message.get(user_id)
+    
+    async def delete_last_system_message(self, user_id: int, bot) -> bool:
+        """Delete last system message for user. Returns True if deleted."""
+        message_id = self.get_last_system_message_id(user_id)
+        if message_id:
+            try:
+                await bot.delete_message(chat_id=user_id, message_id=message_id)
+                del self.last_system_message[user_id]
+                return True
+            except Exception:
+                return False
+        return False
+
+
+# Global instance
+temporary_messages_middleware = TemporaryMessagesMiddleware()
