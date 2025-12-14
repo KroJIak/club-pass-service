@@ -256,10 +256,10 @@ async def handle_back_to_events(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
     
-    text = t(locale, "messages.purchase.select_event")
+    # Events list: only image, no text
     await safe_edit_message(
         callback,
-        text,
+        "",  # No text
         reply_markup=get_events_keyboard(locale, events),
         locale=locale,
         screen_key="buy_ticket"
