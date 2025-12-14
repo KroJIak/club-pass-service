@@ -9,6 +9,7 @@ from bot.handlers import start, menu, purchase, tickets, events, support
 from bot.handlers import catch_all
 from bot.services.api_service import api_service
 from bot.core.middleware import TemporaryMessagesMiddleware, temporary_messages_middleware
+from bot.core.image_cache import preload_images
 
 # Configure logging
 logging.basicConfig(
@@ -20,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 async def main():
     """Main bot function."""
+    # Preload all images into memory cache for fast access
+    preload_images()
+    
     # Initialize bot and dispatcher
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())

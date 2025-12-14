@@ -44,11 +44,11 @@ async def _finalize_support_feedback(
     await _freeze_previous_system_message(bot=bot, user_id=user_id)
     temporary_messages_middleware.clear_last_system_message(user_id)
 
-    # Send confirmation with banner.jpg
-    photo_path = get_locale_image_path(locale, t(locale, "screens.support.image"))
-    photo = FSInputFile(photo_path)
+    # Send confirmation with banner.jpg (uses cached image)
+    from bot.core.message_manager import get_screen_image
+    photo_input = get_screen_image(locale, "support")
     new_message = await message.answer_photo(
-        photo=photo,
+        photo=photo_input,
         caption=confirmation_text,
         reply_markup=get_back_keyboard(locale),
         parse_mode="HTML",
