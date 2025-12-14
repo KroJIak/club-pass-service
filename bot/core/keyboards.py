@@ -74,7 +74,6 @@ def get_confirm_order_keyboard(locale: str) -> InlineKeyboardMarkup:
     """Get order confirmation keyboard."""
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.confirm"), callback_data="confirm_order"))
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.cancel"), callback_data="cancel_order"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_quantity"))
     return builder.as_markup()
 
