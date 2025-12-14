@@ -23,9 +23,10 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     
     locale = get_user_locale(callback.from_user.language_code)
+    # Use the same welcome text as /start command
     menu_text = t(
         locale,
-        "messages.menu",
+        "messages.start",
         club_name=settings.CLUB_NAME,
         choose_action=t(locale, "messages.choose_action"),
     )
