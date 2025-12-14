@@ -118,7 +118,7 @@ async def handle_support_message(message: Message, state: FSMContext):
     # For now, just confirm receipt
     
     # This message is NOT temporary - it's feedback, should remain
-    # Don't delete it
+    # Don't delete it - it's not a temporary message
     
     confirmation_text = (
         "✅ <b>Сообщение получено</b>\n\n"
@@ -126,7 +126,7 @@ async def handle_support_message(message: Message, state: FSMContext):
         "Выберите действие:"
     )
     
-    # Send confirmation (don't delete user's message - it's feedback)
+    # Send confirmation (don't delete user's message - it's feedback, not temporary)
     await message.answer(
         confirmation_text,
         reply_markup=get_main_menu_keyboard(),
