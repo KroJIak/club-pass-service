@@ -78,17 +78,11 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "menu_buy_ticket")
 async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
-    """Handle 'Buy ticket' button."""
-    locale = get_user_locale(callback.from_user.language_code)
-    # Buy ticket: only image, no text
-    await safe_edit_message(
-        callback, 
-        "",  # No text
-        reply_markup=get_back_keyboard(locale),
-        locale=locale,
-        screen_key="buy_ticket"
-    )
-    await callback.answer()
+    """Handle 'Buy ticket' button - redirect to purchase flow."""
+    from bot.handlers.purchase import handle_select_event
+    
+    # Redirect to purchase flow
+    await handle_select_event(callback, state)
 
 
 @router.callback_query(F.data == "menu_my_tickets")

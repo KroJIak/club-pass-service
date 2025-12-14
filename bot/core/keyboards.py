@@ -34,12 +34,13 @@ def get_events_keyboard(locale: str, events: list) -> InlineKeyboardMarkup:
     """Get events list keyboard."""
     builder = InlineKeyboardBuilder()
     for event in events:
+        event_text = f"🎉 {event.get('name', 'Event')}\n📅 {event.get('date', '')} {event.get('time', '')}"
         builder.add(InlineKeyboardButton(
-            text=f"{event.get('name', t(locale, 'buttons.events'))} - {event.get('date', '')}",
+            text=event_text,
             callback_data=f"event_{event.get('id')}"
         ))
     builder.adjust(1)
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_menu"))
+    builder.row(InlineKeyboardButton(text=t(locale, "buttons.back_to_menu"), callback_data="back_to_menu"))
     return builder.as_markup()
 
 
@@ -47,8 +48,11 @@ def get_ticket_types_keyboard(locale: str, ticket_types: list) -> InlineKeyboard
     """Get ticket types keyboard."""
     builder = InlineKeyboardBuilder()
     for ticket_type in ticket_types:
+        available = ticket_type.get('available', 0)
+        available_text = f" ({available} {t(locale, 'labels.available')})" if available > 0 else ""
+        ticket_text = f"🎫 {ticket_type.get('name', 'Type')} - {ticket_type.get('price', 0)} ₽{available_text}"
         builder.add(InlineKeyboardButton(
-            text=f"{ticket_type.get('name', 'Type')} - {ticket_type.get('price', 0)} ₽",
+            text=ticket_text,
             callback_data=f"ticket_type_{ticket_type.get('id')}"
         ))
     builder.adjust(1)
@@ -60,7 +64,7 @@ def get_quantity_keyboard(locale: str, max_quantity: int = 5) -> InlineKeyboardM
     """Get quantity selection keyboard."""
     builder = InlineKeyboardBuilder()
     for i in range(1, min(max_quantity + 1, 6)):
-        builder.add(InlineKeyboardButton(text=str(i), callback_data=f"quantity_{i}"))
+        builder.add(InlineKeyboardButton(text=f"🔢 {i}", callback_data=f"quantity_{i}"))
     builder.adjust(3)
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_ticket_types"))
     return builder.as_markup()
