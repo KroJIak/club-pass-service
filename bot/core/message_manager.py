@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Optional
 
 from aiogram.exceptions import TelegramBadRequest
@@ -9,6 +10,77 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 from bot.core.middleware import temporary_messages_middleware
 from bot.core.i18n import t
+
+logger = logging.getLogger(__name__)
+
+
+async def remove_inline_keyboard(bot, chat_id: int, message_id: int) -> bool:
+    """
+    Best-effort removal of inline keyboard from an existing message.
+
+    Returns True if edit call succeeded, False otherwise.
+    """
+    try:
+        try:
+            empty_keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+            await bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=empty_keyboard,
+            )
+        except Exception:
+            await bot.edit_message_reply_markup(
+                chat_id=chat_id,
+                message_id=message_id,
+                reply_markup=None,
+            )
+        return True
+    except Exception as e:
+        logger.warning(
+            "failed to remove inline keyboard: chat_id=%s message_id=%s error=%s",
+            chat_id,
+            message_id,
+            str(e),
+        )
+        return False
+
+
+async def _after_system_action(bot, user_id: int, chat_id: int, message_id: int) -> None:
+    temporary_messages_middleware.set_last_system_message(user_id, chat_id, message_id)
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+
+
+async def _edit_callback_message(
+    callback: CallbackQuery,
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup],
+    parse_mode: Optional[str],
+) -> None:
+    if callback.message.photo:
+        await callback.message.edit_caption(
+            caption=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+    else:
+        await callback.message.edit_text(
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode,
+        )
+
+
+async def _delete_and_send_new_from_callback(
+    callback: CallbackQuery,
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup],
+    parse_mode: Optional[str],
+) -> Message:
+    try:
+        await callback.message.delete()
+    except Exception:
+        pass
+    return await callback.message.answer(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
 
 
 async def safe_edit_message(
@@ -28,26 +100,8 @@ async def safe_edit_message(
     chat_id = callback.message.chat.id
     
     try:
-        # Try to edit message
-        if callback.message.photo:
-            # If message has photo, try to edit caption
-            await callback.message.edit_caption(
-                caption=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode
-            )
-            temporary_messages_middleware.set_last_system_message(user_id, chat_id, callback.message.message_id)
-        else:
-            # Regular text message
-            await callback.message.edit_text(
-                text=text,
-                reply_markup=reply_markup,
-                parse_mode=parse_mode
-            )
-            temporary_messages_middleware.set_last_system_message(user_id, chat_id, callback.message.message_id)
-
-        # After bot system action -> delete ALL pending user messages
-        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+        await _edit_callback_message(callback, text, reply_markup, parse_mode)
+        await _after_system_action(bot, user_id, chat_id, callback.message.message_id)
         return True
     except TelegramBadRequest as e:
         error_msg = str(e).lower()
@@ -61,30 +115,17 @@ async def safe_edit_message(
         # If editing fails for other reasons (e.g., different content type),
         # delete old message and send new one
         old_message_id = callback.message.message_id
-        try:
-            await callback.message.delete()
-        except:
-            pass
-        
-        # Send new message
-        new_message = await callback.message.answer(
-            text=text,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode
-        )
-        
-        temporary_messages_middleware.set_last_system_message(user_id, new_message.chat.id, new_message.message_id)
+        new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode)
 
-        # After bot system action -> delete ALL pending user messages
-        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
-        
+        await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
+
         # Delete old system message if it was different
         if old_message_id != new_message.message_id:
             try:
                 await bot.delete_message(chat_id=chat_id, message_id=old_message_id)
-            except:
+            except Exception:
                 pass
-        
+
         return False
 
 

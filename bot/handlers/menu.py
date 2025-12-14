@@ -1,6 +1,6 @@
 """Main menu handlers."""
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 
 from bot.core.keyboards import (
@@ -10,11 +10,48 @@ from bot.core.keyboards import (
 )
 from bot.core.config import settings
 from bot.core.states import SupportStates
-from bot.core.message_manager import safe_edit_message
+from bot.core.message_manager import safe_edit_message, remove_inline_keyboard
 from bot.core.i18n import get_user_locale, t
 from bot.core.middleware import temporary_messages_middleware
 
 router = Router()
+
+async def _freeze_previous_system_message(*, bot, user_id: int) -> None:
+    """Remove inline keyboard from the last system message (best-effort)."""
+    ref = temporary_messages_middleware.get_last_system_message(user_id)
+    if not ref:
+        return
+    chat_id, message_id = ref
+    await remove_inline_keyboard(bot, chat_id, message_id)
+
+
+async def _finalize_support_feedback(
+    *,
+    message: Message,
+    user_id: int,
+    locale: str,
+    confirmation_text: str,
+) -> None:
+    """
+    Support UX "easter egg":
+    - previous system message stays in chat, but loses system status and inline buttons
+    - confirmation is always sent as a new system message
+    - temporary user messages are flushed (but support feedback is not queued)
+    """
+    bot = message.bot
+
+    await _freeze_previous_system_message(bot=bot, user_id=user_id)
+    temporary_messages_middleware.clear_last_system_message(user_id)
+
+    new_message = await message.answer(
+        confirmation_text,
+        reply_markup=get_back_keyboard(locale),
+        parse_mode="HTML",
+    )
+    temporary_messages_middleware.set_last_system_message(
+        user_id, new_message.chat.id, new_message.message_id
+    )
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
 
 
 @router.callback_query(F.data == "back_to_menu")
@@ -140,53 +177,12 @@ async def handle_support_message(message: Message, state: FSMContext):
     confirmation_text = t(locale, "messages.support_received")
 
     user_id = message.from_user.id
-    bot = message.bot
-    
-    # For support: always send new message, don't edit old one
-    # But first, remove inline buttons from old system message
-    old_system_ref = temporary_messages_middleware.get_last_system_message(user_id)
-    if old_system_ref:
-        old_chat_id, old_message_id = old_system_ref
-        try:
-            # Try to remove inline buttons using edit_message_reply_markup
-            # Try both empty keyboard and None to see which works
-            try:
-                # Method 1: Use empty InlineKeyboardMarkup
-                empty_keyboard = InlineKeyboardMarkup(inline_keyboard=[])
-                await bot.edit_message_reply_markup(
-                    chat_id=old_chat_id,
-                    message_id=old_message_id,
-                    reply_markup=empty_keyboard
-                )
-            except Exception:
-                # Method 2: Try with None
-                await bot.edit_message_reply_markup(
-                    chat_id=old_chat_id,
-                    message_id=old_message_id,
-                    reply_markup=None
-                )
-        except Exception as e:
-            # If both methods fail, log for debugging
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Failed to remove buttons from old message {old_message_id} in chat {old_chat_id}: {e}")
-    
-    # Clear old system message tracking (but don't delete the message - it stays in chat)
-    temporary_messages_middleware.clear_last_system_message(user_id)
-    
-    # Send new system message
-    new_message = await message.answer(
-        confirmation_text,
-        reply_markup=get_back_keyboard(locale),
-        parse_mode="HTML",
+
+    await _finalize_support_feedback(
+        message=message,
+        user_id=user_id,
+        locale=locale,
+        confirmation_text=confirmation_text,
     )
-    
-    # Set new message as system message
-    temporary_messages_middleware.set_last_system_message(
-        user_id, new_message.chat.id, new_message.message_id
-    )
-    
-    # Delete pending temporary user messages (but NOT the support feedback message)
-    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
-    
+
     await state.clear()
