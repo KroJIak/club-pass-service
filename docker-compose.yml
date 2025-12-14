@@ -1,2 +1,63 @@
-# Docker Compose configuration
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: club-pass-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-club_pass}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: club-pass-api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-club_pass}
+      DEBUG: ${DEBUG:-false}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./api:/app/api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+
+  bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.bot
+    container_name: club-pass-bot
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      API_URL: http://api:8000
+      API_PREFIX: /api
+      DEBUG: ${DEBUG:-false}
+      CLUB_NAME: ${CLUB_NAME:-Night Club}
+      CLUB_ADDRESS: ${CLUB_ADDRESS:-Москва, ул. Примерная, 1}
+      CLUB_PHONE: ${CLUB_PHONE:-}
+      CLUB_EMAIL: ${CLUB_EMAIL:-}
+      SUPPORT_USERNAME: ${SUPPORT_USERNAME:-}
+      SUPPORT_PHONE: ${SUPPORT_PHONE:-}
+    depends_on:
+      - api
+    volumes:
+      - ./bot:/app/bot
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
