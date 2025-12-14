@@ -8,6 +8,8 @@ from bot.core.keyboards import get_main_menu_keyboard
 from bot.core.config import settings
 from bot.core.middleware import temporary_messages_middleware
 from bot.core.i18n import get_user_locale, t
+from bot.core.assets import get_locale_image_path
+from aiogram.types import FSInputFile
 
 router = Router()
 
@@ -31,9 +33,12 @@ async def cmd_start(message: Message, state: FSMContext):
         choose_action=t(locale, "messages.choose_action"),
     )
     
-    # 1) Send new system message first
-    new_message = await message.answer(
-        welcome_text,
+    # 1) Send new system message first with welcome.jpg for main menu
+    photo_path = get_locale_image_path(locale, t(locale, "screens.main_menu.image"))
+    photo = FSInputFile(photo_path)
+    new_message = await message.answer_photo(
+        photo=photo,
+        caption=welcome_text,
         reply_markup=get_main_menu_keyboard(locale),
         parse_mode="HTML"
     )

@@ -1,6 +1,6 @@
 """Main menu handlers."""
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, FSInputFile
 from aiogram.fsm.context import FSMContext
 
 from bot.core.keyboards import (
@@ -13,6 +13,7 @@ from bot.core.states import SupportStates
 from bot.core.message_manager import safe_edit_message, remove_inline_keyboard
 from bot.core.i18n import get_user_locale, t
 from bot.core.middleware import temporary_messages_middleware
+from bot.core.assets import get_locale_image_path
 
 router = Router()
 
@@ -43,8 +44,12 @@ async def _finalize_support_feedback(
     await _freeze_previous_system_message(bot=bot, user_id=user_id)
     temporary_messages_middleware.clear_last_system_message(user_id)
 
-    new_message = await message.answer(
-        confirmation_text,
+    # Send confirmation with banner.jpg
+    photo_path = get_locale_image_path(locale, t(locale, "screens.banner"))
+    photo = FSInputFile(photo_path)
+    new_message = await message.answer_photo(
+        photo=photo,
+        caption=confirmation_text,
         reply_markup=get_back_keyboard(locale),
         parse_mode="HTML",
     )
@@ -71,7 +76,9 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
     await safe_edit_message(
         callback,
         menu_text,
-        reply_markup=get_main_menu_keyboard(locale)
+        reply_markup=get_main_menu_keyboard(locale),
+        locale=locale,
+        screen_key="main_menu"
     )
     await callback.answer()
 
@@ -86,7 +93,13 @@ async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
         title=t(locale, "buttons.buy_ticket").replace("🎫 ", ""),
         in_development=t(locale, "messages.in_development"),
     )
-    await safe_edit_message(callback, text, reply_markup=get_back_keyboard(locale))
+    await safe_edit_message(
+        callback, 
+        text, 
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="buy_ticket"
+    )
     await callback.answer()
 
 
@@ -100,7 +113,13 @@ async def handle_my_tickets(callback: CallbackQuery):
         title=t(locale, "buttons.my_tickets").replace("🎟️ ", ""),
         in_development=t(locale, "messages.in_development"),
     )
-    await safe_edit_message(callback, text, reply_markup=get_back_keyboard(locale))
+    await safe_edit_message(
+        callback, 
+        text, 
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="my_tickets"
+    )
     await callback.answer()
 
 
@@ -114,7 +133,13 @@ async def handle_upcoming_events(callback: CallbackQuery):
         title=t(locale, "buttons.events").replace("🎉 ", ""),
         in_development=t(locale, "messages.in_development"),
     )
-    await safe_edit_message(callback, text, reply_markup=get_back_keyboard(locale))
+    await safe_edit_message(
+        callback, 
+        text, 
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="events"
+    )
     await callback.answer()
 
 
@@ -137,7 +162,9 @@ async def handle_club_info(callback: CallbackQuery):
     await safe_edit_message(
         callback,
         info_text,
-        reply_markup=get_back_keyboard(locale)
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="club_info"
     )
     await callback.answer()
 
@@ -154,7 +181,9 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
     await safe_edit_message(
         callback,
         support_text,
-        reply_markup=get_support_cancel_keyboard(locale)
+        reply_markup=get_support_cancel_keyboard(locale),
+        locale=locale,
+        screen_key="support"
     )
     await callback.answer()
     

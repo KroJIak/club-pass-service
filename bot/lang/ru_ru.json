@@ -21,11 +21,12 @@
   },
   "screens": {
     "main_menu": {
-      "image": "main_menu.jpg"
+      "image": "welcome.jpg"
     },
     "club_info": {
       "image": "club_info.jpg"
-    }
+    },
+    "banner": "banner.jpg"
   },
   "messages": {
     "choose_action": "Выберите действие:",
