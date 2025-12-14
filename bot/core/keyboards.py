@@ -72,8 +72,5 @@ def get_confirm_order_keyboard(locale: str) -> InlineKeyboardMarkup:
 
 
 def get_support_cancel_keyboard(locale: str) -> InlineKeyboardMarkup:
-    """Support screen keyboard."""
-    builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.cancel"), callback_data="cancel_support"))
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_menu"))
-    return builder.as_markup()
+    """Support screen keyboard - only back button."""
+    return get_back_keyboard(locale)

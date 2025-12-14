@@ -126,27 +126,6 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
     await state.set_state(SupportStates.waiting_message)
 
 
-@router.callback_query(F.data == "cancel_support")
-async def handle_cancel_support(callback: CallbackQuery, state: FSMContext):
-    """Handle cancel support message."""
-    await state.clear()
-    
-    locale = get_user_locale(callback.from_user.language_code)
-    menu_text = t(
-        locale,
-        "messages.menu",
-        club_name=settings.CLUB_NAME,
-        choose_action=t(locale, "messages.choose_action"),
-    )
-    
-    await safe_edit_message(
-        callback,
-        menu_text,
-        reply_markup=get_main_menu_keyboard(locale)
-    )
-    await callback.answer(t(locale, "messages.support_cancelled_toast"))
-
-
 @router.message(SupportStates.waiting_message, F.text)
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
