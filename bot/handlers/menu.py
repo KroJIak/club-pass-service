@@ -143,6 +143,21 @@ async def handle_support_message(message: Message, state: FSMContext):
     bot = message.bot
     
     # For support: always send new message, don't edit old one
+    # But first, remove inline buttons from old system message
+    old_system_ref = temporary_messages_middleware.get_last_system_message(user_id)
+    if old_system_ref:
+        old_chat_id, old_message_id = old_system_ref
+        try:
+            # Remove inline buttons from old message (best effort)
+            await bot.edit_message_reply_markup(
+                chat_id=old_chat_id,
+                message_id=old_message_id,
+                reply_markup=None
+            )
+        except Exception:
+            # If editing fails (e.g., message already has no buttons), continue anyway
+            pass
+    
     # Clear old system message tracking (but don't delete the message - it stays in chat)
     temporary_messages_middleware.clear_last_system_message(user_id)
     
