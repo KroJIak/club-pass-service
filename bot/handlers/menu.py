@@ -10,8 +10,9 @@ from bot.core.keyboards import (
 )
 from bot.core.config import settings
 from bot.core.states import SupportStates
-from bot.core.message_manager import safe_edit_message, edit_last_system_message_or_send
+from bot.core.message_manager import safe_edit_message
 from bot.core.i18n import get_user_locale, t
+from bot.core.middleware import temporary_messages_middleware
 
 router = Router()
 
@@ -160,12 +161,26 @@ async def handle_support_message(message: Message, state: FSMContext):
     locale = get_user_locale(message.from_user.language_code)
     confirmation_text = t(locale, "messages.support_received")
 
-    # Update the last system message (single-message UX); fallback to send new
-    await edit_last_system_message_or_send(
-        message,
+    user_id = message.from_user.id
+    bot = message.bot
+    
+    # For support: always send new message, don't edit old one
+    # Clear old system message tracking (but don't delete the message - it stays in chat)
+    temporary_messages_middleware.clear_last_system_message(user_id)
+    
+    # Send new system message
+    new_message = await message.answer(
         confirmation_text,
         reply_markup=get_back_keyboard(locale),
         parse_mode="HTML",
     )
+    
+    # Set new message as system message
+    temporary_messages_middleware.set_last_system_message(
+        user_id, new_message.chat.id, new_message.message_id
+    )
+    
+    # Delete pending temporary user messages (but NOT the support feedback message)
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
     
     await state.clear()

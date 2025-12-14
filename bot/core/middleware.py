@@ -175,6 +175,15 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
             self._persist_state()
         return deleted
 
+    def clear_last_system_message(self, user_id: int) -> None:
+        """
+        Clear the last system message tracking for this user without deleting the message.
+        The message remains in the chat but is no longer considered "system".
+        """
+        if user_id in self.last_system_message:
+            self.last_system_message.pop(user_id, None)
+            self._persist_state()
+
     # ----- pending user messages deletion -----
     async def flush_pending_user_messages(self, bot, user_id: int) -> None:
         """
