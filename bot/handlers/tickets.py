@@ -125,3 +125,9 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     await temporary_messages_middleware.flush_pending_user_messages(callback.bot, user_id)
     
     await callback.answer()
+
+
+@router.callback_query(F.data == "back_to_tickets_list")
+async def handle_back_to_tickets_list(callback: CallbackQuery, state: FSMContext):
+    """Go back to tickets list from ticket detail."""
+    await handle_my_tickets(callback, state)
