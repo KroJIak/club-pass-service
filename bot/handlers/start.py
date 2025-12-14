@@ -20,9 +20,6 @@ async def cmd_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     bot = message.bot
     
-    # Delete old system message if exists
-    await temporary_messages_middleware.delete_last_system_message(user_id, bot)
-    
     # Welcome message
     welcome_text = (
         f"👋 Добро пожаловать в <b>{settings.CLUB_NAME}</b>!\n\n"
@@ -30,14 +27,17 @@ async def cmd_start(message: Message, state: FSMContext):
         "Выберите действие:"
     )
     
-    # Send bot response (new message, not editing)
+    # 1. Send new system message first
     new_message = await message.answer(
         welcome_text,
         reply_markup=get_main_menu_keyboard(),
         parse_mode="HTML"
     )
     
-    # Remember this system message ID
+    # 2. Delete old system message if exists
+    await temporary_messages_middleware.delete_last_system_message(user_id, bot)
+    
+    # 3. Remember new system message ID
     temporary_messages_middleware.set_last_system_message(
         user_id, new_message.message_id
     )
