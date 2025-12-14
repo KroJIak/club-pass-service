@@ -99,10 +99,20 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     
     # Send QR code as photo
     await callback.message.delete()
+    
+    # Create back to tickets list keyboard
+    from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+    from aiogram.utils.keyboard import InlineKeyboardBuilder
+    back_builder = InlineKeyboardBuilder()
+    back_builder.add(InlineKeyboardButton(
+        text=t(locale, "buttons.back"),
+        callback_data="back_to_tickets_list"
+    ))
+    
     new_message = await callback.message.answer_photo(
         photo=qr_file,
         caption=text,
-        reply_markup=get_back_keyboard(locale),
+        reply_markup=back_builder.as_markup(),
         parse_mode="HTML",
     )
     
