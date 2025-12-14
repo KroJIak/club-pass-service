@@ -1,16 +1,17 @@
-"""Keyboard builders."""
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+"""Keyboard builders - only inline keyboards."""
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
-def get_main_menu_keyboard() -> ReplyKeyboardMarkup:
+def get_main_menu_keyboard() -> InlineKeyboardMarkup:
     """Get main menu keyboard."""
-    builder = ReplyKeyboardBuilder()
-    builder.row(KeyboardButton(text="🎫 Купить билет"))
-    builder.row(KeyboardButton(text="🎟️ Мои билеты"))
-    builder.row(KeyboardButton(text="🎉 Ближайшие вечеринки"))
-    builder.row(KeyboardButton(text="ℹ️ Инфо о клубе"), KeyboardButton(text="💬 Поддержка"))
-    return builder.as_markup(resize_keyboard=True)
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="🎫 Купить билет", callback_data="menu_buy_ticket"))
+    builder.row(InlineKeyboardButton(text="🎟️ Мои билеты", callback_data="menu_my_tickets"))
+    builder.row(InlineKeyboardButton(text="🎉 Ближайшие вечеринки", callback_data="menu_events"))
+    builder.row(InlineKeyboardButton(text="ℹ️ Инфо о клубе", callback_data="menu_club_info"))
+    builder.row(InlineKeyboardButton(text="💬 Поддержка", callback_data="menu_support"))
+    return builder.as_markup()
 
 
 def get_back_to_menu_keyboard() -> InlineKeyboardMarkup:
@@ -29,7 +30,7 @@ def get_events_keyboard(events: list) -> InlineKeyboardMarkup:
             callback_data=f"event_{event.get('id')}"
         ))
     builder.adjust(1)
-    builder.row(InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_menu"))
+    builder.row(InlineKeyboardButton(text="◀️ Главное меню", callback_data="back_to_menu"))
     return builder.as_markup()
 
 
@@ -61,4 +62,11 @@ def get_confirm_order_keyboard() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="✅ Подтвердить заказ", callback_data="confirm_order"))
     builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel_order"))
+    return builder.as_markup()
+
+
+def get_support_cancel_keyboard() -> InlineKeyboardMarkup:
+    """Get cancel support message keyboard."""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="❌ Отменить", callback_data="cancel_support"))
     return builder.as_markup()

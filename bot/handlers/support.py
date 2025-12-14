@@ -1,5 +1,5 @@
 """Support handlers."""
 from aiogram import Router
 
-# TODO: Implement support handlers if needed
+# Support logic moved to menu.py
 router = Router()
