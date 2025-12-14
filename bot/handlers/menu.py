@@ -125,11 +125,8 @@ async def handle_upcoming_events(callback: CallbackQuery):
 async def handle_club_info(callback: CallbackQuery):
     """Handle 'Club info' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    info_text = (
-        f"{t(locale, 'messages.screen_club_info_title')}\n\n"
-        f"<b>{settings.CLUB_NAME}</b>\n\n"
-        f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
-    )
+    # Club info: only address, phone, email (no title, no club name)
+    info_text = f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
     
     if settings.CLUB_PHONE:
         info_text += f"{t(locale, 'labels.phone')}: {settings.CLUB_PHONE}\n"

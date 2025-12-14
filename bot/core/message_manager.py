@@ -6,7 +6,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, FSInputFile, InlineKeyboardMarkup, Message
+from aiogram.types import CallbackQuery, FSInputFile, InlineKeyboardMarkup, Message, InputMediaPhoto
 
 from bot.core.middleware import temporary_messages_middleware
 from bot.core.i18n import t
@@ -71,15 +71,16 @@ async def _edit_callback_message(
     if callback.message.photo:
         # Message already has photo
         if photo_path:
-            # Need to change photo - delete old and send new
-            await callback.message.delete()
+            # Need to change photo - use edit_message_media to replace photo without deleting
             photo = FSInputFile(photo_path)
-            return await callback.message.answer_photo(
-                photo=photo,
-                caption=text if text else None,
+            media = InputMediaPhoto(media=photo, caption=text if text else None, parse_mode=parse_mode)
+            await callback.bot.edit_message_media(
+                chat_id=callback.message.chat.id,
+                message_id=callback.message.message_id,
+                media=media,
                 reply_markup=reply_markup,
-                parse_mode=parse_mode,
             )
+            return None
         else:
             # Just edit caption
             await callback.message.edit_caption(
