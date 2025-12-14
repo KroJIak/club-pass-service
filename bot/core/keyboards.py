@@ -86,3 +86,18 @@ def get_confirm_order_keyboard(locale: str) -> InlineKeyboardMarkup:
 def get_support_cancel_keyboard(locale: str) -> InlineKeyboardMarkup:
     """Support screen keyboard - only back button."""
     return get_back_keyboard(locale)
+
+
+def get_tickets_keyboard(locale: str, tickets: list) -> InlineKeyboardMarkup:
+    """Get tickets list keyboard."""
+    builder = InlineKeyboardBuilder()
+    for ticket in tickets:
+        status_emoji = "✅" if ticket.get("status") == "active" else "❌"
+        ticket_text = f"{status_emoji} {ticket.get('event_djs', 'Event')}\n📅 {ticket.get('event_date', '')} {ticket.get('event_time', '')}"
+        builder.add(InlineKeyboardButton(
+            text=ticket_text,
+            callback_data=f"ticket_{ticket.get('id')}"
+        ))
+    builder.adjust(1)
+    builder.row(InlineKeyboardButton(text=t(locale, "buttons.back_to_menu"), callback_data="back_to_menu"))
+    return builder.as_markup()
