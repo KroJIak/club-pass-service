@@ -26,21 +26,13 @@ async def cmd_start(message: Message, state: FSMContext):
 
     locale = get_user_locale(message.from_user.language_code)
 
-    welcome_text = t(
-        locale,
-        "messages.start",
-        club_name=settings.CLUB_NAME,
-        choose_action=t(locale, "messages.choose_action"),
-    )
-    
-    # 1) Send new system message first with welcome.jpg for main menu
+    # Main menu: only image, no text
     photo_path = get_locale_image_path(locale, t(locale, "screens.main_menu.image"))
     photo = FSInputFile(photo_path)
     new_message = await message.answer_photo(
         photo=photo,
-        caption=welcome_text,
+        caption=None,  # No text for main menu
         reply_markup=get_main_menu_keyboard(locale),
-        parse_mode="HTML"
     )
     
     # 2) Delete old system message (only for /start)

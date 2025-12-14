@@ -65,17 +65,10 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     
     locale = get_user_locale(callback.from_user.language_code)
-    # Use the same welcome text as /start command
-    menu_text = t(
-        locale,
-        "messages.start",
-        club_name=settings.CLUB_NAME,
-        choose_action=t(locale, "messages.choose_action"),
-    )
-    
+    # Main menu: only image, no text
     await safe_edit_message(
         callback,
-        menu_text,
+        "",  # No text for main menu
         reply_markup=get_main_menu_keyboard(locale),
         locale=locale,
         screen_key="main_menu"
@@ -87,15 +80,10 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
 async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
     """Handle 'Buy ticket' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    text = t(
-        locale,
-        "messages.screen_buy_ticket",
-        title=t(locale, "buttons.buy_ticket").replace("🎫 ", ""),
-        in_development=t(locale, "messages.in_development"),
-    )
+    # Buy ticket: only image, no text
     await safe_edit_message(
         callback, 
-        text, 
+        "",  # No text
         reply_markup=get_back_keyboard(locale),
         locale=locale,
         screen_key="buy_ticket"
@@ -107,15 +95,10 @@ async def handle_buy_ticket(callback: CallbackQuery, state: FSMContext):
 async def handle_my_tickets(callback: CallbackQuery):
     """Handle 'My tickets' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    text = t(
-        locale,
-        "messages.screen_my_tickets",
-        title=t(locale, "buttons.my_tickets").replace("🎟️ ", ""),
-        in_development=t(locale, "messages.in_development"),
-    )
+    # My tickets: only image, no text
     await safe_edit_message(
         callback, 
-        text, 
+        "",  # No text
         reply_markup=get_back_keyboard(locale),
         locale=locale,
         screen_key="my_tickets"
@@ -127,15 +110,10 @@ async def handle_my_tickets(callback: CallbackQuery):
 async def handle_upcoming_events(callback: CallbackQuery):
     """Handle 'Upcoming events' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    text = t(
-        locale,
-        "messages.screen_events",
-        title=t(locale, "buttons.events").replace("🎉 ", ""),
-        in_development=t(locale, "messages.in_development"),
-    )
+    # Events: only image, no text
     await safe_edit_message(
         callback, 
-        text, 
+        "",  # No text
         reply_markup=get_back_keyboard(locale),
         locale=locale,
         screen_key="events"

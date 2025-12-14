@@ -66,22 +66,35 @@ async def _edit_callback_message(
 ) -> Optional[Message]:
     """
     Edit callback message. Returns new Message if photo was sent, None if edited in place.
+    If photo_path is provided and message already has photo, will replace the photo.
     """
     if callback.message.photo:
-        # If message has photo, edit caption
-        await callback.message.edit_caption(
-            caption=text,
-            reply_markup=reply_markup,
-            parse_mode=parse_mode,
-        )
-        return None
+        # Message already has photo
+        if photo_path:
+            # Need to change photo - delete old and send new
+            await callback.message.delete()
+            photo = FSInputFile(photo_path)
+            return await callback.message.answer_photo(
+                photo=photo,
+                caption=text if text else None,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+            )
+        else:
+            # Just edit caption
+            await callback.message.edit_caption(
+                caption=text if text else None,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode,
+            )
+            return None
     elif photo_path:
-        # If we need to add photo, delete old and send new
+        # Message doesn't have photo, but we need to add one - delete old and send new
         await callback.message.delete()
         photo = FSInputFile(photo_path)
         return await callback.message.answer_photo(
             photo=photo,
-            caption=text,
+            caption=text if text else None,
             reply_markup=reply_markup,
             parse_mode=parse_mode,
         )
