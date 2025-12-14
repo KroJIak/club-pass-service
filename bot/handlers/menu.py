@@ -1,6 +1,6 @@
 """Main menu handlers."""
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
 from aiogram.fsm.context import FSMContext
 
 from bot.core.keyboards import (
@@ -148,15 +148,28 @@ async def handle_support_message(message: Message, state: FSMContext):
     if old_system_ref:
         old_chat_id, old_message_id = old_system_ref
         try:
-            # Remove inline buttons from old message (best effort)
-            await bot.edit_message_reply_markup(
-                chat_id=old_chat_id,
-                message_id=old_message_id,
-                reply_markup=None
-            )
-        except Exception:
-            # If editing fails (e.g., message already has no buttons), continue anyway
-            pass
+            # Try to remove inline buttons using edit_message_reply_markup
+            # Try both empty keyboard and None to see which works
+            try:
+                # Method 1: Use empty InlineKeyboardMarkup
+                empty_keyboard = InlineKeyboardMarkup(inline_keyboard=[])
+                await bot.edit_message_reply_markup(
+                    chat_id=old_chat_id,
+                    message_id=old_message_id,
+                    reply_markup=empty_keyboard
+                )
+            except Exception:
+                # Method 2: Try with None
+                await bot.edit_message_reply_markup(
+                    chat_id=old_chat_id,
+                    message_id=old_message_id,
+                    reply_markup=None
+                )
+        except Exception as e:
+            # If both methods fail, log for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to remove buttons from old message {old_message_id} in chat {old_chat_id}: {e}")
     
     # Clear old system message tracking (but don't delete the message - it stays in chat)
     temporary_messages_middleware.clear_last_system_message(user_id)
