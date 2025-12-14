@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "locale": "ru_ru",
+    "language": "Русский (Россия)"
+  },
+  "buttons": {
+    "buy_ticket": "🎫 Купить билет",
+    "my_tickets": "🎟️ Мои билеты",
+    "events": "🎉 Ближайшие вечеринки",
+    "club_info": "ℹ️ Инфо о клубе",
+    "support": "💬 Поддержка",
+    "back": "◀️ Назад",
+    "back_to_menu": "◀️ Главное меню",
+    "cancel": "❌ Отменить",
+    "confirm": "✅ Подтвердить заказ"
+  },
+  "labels": {
+    "address": "📍 Адрес",
+    "phone": "📞 Телефон",
+    "email": "📧 Email"
+  },
+  "messages": {
+    "choose_action": "Выберите действие:",
+    "start": "👋 Добро пожаловать в <b>{club_name}</b>!\n\n🎉 Покупайте билеты на лучшие вечеринки прямо здесь!\n\n{choose_action}",
+    "menu": "👋 <b>{club_name}</b>\n\n{choose_action}",
+    "in_development": "🚧 Раздел в разработке.",
+    "screen_buy_ticket": "🎫 <b>{title}</b>\n\n{in_development}",
+    "screen_my_tickets": "🎟️ <b>{title}</b>\n\n{in_development}",
+    "screen_events": "🎉 <b>{title}</b>\n\n{in_development}",
+    "screen_club_info_title": "ℹ️ <b>Инфо о клубе</b>",
+    "screen_club_info_footer": "🎉 Лучшие вечеринки каждую неделю!",
+    "support_title": "💬 <b>Поддержка</b>",
+    "support_prompt": "Напишите ваше сообщение в поддержку, и мы обязательно ответим.\n\nПросто отправьте текст вашего сообщения:",
+    "support_cancelled_toast": "Отменено",
+    "support_received": "✅ <b>Сообщение получено</b>\n\nВаше сообщение отправлено в поддержку. Мы свяжемся с вами в ближайшее время."
+  }
+}

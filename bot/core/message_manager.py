@@ -8,6 +8,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 from bot.core.middleware import temporary_messages_middleware
+from bot.core.i18n import t
 
 
 async def safe_edit_message(
@@ -182,34 +183,34 @@ async def edit_last_system_message_or_send(
     await temporary_messages_middleware.delete_system_message(bot, chat_id, message_id)
 
 
-def format_event_message(event: Dict[str, Any]) -> str:
+def format_event_message(locale: str, event: Dict[str, Any]) -> str:
     """Format event information message."""
     return (
-        f"🎉 <b>{event.get('name', 'Событие')}</b>\n\n"
-        f"📅 Дата: {event.get('date', 'Не указано')}\n"
-        f"🕐 Время: {event.get('time', 'Не указано')}\n"
-        f"📍 Место: {event.get('location', 'Не указано')}\n\n"
+        f"🎉 <b>{event.get('name', t(locale, 'buttons.events'))}</b>\n\n"
+        f"📅 {event.get('date', '')}\n"
+        f"🕐 {event.get('time', '')}\n"
+        f"📍 {event.get('location', '')}\n\n"
         f"{event.get('description', '')}"
     )
 
 
-def format_ticket_info(ticket: Dict[str, Any]) -> str:
+def format_ticket_info(locale: str, ticket: Dict[str, Any]) -> str:
     """Format ticket information message."""
     return (
-        f"🎫 <b>Билет #{ticket.get('id', 'N/A')}</b>\n\n"
-        f"🎉 Событие: {ticket.get('event_name', 'Не указано')}\n"
-        f"📅 Дата: {ticket.get('date', 'Не указано')}\n"
-        f"🎟️ Тип: {ticket.get('ticket_type', 'Не указано')}\n"
-        f"🔑 Код: <code>{ticket.get('code', 'N/A')}</code>"
+        f"🎫 <b>{t(locale, 'buttons.my_tickets')} #{ticket.get('id', 'N/A')}</b>\n\n"
+        f"🎉 {ticket.get('event_name', '')}\n"
+        f"📅 {ticket.get('date', '')}\n"
+        f"🎟️ {ticket.get('ticket_type', '')}\n"
+        f"🔑 <code>{ticket.get('code', 'N/A')}</code>"
     )
 
 
-def format_order_summary(order: Dict[str, Any]) -> str:
+def format_order_summary(locale: str, order: Dict[str, Any]) -> str:
     """Format order summary message."""
     return (
-        f"📋 <b>Подтверждение заказа</b>\n\n"
-        f"🎉 Событие: {order.get('event_name', 'Не указано')}\n"
-        f"🎟️ Тип билета: {order.get('ticket_type_name', 'Не указано')}\n"
-        f"🔢 Количество: {order.get('quantity', 0)}\n"
-        f"💰 Сумма: {order.get('total_amount', 0)} ₽"
+        f"📋 <b>{t(locale, 'buttons.confirm')}</b>\n\n"
+        f"🎉 {order.get('event_name', '')}\n"
+        f"🎟️ {order.get('ticket_type_name', '')}\n"
+        f"🔢 {order.get('quantity', 0)}\n"
+        f"💰 {order.get('total_amount', 0)} ₽"
     )
