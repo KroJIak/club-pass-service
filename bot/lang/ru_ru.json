@@ -28,7 +28,6 @@
     "screen_my_tickets": "🎟️ <b>{title}</b>\n\n{in_development}",
     "screen_events": "🎉 <b>{title}</b>\n\n{in_development}",
     "screen_club_info_title": "ℹ️ <b>Инфо о клубе</b>",
-    "screen_club_info_footer": "🎉 Лучшие вечеринки каждую неделю!",
     "support_title": "💬 <b>Поддержка</b>",
     "support_prompt": "Напишите ваше сообщение в поддержку, и мы обязательно ответим.\n\nПросто отправьте текст вашего сообщения:",
     "support_cancelled_toast": "Отменено",

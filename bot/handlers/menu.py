@@ -97,8 +97,6 @@ async def handle_club_info(callback: CallbackQuery):
     if settings.CLUB_EMAIL:
         info_text += f"{t(locale, 'labels.email')}: {settings.CLUB_EMAIL}\n"
     
-    info_text += f"\n{t(locale, 'messages.screen_club_info_footer')}"
-    
     await safe_edit_message(
         callback,
         info_text,
