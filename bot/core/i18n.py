@@ -8,8 +8,27 @@ from functools import lru_cache
 from typing import Any, Mapping, Optional
 
 
-SUPPORTED_LOCALES = ("ru_ru", "en_us")
-DEFAULT_LOCALE = "en_us"
+def _env(name: str, default: str) -> str:
+    return os.getenv(name, default).strip()
+
+
+def _parse_locales(value: str) -> tuple[str, ...]:
+    parts = [p.strip().lower().replace("-", "_") for p in value.split(",") if p.strip()]
+    # de-duplicate preserving order
+    seen = set()
+    out: list[str] = []
+    for p in parts:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return tuple(out)
+
+
+SUPPORTED_LOCALES = _parse_locales(_env("I18N_SUPPORTED_LOCALES", "ru_ru,en_us"))
+DEFAULT_LOCALE = _env("I18N_DEFAULT_LOCALE", "ru_ru").lower().replace("-", "_")
+
+if DEFAULT_LOCALE not in SUPPORTED_LOCALES:
+    DEFAULT_LOCALE = SUPPORTED_LOCALES[0] if SUPPORTED_LOCALES else "ru_ru"
 
 
 def _normalize_language_code(language_code: Optional[str]) -> str:
@@ -25,9 +44,9 @@ def get_user_locale(language_code: Optional[str]) -> str:
     Telegram examples: "ru", "en", "en-US", "ru-RU".
     """
     code = _normalize_language_code(language_code)
-    if code.startswith("ru"):
+    if code.startswith("ru") and "ru_ru" in SUPPORTED_LOCALES:
         return "ru_ru"
-    if code.startswith("en"):
+    if code.startswith("en") and "en_us" in SUPPORTED_LOCALES:
         return "en_us"
     return DEFAULT_LOCALE
 

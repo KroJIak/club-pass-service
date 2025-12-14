@@ -22,10 +22,6 @@ class Settings(BaseSettings):
     CLUB_PHONE: Optional[str] = None
     CLUB_EMAIL: Optional[str] = None
     
-    # Support
-    SUPPORT_USERNAME: Optional[str] = None
-    SUPPORT_PHONE: Optional[str] = None
-    
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -51,8 +51,8 @@ services:
       CLUB_ADDRESS: ${CLUB_ADDRESS:-Москва, ул. Примерная, 1}
       CLUB_PHONE: ${CLUB_PHONE:-}
       CLUB_EMAIL: ${CLUB_EMAIL:-}
-      SUPPORT_USERNAME: ${SUPPORT_USERNAME:-}
-      SUPPORT_PHONE: ${SUPPORT_PHONE:-}
+      I18N_SUPPORTED_LOCALES: ${I18N_SUPPORTED_LOCALES:-ru_ru,en_us}
+      I18N_DEFAULT_LOCALE: ${I18N_DEFAULT_LOCALE:-ru_ru}
     depends_on:
       - api
     volumes:
