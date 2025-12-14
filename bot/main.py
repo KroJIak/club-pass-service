@@ -7,6 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from bot.core.config import settings
 from bot.handlers import start, menu, purchase, tickets, events, support
 from bot.services.api_service import api_service
+from bot.core.middleware import TemporaryMessagesMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -21,6 +22,9 @@ async def main():
     # Initialize bot and dispatcher
     bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
+    
+    # Register middleware for temporary messages
+    dp.message.middleware(TemporaryMessagesMiddleware())
     
     # Register routers
     dp.include_router(start.router)

@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from bot.core.keyboards import get_main_menu_keyboard, get_support_cancel_keyboard
 from bot.core.config import settings
 from bot.core.states import SupportStates
-from bot.core.message_manager import safe_edit_message, delete_temporary_user_messages
+from bot.core.message_manager import safe_edit_message
 
 router = Router()
 
