@@ -23,10 +23,21 @@
     "main_menu": {
       "image": "welcome.jpg"
     },
-    "club_info": {
-      "image": "club_info.jpg"
+    "buy_ticket": {
+      "image": "banner.jpg"
     },
-    "banner": "banner.jpg"
+    "my_tickets": {
+      "image": "banner.jpg"
+    },
+    "events": {
+      "image": "banner.jpg"
+    },
+    "club_info": {
+      "image": "banner.jpg"
+    },
+    "support": {
+      "image": "banner.jpg"
+    }
   },
   "messages": {
     "choose_action": "Choose an option:",

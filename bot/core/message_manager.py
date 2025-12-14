@@ -16,11 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def _get_screen_image_path(locale: str, screen_key: str) -> str:
-    """Get image path for a screen (e.g., 'main_menu' -> welcome.jpg, others -> banner.jpg)."""
-    if screen_key == "main_menu":
-        filename = t(locale, "screens.main_menu.image")
-    else:
-        filename = t(locale, "screens.banner")
+    """Get image path for a screen from lang file: screens.{screen_key}.image"""
+    filename = t(locale, f"screens.{screen_key}.image")
     return get_locale_image_path(locale, filename)
 
 

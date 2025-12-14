@@ -45,7 +45,7 @@ async def _finalize_support_feedback(
     temporary_messages_middleware.clear_last_system_message(user_id)
 
     # Send confirmation with banner.jpg
-    photo_path = get_locale_image_path(locale, t(locale, "screens.banner"))
+    photo_path = get_locale_image_path(locale, t(locale, "screens.support.image"))
     photo = FSInputFile(photo_path)
     new_message = await message.answer_photo(
         photo=photo,
