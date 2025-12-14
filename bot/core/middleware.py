@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 from collections import defaultdict
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
@@ -33,6 +35,46 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         # Last system message per user_id: (chat_id, message_id)
         self.last_system_message: Dict[int, SystemMsgRef] = {}
 
+        # Local persistence (so we don't lose pending msgs on restart)
+        self._state_file = os.path.join(os.path.dirname(__file__), "..", ".runtime", "state.json")
+        self._load_state()
+
+    def _ensure_runtime_dir(self) -> None:
+        runtime_dir = os.path.dirname(os.path.abspath(self._state_file))
+        os.makedirs(runtime_dir, exist_ok=True)
+
+    def _load_state(self) -> None:
+        try:
+            if not os.path.exists(self._state_file):
+                return
+            with open(self._state_file, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+            pending = raw.get("pending_user_messages", {})
+            last = raw.get("last_system_message", {})
+
+            self.pending_user_messages = defaultdict(
+                list,
+                {int(k): [tuple(vv) for vv in v] for k, v in pending.items()},
+            )
+            self.last_system_message = {int(k): tuple(v) for k, v in last.items()}
+        except Exception:
+            # Best-effort; if state is corrupt, ignore.
+            self.pending_user_messages = defaultdict(list)
+            self.last_system_message = {}
+
+    def _persist_state(self) -> None:
+        try:
+            self._ensure_runtime_dir()
+            data = {
+                "pending_user_messages": {str(k): v for k, v in self.pending_user_messages.items()},
+                "last_system_message": {str(k): list(v) for k, v in self.last_system_message.items()},
+            }
+            with open(self._state_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+        except Exception:
+            # Best-effort persistence.
+            pass
+
     async def __call__(
         self,
         handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
@@ -55,12 +97,14 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         # ВСЕ сообщения пользователя временные, кроме feedback в поддержку
         if not is_support_feedback:
             self.pending_user_messages[user_id].append((chat_id, event.message_id))
+            self._persist_state()
 
         return await handler(event, data)
 
     # ----- system message tracking -----
     def set_last_system_message(self, user_id: int, chat_id: int, message_id: int) -> None:
         self.last_system_message[user_id] = (chat_id, message_id)
+        self._persist_state()
 
     def get_last_system_message(self, user_id: int) -> Optional[SystemMsgRef]:
         return self.last_system_message.get(user_id)
@@ -80,6 +124,7 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         deleted = await self.delete_system_message(bot, chat_id, message_id)
         if deleted:
             self.last_system_message.pop(user_id, None)
+            self._persist_state()
         return deleted
 
     # ----- pending user messages deletion -----
@@ -94,6 +139,7 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
 
         # Clear early to avoid re-entrancy loops; if deletion fails we don't retry endlessly.
         self.pending_user_messages[user_id] = []
+        self._persist_state()
 
         for chat_id, message_id in pending:
             try:
