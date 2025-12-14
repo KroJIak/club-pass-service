@@ -1,5 +1,81 @@
 """Message formatting and management."""
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup
+from aiogram.exceptions import TelegramBadRequest
+
+
+async def safe_edit_message(
+    callback: CallbackQuery,
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup] = None,
+    parse_mode: Optional[str] = "HTML"
+) -> bool:
+    """
+    Safely edit message. If editing fails (e.g., different content types),
+    delete old message and send new one.
+    
+    Returns True if message was edited, False if new message was sent.
+    """
+    try:
+        # Try to edit text message
+        if callback.message.photo:
+            # If message has photo, try to edit caption
+            await callback.message.edit_caption(
+                caption=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+        else:
+            # Regular text message
+            await callback.message.edit_text(
+                text=text,
+                reply_markup=reply_markup,
+                parse_mode=parse_mode
+            )
+        return True
+    except TelegramBadRequest as e:
+        # If editing fails (e.g., "message is not modified" or different content type),
+        # delete old message and send new one
+        if "message is not modified" not in str(e).lower():
+            try:
+                await callback.message.delete()
+            except:
+                pass
+        
+        # Send new message
+        await callback.message.answer(
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode
+        )
+        return False
+
+
+async def safe_edit_or_send(
+    message_or_callback: Message | CallbackQuery,
+    text: str,
+    reply_markup: Optional[InlineKeyboardMarkup] = None,
+    parse_mode: Optional[str] = "HTML"
+) -> bool:
+    """
+    Edit message if callback, or send new if message.
+    Returns True if edited, False if sent new.
+    """
+    if isinstance(message_or_callback, CallbackQuery):
+        return await safe_edit_message(
+            message_or_callback,
+            text,
+            reply_markup,
+            parse_mode
+        )
+    else:
+        # It's a Message, send new one
+        await message_or_callback.answer(
+            text=text,
+            reply_markup=reply_markup,
+            parse_mode=parse_mode
+        )
+        return False
 
 
 def format_event_message(event: Dict[str, Any]) -> str:

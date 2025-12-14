@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from bot.core.keyboards import get_main_menu_keyboard, get_support_cancel_keyboard
 from bot.core.config import settings
 from bot.core.states import SupportStates
+from bot.core.message_manager import safe_edit_message
 
 router = Router()
 
@@ -20,10 +21,10 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
         "Выберите действие:"
     )
     
-    await callback.message.edit_text(
+    await safe_edit_message(
+        callback,
         menu_text,
-        reply_markup=get_main_menu_keyboard(),
-        parse_mode="HTML"
+        reply_markup=get_main_menu_keyboard()
     )
     await callback.answer()
 
@@ -62,10 +63,10 @@ async def handle_club_info(callback: CallbackQuery):
     
     info_text += "\n🎉 Лучшие вечеринки каждую неделю!"
     
-    await callback.message.edit_text(
+    await safe_edit_message(
+        callback,
         info_text,
-        reply_markup=get_main_menu_keyboard(),
-        parse_mode="HTML"
+        reply_markup=get_main_menu_keyboard()
     )
     await callback.answer()
 
@@ -79,10 +80,10 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
         "Просто отправьте текст вашего сообщения:"
     )
     
-    await callback.message.edit_text(
+    await safe_edit_message(
+        callback,
         support_text,
-        reply_markup=get_support_cancel_keyboard(),
-        parse_mode="HTML"
+        reply_markup=get_support_cancel_keyboard()
     )
     await callback.answer()
     
@@ -100,10 +101,10 @@ async def handle_cancel_support(callback: CallbackQuery, state: FSMContext):
         "Выберите действие:"
     )
     
-    await callback.message.edit_text(
+    await safe_edit_message(
+        callback,
         menu_text,
-        reply_markup=get_main_menu_keyboard(),
-        parse_mode="HTML"
+        reply_markup=get_main_menu_keyboard()
     )
     await callback.answer("Отменено")
 
