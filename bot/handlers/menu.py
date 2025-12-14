@@ -94,21 +94,6 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
     await tickets_handler(callback, state)
 
 
-@router.callback_query(F.data == "menu_events")
-async def handle_upcoming_events(callback: CallbackQuery):
-    """Handle 'Upcoming events' button."""
-    locale = get_user_locale(callback.from_user.language_code)
-    # Events: only image, no text, no buttons
-    await safe_edit_message(
-        callback, 
-        "",  # No text
-        reply_markup=None,  # No buttons
-        locale=locale,
-        screen_key="events"
-    )
-    await callback.answer()
-
-
 @router.callback_query(F.data == "menu_club_info")
 async def handle_club_info(callback: CallbackQuery):
     """Handle 'Club info' button."""
