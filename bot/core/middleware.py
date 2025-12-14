@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from collections import defaultdict
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
@@ -17,6 +18,8 @@ ChatId = int
 MessageId = int
 SystemMsgRef = Tuple[ChatId, MessageId]
 UserMsgRef = Tuple[ChatId, MessageId]
+
+logger = logging.getLogger("bot.temp_messages")
 
 
 class TemporaryMessagesMiddleware(BaseMiddleware):
@@ -94,10 +97,36 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
             if current_state == SupportStates.waiting_message.state:
                 is_support_feedback = True
 
+        # Log every incoming user message (for debugging message deletion)
+        try:
+            username = event.from_user.username
+            text = event.text or event.caption or ""
+            content_type = "photo" if event.photo else "text"
+            logger.info(
+                "incoming user message: user_id=%s chat_id=%s message_id=%s username=%s type=%s text=%r support_feedback=%s",
+                user_id,
+                chat_id,
+                event.message_id,
+                username,
+                content_type,
+                text,
+                is_support_feedback,
+            )
+        except Exception:
+            pass
+
         # ВСЕ сообщения пользователя временные, кроме feedback в поддержку
         if not is_support_feedback:
             self.pending_user_messages[user_id].append((chat_id, event.message_id))
             self._persist_state()
+            try:
+                logger.debug(
+                    "queued pending user message: user_id=%s pending_count=%s",
+                    user_id,
+                    len(self.pending_user_messages[user_id]),
+                )
+            except Exception:
+                pass
 
         return await handler(event, data)
 
@@ -135,18 +164,44 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         """
         pending = self.pending_user_messages.get(user_id, [])
         if not pending:
+            try:
+                logger.debug("flush pending: user_id=%s pending_count=0", user_id)
+            except Exception:
+                pass
             return
+
+        try:
+            logger.info("flush pending: user_id=%s pending_count=%s", user_id, len(pending))
+        except Exception:
+            pass
 
         # Clear early to avoid re-entrancy loops; if deletion fails we don't retry endlessly.
         self.pending_user_messages[user_id] = []
         self._persist_state()
 
+        deleted = 0
+        failed = 0
         for chat_id, message_id in pending:
             try:
                 await bot.delete_message(chat_id=chat_id, message_id=message_id)
+                deleted += 1
             except Exception:
                 # If Telegram doesn't allow deletion, ignore (best-effort).
-                pass
+                failed += 1
+                try:
+                    logger.warning(
+                        "failed to delete user message: user_id=%s chat_id=%s message_id=%s",
+                        user_id,
+                        chat_id,
+                        message_id,
+                    )
+                except Exception:
+                    pass
+
+        try:
+            logger.info("flush pending done: user_id=%s deleted=%s failed=%s", user_id, deleted, failed)
+        except Exception:
+            pass
 
 
 # Global instance used across handlers/helpers
