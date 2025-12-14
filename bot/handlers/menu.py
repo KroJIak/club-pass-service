@@ -98,11 +98,11 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
 async def handle_upcoming_events(callback: CallbackQuery):
     """Handle 'Upcoming events' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    # Events: only image, no text
+    # Events: only image, no text, no buttons
     await safe_edit_message(
         callback, 
         "",  # No text
-        reply_markup=get_back_keyboard(locale),
+        reply_markup=None,  # No buttons
         locale=locale,
         screen_key="events"
     )
