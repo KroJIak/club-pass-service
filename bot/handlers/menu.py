@@ -7,6 +7,7 @@ from bot.core.keyboards import get_main_menu_keyboard, get_support_cancel_keyboa
 from bot.core.config import settings
 from bot.core.states import SupportStates
 from bot.core.message_manager import safe_edit_message
+from bot.core.middleware import temporary_messages_middleware
 
 router = Router()
 
@@ -113,6 +114,7 @@ async def handle_cancel_support(callback: CallbackQuery, state: FSMContext):
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
     support_message = message.text
+    user_id = message.from_user.id
     
     # TODO: Send message to support/admin
     # For now, just confirm receipt
@@ -127,10 +129,15 @@ async def handle_support_message(message: Message, state: FSMContext):
     )
     
     # Send confirmation (don't delete user's message - it's feedback, not temporary)
-    await message.answer(
+    new_message = await message.answer(
         confirmation_text,
         reply_markup=get_main_menu_keyboard(),
         parse_mode="HTML"
+    )
+    
+    # Remember this system message ID
+    temporary_messages_middleware.set_last_system_message(
+        user_id, new_message.message_id
     )
     
     await state.clear()
