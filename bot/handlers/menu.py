@@ -1,6 +1,6 @@
 """Main menu handlers."""
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message, FSInputFile
+from aiogram.types import CallbackQuery, Message, FSInputFile, ReactionTypeEmoji
 from aiogram.fsm.context import FSMContext
 
 from bot.core.keyboards import (
@@ -158,6 +158,19 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
     support_message = message.text
+    
+    # Set reaction "writing hand" on user's message
+    try:
+        await message.bot.set_message_reaction(
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            reaction=[ReactionTypeEmoji(emoji="✍️")]
+        )
+    except Exception as e:
+        # If reaction fails, log but don't break the flow
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to set reaction on support message: {e}")
     
     # TODO: Send message to support/admin
     # For now, just confirm receipt
