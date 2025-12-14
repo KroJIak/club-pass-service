@@ -1,2 +1,40 @@
-# Configuration settings
+"""Configuration settings for API service."""
+from pydantic_settings import BaseSettings
+from typing import Optional
 
+
+class Settings(BaseSettings):
+    """Application settings loaded from environment variables."""
+    
+    # API
+    API_TITLE: str = "Club Pass Service API"
+    API_VERSION: str = "1.0.0"
+    API_PREFIX: str = "/api"
+    DEBUG: bool = False
+    
+    # Database
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_USER: str = "postgres"
+    DB_PASSWORD: str = "postgres"
+    DB_NAME: str = "club_pass"
+    DB_ECHO: bool = False
+    
+    # Security
+    SECRET_KEY: str = "your-secret-key-change-in-production"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # YooKassa (will be configured later)
+    YOOKASSA_SHOP_ID: Optional[str] = None
+    YOOKASSA_SECRET_KEY: Optional[str] = None
+    
+    # Telegram Bot (for notifications)
+    TELEGRAM_BOT_TOKEN: Optional[str] = None
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+
+settings = Settings()
