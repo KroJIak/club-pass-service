@@ -14,7 +14,7 @@ async def safe_edit_message(
     Safely edit message. If editing fails (e.g., different content types),
     delete old message and send new one.
     
-    Returns True if message was edited, False if new message was sent.
+    Returns True if message was edited or unchanged, False if new message was sent.
     """
     try:
         # Try to edit text message
@@ -34,13 +34,18 @@ async def safe_edit_message(
             )
         return True
     except TelegramBadRequest as e:
-        # If editing fails (e.g., "message is not modified" or different content type),
+        error_msg = str(e).lower()
+        
+        # If message is not modified, just leave it as is
+        if "message is not modified" in error_msg:
+            return True
+        
+        # If editing fails for other reasons (e.g., different content type),
         # delete old message and send new one
-        if "message is not modified" not in str(e).lower():
-            try:
-                await callback.message.delete()
-            except:
-                pass
+        try:
+            await callback.message.delete()
+        except:
+            pass
         
         # Send new message
         await callback.message.answer(
@@ -76,6 +81,25 @@ async def safe_edit_or_send(
             parse_mode=parse_mode
         )
         return False
+
+
+async def delete_temporary_user_messages(
+    user_id: int,
+    temporary_messages: list[Message]
+) -> None:
+    """
+    Delete temporary user messages after bot response.
+    
+    Args:
+        user_id: User ID
+        temporary_messages: List of temporary messages to delete
+    """
+    for msg in temporary_messages:
+        try:
+            await msg.delete()
+        except Exception:
+            # Ignore errors (message might be already deleted)
+            pass
 
 
 def format_event_message(event: Dict[str, Any]) -> str:

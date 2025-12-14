@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from bot.core.keyboards import get_main_menu_keyboard, get_support_cancel_keyboard
 from bot.core.config import settings
 from bot.core.states import SupportStates
-from bot.core.message_manager import safe_edit_message
+from bot.core.message_manager import safe_edit_message, delete_temporary_user_messages
 
 router = Router()
 
@@ -117,14 +117,16 @@ async def handle_support_message(message: Message, state: FSMContext):
     # TODO: Send message to support/admin
     # For now, just confirm receipt
     
+    # This message is NOT temporary - it's feedback, should remain
+    # Don't delete it
+    
     confirmation_text = (
         "✅ <b>Сообщение получено</b>\n\n"
         "Ваше сообщение отправлено в поддержку. Мы свяжемся с вами в ближайшее время.\n\n"
         "Выберите действие:"
     )
     
-    # Delete user's message and send confirmation
-    await message.delete()
+    # Send confirmation (don't delete user's message - it's feedback)
     await message.answer(
         confirmation_text,
         reply_markup=get_main_menu_keyboard(),
