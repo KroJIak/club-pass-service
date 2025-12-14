@@ -19,6 +19,16 @@
     "phone": "📞 Phone",
     "email": "📧 Email"
   },
+  "screens": {
+    "main_menu": {
+      "name": "Main menu",
+      "image": "main_menu.svg"
+    },
+    "club_info": {
+      "name": "Club info",
+      "image": "club_info.svg"
+    }
+  },
   "messages": {
     "choose_action": "Choose an option:",
     "start": "👋 Welcome to <b>{club_name}</b>!\n\n🎉 Buy tickets for the best parties right here!\n\n{choose_action}",

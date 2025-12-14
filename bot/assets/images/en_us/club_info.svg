@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#0b0f1a"/>
+  <text x="80" y="160" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700">
+    Club info
+  </text>
+  <text x="80" y="230" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="32">
+    (test image en_us)
+  </text>
+  <rect x="80" y="290" width="1120" height="350" rx="28" fill="#111827"/>
+  <text x="120" y="380" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="600">
+    Visual header for this screen
+  </text>
+  <text x="120" y="440" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="26">
+    Below: text (address/contacts) + inline buttons.
+  </text>
+</svg>
+

@@ -19,6 +19,16 @@
     "phone": "📞 Телефон",
     "email": "📧 Email"
   },
+  "screens": {
+    "main_menu": {
+      "name": "Главное меню",
+      "image": "main_menu.svg"
+    },
+    "club_info": {
+      "name": "Инфо о клубе",
+      "image": "club_info.svg"
+    }
+  },
   "messages": {
     "choose_action": "Выберите действие:",
     "start": "👋 Добро пожаловать в <b>{club_name}</b>!\n\n🎉 Покупайте билеты на лучшие вечеринки прямо здесь!\n\n{choose_action}",
