@@ -140,9 +140,28 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
 
     async def delete_system_message(self, bot, chat_id: int, message_id: int) -> bool:
         try:
-            await bot.delete_message(chat_id=chat_id, message_id=message_id)
-            return True
-        except Exception:
+            res = await bot.delete_message(chat_id=chat_id, message_id=message_id)
+            ok = bool(res)
+            try:
+                logger.info(
+                    "delete system message: chat_id=%s message_id=%s result=%s",
+                    chat_id,
+                    message_id,
+                    ok,
+                )
+            except Exception:
+                pass
+            return ok
+        except Exception as e:
+            try:
+                logger.warning(
+                    "failed to delete system message: chat_id=%s message_id=%s error=%s",
+                    chat_id,
+                    message_id,
+                    str(e),
+                )
+            except Exception:
+                pass
             return False
 
     async def delete_last_system_message(self, user_id: int, bot) -> bool:
@@ -183,17 +202,40 @@ class TemporaryMessagesMiddleware(BaseMiddleware):
         failed = 0
         for chat_id, message_id in pending:
             try:
-                await bot.delete_message(chat_id=chat_id, message_id=message_id)
-                deleted += 1
-            except Exception:
+                res = await bot.delete_message(chat_id=chat_id, message_id=message_id)
+                ok = bool(res)
+                if ok:
+                    deleted += 1
+                    try:
+                        logger.debug(
+                            "deleted user message: user_id=%s chat_id=%s message_id=%s",
+                            user_id,
+                            chat_id,
+                            message_id,
+                        )
+                    except Exception:
+                        pass
+                else:
+                    failed += 1
+                    try:
+                        logger.warning(
+                            "delete_message returned false: user_id=%s chat_id=%s message_id=%s",
+                            user_id,
+                            chat_id,
+                            message_id,
+                        )
+                    except Exception:
+                        pass
+            except Exception as e:
                 # If Telegram doesn't allow deletion, ignore (best-effort).
                 failed += 1
                 try:
                     logger.warning(
-                        "failed to delete user message: user_id=%s chat_id=%s message_id=%s",
+                        "failed to delete user message: user_id=%s chat_id=%s message_id=%s error=%s",
                         user_id,
                         chat_id,
                         message_id,
+                        str(e),
                     )
                 except Exception:
                     pass
