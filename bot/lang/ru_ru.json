@@ -21,11 +21,9 @@
   },
   "screens": {
     "main_menu": {
-      "name": "Главное меню",
       "image": "main_menu.jpg"
     },
     "club_info": {
-      "name": "Инфо о клубе",
       "image": "club_info.jpg"
     }
   },

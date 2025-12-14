@@ -21,11 +21,9 @@
   },
   "screens": {
     "main_menu": {
-      "name": "Main menu",
       "image": "main_menu.jpg"
     },
     "club_info": {
-      "name": "Club info",
       "image": "club_info.jpg"
     }
   },
