@@ -71,10 +71,19 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
         {"id": 2, "name": "VIP", "price": 3000, "available": 20},
     ]
     
-    # Ticket types: only image, no text
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
+    text = t(
+        locale,
+        "messages.purchase.select_ticket_type",
+        event_name=djs_text,
+        event_date=event.get("date", ""),
+        event_time=event.get("time", ""),
+    )
+    
     await safe_edit_message(
         callback,
-        "",  # No text
+        text,
         reply_markup=get_ticket_types_keyboard(locale, ticket_types),
         locale=locale,
         screen_key="buy_ticket"
@@ -137,10 +146,23 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     
     total_price = ticket_type.get("price", 0) * quantity
     
-    # Order confirmation: only image, no text
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
+    text = t(
+        locale,
+        "messages.purchase.confirm_order",
+        event_name=djs_text,
+        event_date=event.get("date", ""),
+        event_time=event.get("time", ""),
+        ticket_type_name=ticket_type.get("name", ""),
+        quantity=quantity,
+        price_per_ticket=ticket_type.get("price", 0),
+        total_price=total_price,
+    )
+    
     await safe_edit_message(
         callback,
-        "",  # No text
+        text,
         reply_markup=get_confirm_order_keyboard(locale),
         locale=locale,
         screen_key="buy_ticket"
@@ -256,10 +278,10 @@ async def handle_back_to_events(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
     
-    # Events list: only image, no text
+    text = t(locale, "messages.purchase.select_event")
     await safe_edit_message(
         callback,
-        "",  # No text
+        text,
         reply_markup=get_events_keyboard(locale, events),
         locale=locale,
         screen_key="buy_ticket"
@@ -291,10 +313,19 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
         {"id": 2, "name": "VIP", "price": 3000, "available": 20},
     ]
     
-    # Ticket types: only image, no text
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else ""
+    text = t(
+        locale,
+        "messages.purchase.select_ticket_type",
+        event_name=djs_text,
+        event_date=event.get("date", ""),
+        event_time=event.get("time", ""),
+    )
+    
     await safe_edit_message(
         callback,
-        "",  # No text
+        text,
         reply_markup=get_ticket_types_keyboard(locale, ticket_types),
         locale=locale,
         screen_key="buy_ticket"
