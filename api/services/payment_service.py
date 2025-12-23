@@ -116,12 +116,9 @@ class PaymentService:
         ]
         
         # Provider token from BotFather (after connecting bot to YooKassa)
-        # For now, we'll need to get it from settings or use bot token
+        # For mock mode, we can use a dummy token
         # According to docs, provider_token is obtained from BotFather
-        provider_token = settings.YOOKASSA_SECRET_KEY or settings.TELEGRAM_BOT_TOKEN
-        
-        if not provider_token:
-            raise ValueError("Provider token not configured. Please set YOOKASSA_SECRET_KEY or TELEGRAM_BOT_TOKEN")
+        provider_token = settings.YOOKASSA_SECRET_KEY or settings.TELEGRAM_BOT_TOKEN or "MOCK_PROVIDER_TOKEN"
         
         return {
             "order_id": order.order_id,

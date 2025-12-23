@@ -44,9 +44,20 @@ async def create_order(
             promocode=order_data.promocode,
         )
     except ValueError as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error creating payment invoice: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Unexpected error creating payment invoice: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {str(e)}"
         )
     
     return OrderResponse(**invoice_data)
