@@ -1,6 +1,6 @@
 """Promocode ORM model and Pydantic schemas."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, Integer as SQLInteger
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean, Integer as SQLInteger
 from api.core.db import Base
 
 
