@@ -25,8 +25,17 @@ const theme = createTheme({
 })
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth()
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />
+  const { isAuthenticated, isLoading } = useAuth()
+  
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  
+  return <>{children}</>
 }
 
 function App() {

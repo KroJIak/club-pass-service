@@ -16,31 +16,27 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login, isAuthenticated } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
   const navigate = useNavigate()
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (only once)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!isLoading && isAuthenticated) {
       navigate('/events', { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, isLoading, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    console.log('Form submitted, calling login function')
     try {
       const result = await login(username, password)
-      console.log('Login result:', result)
       
       if (result.success) {
-        // Wait a bit for state to update, then navigate
-        setTimeout(() => {
-          navigate('/events', { replace: true })
-        }, 100)
+        // Don't navigate here - let useEffect handle it
+        // This prevents double navigation
       } else {
         setError(result.error || 'Login failed')
         setLoading(false)
@@ -50,6 +46,11 @@ const Login = () => {
       setError('An unexpected error occurred')
       setLoading(false)
     }
+  }
+
+  const login = async (username: string, password: string) => {
+    const { login: loginFn } = useAuth()
+    return await loginFn(username, password)
   }
 
   return (
