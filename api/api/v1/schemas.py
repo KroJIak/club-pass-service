@@ -145,6 +145,9 @@ class OrderCreate(BaseModel):
     ticket_type_id: int
     quantity: int = Field(gt=0, le=10, description="Quantity of tickets (1-10)")
     promocode: Optional[str] = None
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 
 class OrderResponse(BaseModel):

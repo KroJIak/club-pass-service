@@ -213,6 +213,9 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
         event_id=event_id,
         ticket_type_id=ticket_type_id,
         quantity=quantity,
+        username=callback.from_user.username,
+        first_name=callback.from_user.first_name,
+        last_name=callback.from_user.last_name,
     )
     
     if not order_data:

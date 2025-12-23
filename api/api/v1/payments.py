@@ -33,9 +33,9 @@ async def create_order(
         # Get or create user
         user_data = UserCreate(
             telegram_user_id=order_data.user_id,
-            username=None,
-            first_name=None,
-            last_name=None,
+            username=order_data.username,
+            first_name=order_data.first_name,
+            last_name=order_data.last_name,
         )
         user = UserRepository.get_or_create(db, user_data)
         logger.info(f"User found/created: id={user.id}, telegram_user_id={user.telegram_user_id}")
