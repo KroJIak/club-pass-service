@@ -34,11 +34,7 @@ export const useAuth = () => {
       console.log('Login successful, received token')
       localStorage.setItem('token', response.access_token)
       setIsAuthenticated(true)
-      console.log('Token saved, redirecting...')
-      // Use window.location for navigation to ensure state update
-      setTimeout(() => {
-        window.location.href = '/'
-      }, 100)
+      console.log('Token saved, authentication state updated')
       return { success: true }
     } catch (error: any) {
       console.error('Login error:', error)
@@ -53,6 +49,7 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem('token')
     setIsAuthenticated(false)
+    // Use window.location to ensure full page reload
     window.location.href = '/login'
   }
 

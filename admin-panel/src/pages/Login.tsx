@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Container,
   Paper,
@@ -15,7 +16,15 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/events', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,16 +32,23 @@ const Login = () => {
     setLoading(true)
 
     console.log('Form submitted, calling login function')
-    const result = await login(username, password)
-    console.log('Login result:', result)
-    
-    if (!result.success) {
-      setError(result.error || 'Login failed')
+    try {
+      const result = await login(username, password)
+      console.log('Login result:', result)
+      
+      if (result.success) {
+        // Wait a bit for state to update, then navigate
+        setTimeout(() => {
+          navigate('/events', { replace: true })
+        }, 100)
+      } else {
+        setError(result.error || 'Login failed')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Unexpected error:', error)
+      setError('An unexpected error occurred')
       setLoading(false)
-    } else {
-      // If success, navigation happens in useAuth hook via window.location.href
-      // Don't set loading to false here as we're redirecting
-      console.log('Login successful, waiting for redirect...')
     }
   }
 
