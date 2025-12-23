@@ -11,6 +11,7 @@ class TicketStatus(str, enum.Enum):
     ACTIVE = "active"
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
+    EXPIRED = "expired"
 
 
 class Ticket(Base):

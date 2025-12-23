@@ -33,6 +33,10 @@ async def get_user_tickets_by_telegram_id(
 ):
     """Get tickets for a user by Telegram user ID."""
     from api.repositories.user_repository import UserRepository
+    from api.services.ticket_expiration_service import TicketExpirationService
+    
+    # Check and mark expired tickets before fetching
+    TicketExpirationService.mark_expired_tickets(db)
     
     # Find user by telegram_user_id
     user = UserRepository.get_by_telegram_id(db, telegram_user_id)

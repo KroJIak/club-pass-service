@@ -43,6 +43,7 @@ class TicketRepository:
         ).filter(Ticket.user_id == user_id)
         
         if active_only:
+            # Only return active tickets (exclude expired, refunded, and cancelled)
             query = query.filter(Ticket.status == TicketStatus.ACTIVE)
         
         return query.order_by(Ticket.created_at.desc()).all()
