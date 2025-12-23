@@ -1,2 +1,25 @@
-# Users endpoints
+"""Users endpoints."""
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
+from api.core.db import get_db
+from api.repositories.user_repository import UserRepository
+from api.api.v1.schemas import UserCreate, UserResponse
+
+router = APIRouter()
+
+
+@router.post("", response_model=UserResponse)
+async def create_or_update_user(
+    user_data: UserCreate,
+    db: Session = Depends(get_db),
+):
+    """Create or update a user."""
+    try:
+        user = UserRepository.get_or_create(db, user_data)
+        return UserResponse.model_validate(user)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating/updating user: {str(e)}"
+        )

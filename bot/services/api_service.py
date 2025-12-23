@@ -145,6 +145,32 @@ class APIService:
                 except:
                     pass
             return None
+    
+    async def create_or_update_user(
+        self,
+        telegram_user_id: int,
+        username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Create or update a user."""
+        try:
+            request_data = {
+                "telegram_user_id": telegram_user_id,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name
+            }
+            response = await self.client.post(
+                f"{self.base_url}/v1/users",
+                json=request_data
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            # Don't log as error - user creation is not critical for /start
+            print(f"Error creating/updating user: {e}")
+            return None
 
 
 # Global instance
