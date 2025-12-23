@@ -62,27 +62,40 @@ class APIService:
         promocode: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         """Create an order and get payment invoice data."""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        request_data = {
+            "user_id": user_id,
+            "event_id": event_id,
+            "ticket_type_id": ticket_type_id,
+            "quantity": quantity,
+            "promocode": promocode
+        }
+        logger.info(f"Creating order: {request_data}, base_url={self.base_url}")
+        
         try:
             response = await self.client.post(
                 f"{self.base_url}/v1/orders",
-                json={
-                    "user_id": user_id,
-                    "event_id": event_id,
-                    "ticket_type_id": ticket_type_id,
-                    "quantity": quantity,
-                    "promocode": promocode
-                }
+                json=request_data
             )
             response.raise_for_status()
             return response.json()
         except httpx.HTTPError as e:
-            print(f"Error creating order: {e}")
+            logger.error(f"Error creating order: {e}")
             if hasattr(e, 'response') and e.response is not None:
                 try:
                     error_detail = e.response.json().get("detail", str(e))
+                    logger.error(f"Error detail: {error_detail}")
                     print(f"Error detail: {error_detail}")
-                except:
-                    pass
+                except Exception as parse_error:
+                    logger.error(f"Failed to parse error response: {parse_error}")
+                    try:
+                        error_text = e.response.text
+                        logger.error(f"Error response text: {error_text}")
+                        print(f"Error response text: {error_text}")
+                    except:
+                        pass
             return None
     
     async def get_user_tickets(self, user_id: int, active_only: bool = False) -> List[Dict[str, Any]]:

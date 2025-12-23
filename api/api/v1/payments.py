@@ -24,17 +24,23 @@ async def create_order(
     db: Session = Depends(get_db),
 ):
     """Create an order and prepare payment invoice."""
-    # Get or create user
-    user_data = UserCreate(
-        telegram_user_id=order_data.user_id,
-        username=None,
-        first_name=None,
-        last_name=None,
-    )
-    user = UserRepository.get_or_create(db, user_data)
+    import logging
+    logger = logging.getLogger(__name__)
     
-    # Create payment invoice
     try:
+        logger.info(f"Creating order: user_id={order_data.user_id}, event_id={order_data.event_id}, ticket_type_id={order_data.ticket_type_id}, quantity={order_data.quantity}")
+        
+        # Get or create user
+        user_data = UserCreate(
+            telegram_user_id=order_data.user_id,
+            username=None,
+            first_name=None,
+            last_name=None,
+        )
+        user = UserRepository.get_or_create(db, user_data)
+        logger.info(f"User found/created: id={user.id}, telegram_user_id={user.telegram_user_id}")
+        
+        # Create payment invoice
         invoice_data = PaymentService.create_payment_invoice(
             db=db,
             user_id=user.id,
@@ -43,24 +49,21 @@ async def create_order(
             quantity=order_data.quantity,
             promocode=order_data.promocode,
         )
+        logger.info(f"Payment invoice created: order_id={invoice_data['order_id']}, payment_id={invoice_data['payment_id']}")
+        
+        return OrderResponse(**invoice_data)
     except ValueError as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Error creating payment invoice: {e}")
+        logger.error(f"Validation error creating payment invoice: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Unexpected error creating payment invoice: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Internal server error: {str(e)}"
         )
-    
-    return OrderResponse(**invoice_data)
 
 
 @router.post("/payments/process")
