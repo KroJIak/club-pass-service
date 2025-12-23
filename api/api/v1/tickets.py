@@ -17,8 +17,30 @@ async def get_user_tickets(
     active_only: bool = False,
     db: Session = Depends(get_db),
 ):
-    """Get tickets for a user."""
+    """Get tickets for a user by internal user ID."""
     tickets = TicketService.get_user_tickets(db, user_id, active_only=active_only)
+    
+    return TicketListResponse(
+        tickets=[TicketDetailResponse.model_validate(ticket) for ticket in tickets]
+    )
+
+
+@router.get("/users/telegram/{telegram_user_id}/tickets", response_model=TicketListResponse)
+async def get_user_tickets_by_telegram_id(
+    telegram_user_id: int,
+    active_only: bool = False,
+    db: Session = Depends(get_db),
+):
+    """Get tickets for a user by Telegram user ID."""
+    from api.repositories.user_repository import UserRepository
+    
+    # Find user by telegram_user_id
+    user = UserRepository.get_by_telegram_id(db, telegram_user_id)
+    if not user:
+        return TicketListResponse(tickets=[])
+    
+    # Get tickets for the user
+    tickets = TicketService.get_user_tickets(db, user.id, active_only=active_only)
     
     return TicketListResponse(
         tickets=[TicketDetailResponse.model_validate(ticket) for ticket in tickets]

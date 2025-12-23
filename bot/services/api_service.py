@@ -104,11 +104,11 @@ class APIService:
                         pass
             return None
     
-    async def get_user_tickets(self, user_id: int, active_only: bool = False) -> List[Dict[str, Any]]:
-        """Get user tickets."""
+    async def get_user_tickets(self, telegram_user_id: int, active_only: bool = False) -> List[Dict[str, Any]]:
+        """Get user tickets by Telegram user ID."""
         try:
             response = await self.client.get(
-                f"{self.base_url}/v1/users/{user_id}/tickets",
+                f"{self.base_url}/v1/users/telegram/{telegram_user_id}/tickets",
                 params={"active_only": active_only}
             )
             response.raise_for_status()
