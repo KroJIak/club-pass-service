@@ -59,5 +59,17 @@ services:
       - ./bot:/app/bot
     restart: unless-stopped
 
+  admin:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.admin
+    container_name: club-pass-admin
+    ports:
+      - "${ADMIN_PORT:-3000}:80"
+    depends_on:
+      - api
+    environment:
+      - VITE_API_URL=http://api:8000
+
 volumes:
   postgres_data:
