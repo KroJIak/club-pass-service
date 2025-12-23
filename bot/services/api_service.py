@@ -108,6 +108,24 @@ class APIService:
         except httpx.HTTPError as e:
             print(f"Error fetching ticket: {e}")
             return None
+    
+    async def complete_order_mock(self, order_id: str) -> Optional[Dict[str, Any]]:
+        """Complete order in mock mode (for testing without payment)."""
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/v1/orders/{order_id}/complete-mock"
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            print(f"Error completing mock order: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json().get("detail", str(e))
+                    print(f"Error detail: {error_detail}")
+                except:
+                    pass
+            return None
 
 
 # Global instance

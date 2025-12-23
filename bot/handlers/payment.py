@@ -3,9 +3,9 @@ from aiogram import Router, F
 from aiogram.types import PreCheckoutQuery, Message, SuccessfulPayment
 from aiogram.fsm.context import FSMContext
 import httpx
-from bot.core.config import settings
 from bot.core.i18n import get_user_locale, t
 from bot.core.message_manager import safe_edit_or_send
+from bot.services.api_service import api_service
 
 router = Router()
 
@@ -35,7 +35,7 @@ async def process_successful_payment(message: Message, state: FSMContext):
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                f"{settings.API_URL}{settings.API_PREFIX}/v1/payments/process",
+                f"{api_service.base_url}/v1/payments/process",
                 json={
                     "order_id": order_id,
                     "telegram_payment_charge_id": payment.provider_payment_charge_id,

@@ -14,7 +14,6 @@ from bot.core.keyboards import (
 )
 from bot.core.message_manager import safe_edit_message
 from bot.services.api_service import api_service
-from bot.core.config import settings
 
 router = Router()
 
@@ -230,38 +229,9 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
     
     # MOCK MODE: Skip payment and create tickets directly
     # TODO: Remove this when YooKassa is configured
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(
-                f"{settings.API_URL}{settings.API_PREFIX}/v1/orders/{order_data['order_id']}/complete-mock"
-            )
-            response.raise_for_status()
-            result = response.json()
-            
-            tickets_created = result.get("tickets_created", 0)
-            
-            if tickets_created > 0:
-                text = t(
-                    locale,
-                    "messages.purchase.payment_success",
-                    tickets_count=tickets_created,
-                )
-            else:
-                text = t(locale, "messages.purchase.payment_processed")
-            
-            await safe_edit_message(
-                callback,
-                text,
-                reply_markup=get_back_keyboard(locale),
-                locale=locale,
-                screen_key="buy_ticket"
-            )
-            
-            # Clear purchase state
-            await state.clear()
-    except Exception as e:
-        print(f"Error completing mock order: {e}")
+    result = await api_service.complete_order_mock(order_data['order_id'])
+    
+    if not result:
         text = t(locale, "messages.purchase.order_error")
         await safe_edit_message(
             callback,
@@ -270,6 +240,30 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
             locale=locale,
             screen_key="buy_ticket"
         )
+        await callback.answer()
+        return
+    
+    tickets_created = result.get("tickets_created", 0)
+    
+    if tickets_created > 0:
+        text = t(
+            locale,
+            "messages.purchase.payment_success",
+            tickets_count=tickets_created,
+        )
+    else:
+        text = t(locale, "messages.purchase.payment_processed")
+    
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="buy_ticket"
+    )
+    
+    # Clear purchase state
+    await state.clear()
     
     await callback.answer()
     
