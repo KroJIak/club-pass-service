@@ -16,15 +16,18 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { isAuthenticated, isLoading } = useAuth()
+  const { login, isLoading } = useAuth()
   const navigate = useNavigate()
 
-  // Redirect if already authenticated (only once)
+  // Redirect if already authenticated (only check once on mount)
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/events', { replace: true })
+    if (!isLoading) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        navigate('/events', { replace: true })
+      }
     }
-  }, [isAuthenticated, isLoading, navigate])
+  }, [isLoading, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,11 +37,13 @@ const Login = () => {
     try {
       const result = await login(username, password)
       
-      if (!result.success) {
+      if (result.success) {
+        // Simple redirect after successful login
+        navigate('/events', { replace: true })
+      } else {
         setError(result.error || 'Login failed')
         setLoading(false)
       }
-      // If success, useEffect will handle navigation when isAuthenticated becomes true
     } catch (error) {
       console.error('Unexpected error:', error)
       setError('An unexpected error occurred')
