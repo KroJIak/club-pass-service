@@ -29,16 +29,23 @@ export const useAuth = () => {
 
   const login = async (username: string, password: string) => {
     try {
+      console.log('Attempting login with username:', username)
       const response = await authService.login({ username, password })
+      console.log('Login successful, received token')
       localStorage.setItem('token', response.access_token)
       setIsAuthenticated(true)
+      console.log('Token saved, redirecting...')
       // Use window.location for navigation to ensure state update
-      window.location.href = '/'
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
       return { success: true }
     } catch (error: any) {
+      console.error('Login error:', error)
+      console.error('Error response:', error.response)
       return {
         success: false,
-        error: error.response?.data?.detail || 'Login failed',
+        error: error.response?.data?.detail || error.message || 'Login failed',
       }
     }
   }

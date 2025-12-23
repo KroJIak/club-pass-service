@@ -22,16 +22,17 @@ const Login = () => {
     setError('')
     setLoading(true)
 
-    try {
-      const result = await login(username, password)
-      if (!result.success) {
-        setError(result.error || 'Login failed')
-        setLoading(false)
-      }
-      // If success, navigation happens in useAuth hook via window.location.href
-    } catch (error) {
-      setError('An unexpected error occurred')
+    console.log('Form submitted, calling login function')
+    const result = await login(username, password)
+    console.log('Login result:', result)
+    
+    if (!result.success) {
+      setError(result.error || 'Login failed')
       setLoading(false)
+    } else {
+      // If success, navigation happens in useAuth hook via window.location.href
+      // Don't set loading to false here as we're redirecting
+      console.log('Login successful, waiting for redirect...')
     }
   }
 
