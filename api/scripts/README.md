@@ -1,26 +1,42 @@
-# Database Seed Script
+# API Scripts
 
-Скрипт для заполнения базы данных тестовыми данными.
+## check_expired_tickets.py
 
-## Использование
+Скрипт для проверки и пометки просроченных билетов.
 
-### Через Docker
+### Логика просрочки
+
+- Если мероприятие в 00:00-11:59, билет истекает в 12:00 того же дня
+- Если мероприятие в 12:00-23:59, билет истекает в 12:00 следующего дня
+
+### Запуск
 
 ```bash
-docker-compose exec api python -m api.scripts.seed_data
+# Вручную
+python api/scripts/check_expired_tickets.py
+
+# Через Docker
+docker compose exec api python api/scripts/check_expired_tickets.py
 ```
 
-### Локально
+### Автоматический запуск (cron)
+
+Добавьте в crontab для запуска каждый час:
 
 ```bash
-cd api
-python -m scripts.seed_data
+0 * * * * cd /path/to/club-pass-service && docker compose exec -T api python api/scripts/check_expired_tickets.py
 ```
 
-## Что создается
+Или для запуска каждые 30 минут:
 
-- 2 тестовых события (Events)
-- 4 типа билетов (TicketTypes) - по 2 для каждого события
+```bash
+*/30 * * * * cd /path/to/club-pass-service && docker compose exec -T api python api/scripts/check_expired_tickets.py
+```
 
-Скрипт проверяет наличие данных и не перезаписывает существующие записи.
+### Интеграция с системой
 
+Скрипт можно интегрировать в:
+- **Celery** с периодическими задачами
+- **cron** для простого планирования
+- **systemd timer** для более продвинутого планирования
+- **Kubernetes CronJob** для контейнеризованных сред
