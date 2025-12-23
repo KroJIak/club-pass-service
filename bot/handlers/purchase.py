@@ -328,10 +328,11 @@ async def handle_back_to_quantity(callback: CallbackQuery, state: FSMContext):
     """Go back to quantity selection."""
     locale = get_user_locale(callback.from_user.language_code)
     data = await state.get_data()
+    event_id = data.get("event_id")
     ticket_type_id = data.get("ticket_type_id")
     
-    if not ticket_type_id:
-        # If no ticket_type_id, go back to ticket types
+    if not ticket_type_id or not event_id:
+        # If no ticket_type_id or event_id, go back to ticket types
         await handle_back_to_ticket_types(callback, state)
         return
     
