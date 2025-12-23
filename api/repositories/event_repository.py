@@ -24,3 +24,8 @@ class EventRepository:
             Event.id == event_id,
             Event.is_active == True
         ).first()
+    
+    @staticmethod
+    def get_all(db: Session) -> List[Event]:
+        """Get all events (including inactive)."""
+        return db.query(Event).order_by(Event.created_at.desc()).all()

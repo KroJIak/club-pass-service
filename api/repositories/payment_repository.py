@@ -1,5 +1,5 @@
 """Payment repository."""
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from api.models.payment import Payment, PaymentStatus
 from decimal import Decimal

@@ -43,4 +43,9 @@ class TicketTypeRepository:
         if ticket_type:
             ticket_type.available_quantity = max(0, ticket_type.available_quantity - quantity)
             db.commit()
+    
+    @staticmethod
+    def get_all(db: Session) -> List[TicketType]:
+        """Get all ticket types (including inactive)."""
+        return db.query(TicketType).order_by(TicketType.id.desc()).all()
 

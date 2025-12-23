@@ -1,5 +1,5 @@
 """User repository."""
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from datetime import datetime
 from api.models.user import User
@@ -18,6 +18,11 @@ class UserRepository:
     def get_by_id(db: Session, user_id: int) -> Optional[User]:
         """Get user by ID."""
         return db.query(User).filter(User.id == user_id).first()
+    
+    @staticmethod
+    def get_all(db: Session) -> List[User]:
+        """Get all users."""
+        return db.query(User).order_by(User.created_at.desc()).all()
     
     @staticmethod
     def create(db: Session, user_data: UserCreate) -> User:

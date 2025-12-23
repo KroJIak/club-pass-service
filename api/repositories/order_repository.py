@@ -1,6 +1,6 @@
 """Order repository."""
-from typing import Optional
-from sqlalchemy.orm import Session
+from typing import Optional, List
+from sqlalchemy.orm import Session, joinedload
 import uuid
 from api.models.order import Order
 
@@ -46,4 +46,24 @@ class OrderRepository:
             db.commit()
             db.refresh(order)
         return order
+    
+    @staticmethod
+    def get_all(db: Session) -> List[Order]:
+        """Get all orders."""
+        return db.query(Order).options(
+            joinedload(Order.user),
+            joinedload(Order.event),
+            joinedload(Order.ticket_type),
+            joinedload(Order.payment)
+        ).order_by(Order.created_at.desc()).all()
+    
+    @staticmethod
+    def get_by_id(db: Session, order_id: int) -> Optional[Order]:
+        """Get order by internal ID."""
+        return db.query(Order).options(
+            joinedload(Order.user),
+            joinedload(Order.event),
+            joinedload(Order.ticket_type),
+            joinedload(Order.payment)
+        ).filter(Order.id == order_id).first()
 

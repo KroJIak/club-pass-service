@@ -35,6 +35,15 @@ class TicketRepository:
         ).filter(Ticket.token == token).first()
     
     @staticmethod
+    def get_all(db: Session) -> List[Ticket]:
+        """Get all tickets."""
+        return db.query(Ticket).options(
+            joinedload(Ticket.event),
+            joinedload(Ticket.ticket_type),
+            joinedload(Ticket.user)
+        ).order_by(Ticket.created_at.desc()).all()
+    
+    @staticmethod
     def get_by_user_id(db: Session, user_id: int, active_only: bool = False) -> List[Ticket]:
         """Get tickets for a user."""
         query = db.query(Ticket).options(
