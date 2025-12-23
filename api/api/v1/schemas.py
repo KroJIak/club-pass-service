@@ -1,0 +1,188 @@
+"""Pydantic schemas for API requests and responses."""
+from datetime import datetime
+from typing import Optional, List
+from pydantic import BaseModel, Field
+from decimal import Decimal
+
+from api.models.ticket import TicketStatus
+from api.models.payment import PaymentStatus
+
+
+# User schemas
+class UserCreate(BaseModel):
+    """Schema for creating a user."""
+    telegram_user_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class UserResponse(BaseModel):
+    """Schema for user response."""
+    id: int
+    telegram_user_id: int
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Event schemas
+class EventResponse(BaseModel):
+    """Schema for event response."""
+    id: int
+    name: str
+    description: Optional[str] = None
+    date: str
+    time: str
+    djs: Optional[List[str]] = None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class EventListResponse(BaseModel):
+    """Schema for list of events."""
+    events: List[EventResponse]
+
+
+# TicketType schemas
+class TicketTypeResponse(BaseModel):
+    """Schema for ticket type response."""
+    id: int
+    event_id: int
+    name: str
+    price: Decimal
+    available_quantity: int
+    total_quantity: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class TicketTypeListResponse(BaseModel):
+    """Schema for list of ticket types."""
+    ticket_types: List[TicketTypeResponse]
+
+
+# Ticket schemas
+class TicketResponse(BaseModel):
+    """Schema for ticket response."""
+    id: int
+    user_id: int
+    event_id: int
+    ticket_type_id: int
+    token: str
+    status: TicketStatus
+    is_used: bool
+    used_at: Optional[datetime] = None
+    refunded_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    # Related data
+    event: Optional[EventResponse] = None
+    ticket_type: Optional[TicketTypeResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class TicketListResponse(BaseModel):
+    """Schema for list of tickets."""
+    tickets: List[TicketResponse]
+
+
+class TicketDetailResponse(BaseModel):
+    """Schema for detailed ticket response with all related data."""
+    id: int
+    user_id: int
+    event_id: int
+    ticket_type_id: int
+    token: str
+    status: TicketStatus
+    is_used: bool
+    used_at: Optional[datetime] = None
+    refunded_at: Optional[datetime] = None
+    created_at: datetime
+    updated_at: datetime
+    event: EventResponse
+    ticket_type: TicketTypeResponse
+
+    class Config:
+        from_attributes = True
+
+
+# Payment schemas
+class PaymentResponse(BaseModel):
+    """Schema for payment response."""
+    id: int
+    user_id: int
+    order_id: Optional[str] = None
+    yookassa_payment_id: Optional[str] = None
+    telegram_payment_charge_id: Optional[str] = None
+    amount: Decimal
+    status: PaymentStatus
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Order schemas
+class OrderCreate(BaseModel):
+    """Schema for creating an order."""
+    user_id: int
+    event_id: int
+    ticket_type_id: int
+    quantity: int = Field(gt=0, le=10, description="Quantity of tickets (1-10)")
+    promocode: Optional[str] = None
+
+
+class OrderResponse(BaseModel):
+    """Schema for order response with payment invoice data."""
+    order_id: str
+    payment_id: int
+    amount: Decimal
+    invoice_title: str
+    invoice_description: str
+    invoice_payload: str
+    invoice_prices: List[dict]  # List of {"label": str, "amount": int}
+    provider_token: str  # YooKassa provider token from BotFather
+
+
+# Refund schemas
+class TicketRefundRequest(BaseModel):
+    """Schema for ticket refund request."""
+    ticket_id: int
+
+
+class TicketRefundResponse(BaseModel):
+    """Schema for ticket refund response."""
+    ticket_id: int
+    status: TicketStatus
+    refunded_at: datetime
+    message: str
+
+
+# Mark ticket as used
+class TicketMarkUsedRequest(BaseModel):
+    """Schema for marking ticket as used."""
+    ticket_id: int
+
+
+class TicketMarkUsedResponse(BaseModel):
+    """Schema for marking ticket as used response."""
+    ticket_id: int
+    is_used: bool
+    used_at: datetime
+    message: str
+

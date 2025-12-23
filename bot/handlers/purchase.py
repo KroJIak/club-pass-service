@@ -13,6 +13,7 @@ from bot.core.keyboards import (
     get_confirm_order_keyboard,
 )
 from bot.core.message_manager import safe_edit_message
+from bot.services.api_service import api_service
 
 router = Router()
 
@@ -23,12 +24,8 @@ async def handle_select_event(callback: CallbackQuery, state: FSMContext):
     locale = get_user_locale(callback.from_user.language_code)
     await state.set_state(PurchaseStates.selecting_event)
     
-    # TODO: Fetch events from API
-    # For now, use mock data
-    events = [
-        {"id": 1, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"},
-        {"id": 2, "name": "House Music Night", "date": "05.01.2025", "time": "23:00"},
-    ]
+    # Fetch events from API
+    events = await api_service.get_events(active_only=True)
     
     if not events:
         text = t(locale, "messages.purchase.no_events")
@@ -63,16 +60,27 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
     await state.update_data(event_id=event_id)
     await state.set_state(PurchaseStates.selecting_ticket_type)
     
-    # TODO: Fetch event details and ticket types from API
-    # For now, use mock data
-    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
-    ticket_types = [
-        {"id": 1, "name": "Обычный", "price": 1500, "available": 50},
-        {"id": 2, "name": "VIP", "price": 3000, "available": 20},
-    ]
+    # Fetch event details and ticket types from API
+    event = await api_service.get_event(event_id)
+    if not event:
+        await callback.answer("Event not found", show_alert=True)
+        return
+    
+    ticket_types = await api_service.get_ticket_types(event_id)
+    if not ticket_types:
+        text = t(locale, "messages.purchase.no_ticket_types")
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_back_keyboard(locale),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+        await callback.answer()
+        return
     
     djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else ""
+    djs_text = ", ".join(djs) if djs else event.get("name", "")
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
@@ -96,24 +104,30 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
     """Handle ticket type selection."""
     locale = get_user_locale(callback.from_user.language_code)
     ticket_type_id = int(callback.data.split("_")[2])
+    data = await state.get_data()
+    event_id = data.get("event_id")
     
     # Save selected ticket type to state
     await state.update_data(ticket_type_id=ticket_type_id)
     await state.set_state(PurchaseStates.selecting_quantity)
     
-    # TODO: Fetch ticket type details from API
-    # For now, use mock data
-    ticket_type = {"id": ticket_type_id, "name": "Обычный", "price": 1500, "available": 50}
+    # Fetch ticket types to get details
+    ticket_types = await api_service.get_ticket_types(event_id)
+    ticket_type = next((tt for tt in ticket_types if tt.get("id") == ticket_type_id), None)
+    
+    if not ticket_type:
+        await callback.answer("Ticket type not found", show_alert=True)
+        return
     
     text = t(
         locale,
         "messages.purchase.select_quantity",
         ticket_type_name=ticket_type.get("name", ""),
-        price=ticket_type.get("price", 0),
-        available=ticket_type.get("available", 0),
+        price=float(ticket_type.get("price", 0)),
+        available=ticket_type.get("available_quantity", 0),
     )
     
-    max_quantity = min(ticket_type.get("available", 5), 5)
+    max_quantity = min(ticket_type.get("available_quantity", 5), 5)
     await safe_edit_message(
         callback,
         text,
@@ -139,15 +153,22 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     event_id = data.get("event_id")
     ticket_type_id = data.get("ticket_type_id")
     
-    # TODO: Fetch full details from API
-    # For now, use mock data
-    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
-    ticket_type = {"id": ticket_type_id, "name": "Обычный", "price": 1500}
+    # Fetch full details from API
+    event = await api_service.get_event(event_id)
+    if not event:
+        await callback.answer("Event not found", show_alert=True)
+        return
     
-    total_price = ticket_type.get("price", 0) * quantity
+    ticket_types = await api_service.get_ticket_types(event_id)
+    ticket_type = next((tt for tt in ticket_types if tt.get("id") == ticket_type_id), None)
+    if not ticket_type:
+        await callback.answer("Ticket type not found", show_alert=True)
+        return
+    
+    total_price = float(ticket_type.get("price", 0)) * quantity
     
     djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else ""
+    djs_text = ", ".join(djs) if djs else event.get("name", "")
     text = t(
         locale,
         "messages.purchase.confirm_order",
@@ -156,7 +177,7 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
         event_time=event.get("time", ""),
         ticket_type_name=ticket_type.get("name", ""),
         quantity=quantity,
-        price_per_ticket=ticket_type.get("price", 0),
+        price_per_ticket=float(ticket_type.get("price", 0)),
         total_price=total_price,
     )
     
@@ -177,22 +198,70 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
     
     # Get order data
     data = await state.get_data()
+    event_id = data.get("event_id")
+    ticket_type_id = data.get("ticket_type_id")
+    quantity = data.get("quantity")
+    user_id = callback.from_user.id
     
-    # TODO: Create order in API and initiate YooKassa payment
-    # For now, show placeholder
-    text = t(locale, "messages.purchase.processing_payment")
+    if not all([event_id, ticket_type_id, quantity]):
+        await callback.answer("Missing order data", show_alert=True)
+        return
     
-    await safe_edit_message(
-        callback,
-        text,
-        reply_markup=get_back_keyboard(locale),
-        locale=locale,
-        screen_key="buy_ticket"
+    # Create order in API and get invoice data
+    order_data = await api_service.create_order(
+        user_id=user_id,
+        event_id=event_id,
+        ticket_type_id=ticket_type_id,
+        quantity=quantity,
     )
-    await callback.answer()
     
-    # TODO: After payment is processed, clear state
-    # await state.clear()
+    if not order_data:
+        text = t(locale, "messages.purchase.order_error")
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_back_keyboard(locale),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+        await callback.answer()
+        return
+    
+    # Send invoice to user
+    try:
+        await callback.bot.send_invoice(
+            chat_id=callback.from_user.id,
+            title=order_data["invoice_title"],
+            description=order_data["invoice_description"],
+            payload=order_data["invoice_payload"],
+            provider_token=order_data["provider_token"],
+            currency="RUB",
+            prices=order_data["invoice_prices"],
+        )
+        
+        # Save order_id to state for payment processing
+        await state.update_data(order_id=order_data["order_id"], payment_id=order_data["payment_id"])
+        
+        text = t(locale, "messages.purchase.invoice_sent")
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_back_keyboard(locale),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+    except Exception as e:
+        print(f"Error sending invoice: {e}")
+        text = t(locale, "messages.purchase.invoice_error")
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_back_keyboard(locale),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+    
+    await callback.answer()
 
 
 @router.callback_query(F.data == "cancel_order")
@@ -228,19 +297,23 @@ async def handle_back_to_quantity(callback: CallbackQuery, state: FSMContext):
     # Clear quantity when going back
     await state.update_data(quantity=None)
     
-    # TODO: Fetch ticket type details from API
-    # For now, use mock data
-    ticket_type = {"id": ticket_type_id, "name": "Обычный", "price": 1500, "available": 50}
+    # Fetch ticket type details from API
+    ticket_types = await api_service.get_ticket_types(event_id)
+    ticket_type = next((tt for tt in ticket_types if tt.get("id") == ticket_type_id), None)
+    
+    if not ticket_type:
+        await callback.answer("Ticket type not found", show_alert=True)
+        return
     
     text = t(
         locale,
         "messages.purchase.select_quantity",
         ticket_type_name=ticket_type.get("name", ""),
-        price=ticket_type.get("price", 0),
-        available=ticket_type.get("available", 0),
+        price=float(ticket_type.get("price", 0)),
+        available=ticket_type.get("available_quantity", 0),
     )
     
-    max_quantity = min(ticket_type.get("available", 5), 5)
+    max_quantity = min(ticket_type.get("available_quantity", 5), 5)
     await safe_edit_message(
         callback,
         text,
@@ -259,12 +332,8 @@ async def handle_back_to_events(callback: CallbackQuery, state: FSMContext):
     # Clear event_id from state when going back
     await state.update_data(event_id=None, ticket_type_id=None, quantity=None)
     
-    # TODO: Fetch events from API
-    # For now, use mock data
-    events = [
-        {"id": 1, "name": "Новогодняя вечеринка", "date": "31.12.2024", "time": "22:00"},
-        {"id": 2, "name": "House Music Night", "date": "05.01.2025", "time": "23:00"},
-    ]
+    # Fetch events from API
+    events = await api_service.get_events(active_only=True)
     
     if not events:
         text = t(locale, "messages.purchase.no_events")
@@ -305,16 +374,16 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     # Clear ticket_type_id and quantity when going back
     await state.update_data(ticket_type_id=None, quantity=None)
     
-    # TODO: Fetch event details and ticket types from API
-    # For now, use mock data
-    event = {"id": event_id, "djs": ["DJ. DIMSY", "EMPYZ", "JEWGEN", "ZIPSI"], "date": "31.12.2024", "time": "22:00"}
-    ticket_types = [
-        {"id": 1, "name": "Обычный", "price": 1500, "available": 50},
-        {"id": 2, "name": "VIP", "price": 3000, "available": 20},
-    ]
+    # Fetch event details and ticket types from API
+    event = await api_service.get_event(event_id)
+    if not event:
+        await callback.answer("Event not found", show_alert=True)
+        return
+    
+    ticket_types = await api_service.get_ticket_types(event_id)
     
     djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else ""
+    djs_text = ", ".join(djs) if djs else event.get("name", "")
     text = t(
         locale,
         "messages.purchase.select_ticket_type",

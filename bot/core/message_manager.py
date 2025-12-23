@@ -147,12 +147,14 @@ async def safe_edit_message(
     parse_mode: Optional[str] = "HTML",
     locale: Optional[str] = None,
     screen_key: Optional[str] = None,
+    photo_input: Optional[BufferedInputFile | FSInputFile] = None,
 ) -> bool:
     """
     Safely edit message. If editing fails (e.g., different content types),
     delete old message and send new one.
     
     If locale and screen_key are provided, will attach appropriate image.
+    If photo_input is provided, it will be used instead of screen_key image.
     
     Returns True if message was edited, False if new message was sent.
     """
@@ -160,9 +162,9 @@ async def safe_edit_message(
     bot = callback.bot
     chat_id = callback.message.chat.id
     
-    photo_input = None
-    if locale and screen_key:
-        photo_input = get_screen_image(locale, screen_key)
+    if photo_input is None:
+        if locale and screen_key:
+            photo_input = get_screen_image(locale, screen_key)
     
     try:
         new_message = await _edit_callback_message(callback, text, reply_markup, parse_mode, photo_input)

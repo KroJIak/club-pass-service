@@ -7,6 +7,7 @@ from bot.core.i18n import get_user_locale, t
 from bot.core.keyboards import get_back_keyboard, get_tickets_keyboard
 from bot.core.message_manager import safe_edit_message
 from bot.core.qr_generator import generate_qr_code
+from bot.services.api_service import api_service
 
 router = Router()
 
@@ -17,29 +18,9 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
     locale = get_user_locale(callback.from_user.language_code)
     await state.clear()
     
-    # TODO: Fetch tickets from API
-    # For now, use mock data
+    # Fetch tickets from API
     user_id = callback.from_user.id
-    tickets = [
-        {
-            "id": 1,
-            "token": "TKT-12345-ABCDE",
-            "event_djs": "DJ. DIMSY, EMPYZ, JEWGEN, ZIPSI",
-            "event_date": "31.12.2024",
-            "event_time": "22:00",
-            "ticket_type": "Обычный",
-            "status": "active",
-        },
-        {
-            "id": 2,
-            "token": "TKT-67890-FGHIJ",
-            "event_djs": "DJ. DIMSY, EMPYZ",
-            "event_date": "05.01.2025",
-            "event_time": "23:00",
-            "ticket_type": "VIP",
-            "status": "active",
-        },
-    ]
+    tickets = await api_service.get_user_tickets(user_id, active_only=True)
     
     if not tickets:
         text = t(locale, "messages.tickets.no_tickets")
@@ -53,11 +34,28 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
     
+    # Format tickets for keyboard
+    formatted_tickets = []
+    for ticket in tickets:
+        event = ticket.get("event", {})
+        ticket_type = ticket.get("ticket_type", {})
+        djs = event.get("djs", [])
+        djs_text = ", ".join(djs) if djs else event.get("name", "")
+        
+        formatted_tickets.append({
+            "id": ticket.get("id"),
+            "event_djs": djs_text,
+            "event_date": event.get("date", ""),
+            "event_time": event.get("time", ""),
+            "ticket_type": ticket_type.get("name", ""),
+            "status": ticket.get("status", "active"),
+        })
+    
     text = t(locale, "messages.tickets.select_ticket")
     await safe_edit_message(
         callback,
         text,
-        reply_markup=get_tickets_keyboard(locale, tickets),
+        reply_markup=get_tickets_keyboard(locale, formatted_tickets),
         locale=locale,
         screen_key="my_tickets"
     )
@@ -70,35 +68,33 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     locale = get_user_locale(callback.from_user.language_code)
     ticket_id = int(callback.data.split("_")[1])
     
-    # TODO: Fetch ticket details from API
-    # For now, use mock data
-    ticket = {
-        "id": ticket_id,
-        "token": f"TKT-{ticket_id:05d}-ABCDE",
-        "event_djs": "DJ. DIMSY, EMPYZ, JEWGEN, ZIPSI",
-        "event_date": "31.12.2024",
-        "event_time": "22:00",
-        "ticket_type": "Обычный",
-        "status": "active",
-    }
+    # Fetch ticket details from API
+    ticket = await api_service.get_ticket(ticket_id)
+    if not ticket:
+        await callback.answer("Ticket not found", show_alert=True)
+        return
+    
+    # Extract data from API response
+    event = ticket.get("event", {})
+    ticket_type = ticket.get("ticket_type", {})
+    djs = event.get("djs", [])
+    djs_text = ", ".join(djs) if djs else event.get("name", "")
+    token = ticket.get("token", "")
     
     # Generate QR code
-    qr_bytes = generate_qr_code(ticket.get("token", ""))
+    qr_bytes = generate_qr_code(token)
     qr_file = BufferedInputFile(qr_bytes, filename="ticket_qr.png")
     
     # Format ticket info text
     text = t(
         locale,
         "messages.tickets.ticket_info",
-        event_djs=ticket.get("event_djs", ""),
-        event_date=ticket.get("event_date", ""),
-        event_time=ticket.get("event_time", ""),
-        ticket_type=ticket.get("ticket_type", ""),
-        ticket_token=ticket.get("token", ""),
+        event_djs=djs_text,
+        event_date=event.get("date", ""),
+        event_time=event.get("time", ""),
+        ticket_type=ticket_type.get("name", ""),
+        ticket_token=token,
     )
-    
-    # Send QR code as photo
-    await callback.message.delete()
     
     # Create back to tickets list keyboard
     from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
@@ -108,21 +104,16 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
         text=t(locale, "buttons.back"),
         callback_data="back_to_tickets_list"
     ))
+    back_keyboard = back_builder.as_markup()
     
-    new_message = await callback.message.answer_photo(
-        photo=qr_file,
-        caption=text,
-        reply_markup=back_builder.as_markup(),
+    # Edit existing message with QR code
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=back_keyboard,
         parse_mode="HTML",
+        photo_input=qr_file,
     )
-    
-    # Update system message tracking
-    from bot.core.middleware import temporary_messages_middleware
-    user_id = callback.from_user.id
-    temporary_messages_middleware.set_last_system_message(
-        user_id, new_message.chat.id, new_message.message_id
-    )
-    await temporary_messages_middleware.flush_pending_user_messages(callback.bot, user_id)
     
     await callback.answer()
 

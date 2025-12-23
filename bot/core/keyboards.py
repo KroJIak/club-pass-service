@@ -52,9 +52,12 @@ def get_ticket_types_keyboard(locale: str, ticket_types: list) -> InlineKeyboard
     """Get ticket types keyboard."""
     builder = InlineKeyboardBuilder()
     for ticket_type in ticket_types:
-        available = ticket_type.get('available', 0)
+        available = ticket_type.get('available_quantity', ticket_type.get('available', 0))
         available_text = f" ({available} {t(locale, 'labels.available')})" if available > 0 else ""
-        ticket_text = f"🎫 {ticket_type.get('name', 'Type')} - {ticket_type.get('price', 0)} ₽{available_text}"
+        price = ticket_type.get('price', 0)
+        if isinstance(price, str):
+            price = float(price)
+        ticket_text = f"🎫 {ticket_type.get('name', 'Type')} - {price} ₽{available_text}"
         builder.add(InlineKeyboardButton(
             text=ticket_text,
             callback_data=f"ticket_type_{ticket_type.get('id')}"

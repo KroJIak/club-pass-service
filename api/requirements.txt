@@ -14,3 +14,4 @@ pydantic-settings==2.1.0
 
 # Utilities
 python-dotenv==1.0.0
+qrcode[pil]==7.4.2

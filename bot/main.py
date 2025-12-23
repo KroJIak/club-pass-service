@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from bot.core.config import settings
-from bot.handlers import start, menu, purchase, tickets, events, support
+from bot.handlers import start, menu, purchase, tickets, events, support, payment
 from bot.handlers import catch_all
 from bot.services.api_service import api_service
 from bot.core.middleware import TemporaryMessagesMiddleware, temporary_messages_middleware
@@ -38,6 +38,7 @@ async def main():
     dp.include_router(tickets.router)
     dp.include_router(events.router)
     dp.include_router(support.router)
+    dp.include_router(payment.router)
     # Must be last: ensures every user message is "handled" so middleware runs
     dp.include_router(catch_all.router)
     
