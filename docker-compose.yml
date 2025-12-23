@@ -44,7 +44,7 @@ services:
     container_name: club-pass-bot
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      API_URL: http://api:8000
+      API_URL: ${API_URL:-http://api:8000}
       API_PREFIX: /api
       DEBUG: ${DEBUG:-false}
       CLUB_NAME: ${CLUB_NAME:-Night Club}
