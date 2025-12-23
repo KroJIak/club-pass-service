@@ -123,7 +123,7 @@ class PaymentService:
         return {
             "order_id": order.order_id,
             "payment_id": payment.id,
-            "amount": total_amount,
+            "amount": float(total_amount),  # Convert Decimal to float for JSON serialization
             "invoice_title": invoice_title,
             "invoice_description": invoice_description,
             "invoice_payload": invoice_payload,

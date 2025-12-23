@@ -151,7 +151,7 @@ class OrderResponse(BaseModel):
     """Schema for order response with payment invoice data."""
     order_id: str
     payment_id: int
-    amount: Decimal
+    amount: float  # Changed from Decimal to float for JSON serialization
     invoice_title: str
     invoice_description: str
     invoice_payload: str
