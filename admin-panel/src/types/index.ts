@@ -1,0 +1,156 @@
+export interface User {
+  id: number
+  telegram_user_id: number
+  username: string | null
+  first_name: string | null
+  last_name: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Event {
+  id: number
+  name: string
+  description: string | null
+  date: string // DD.MM.YYYY
+  time: string // HH:MM
+  djs: string[] | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TicketType {
+  id: number
+  event_id: number
+  name: string
+  price: number
+  available_quantity: number
+  total_quantity: number
+  is_active: boolean
+}
+
+export interface Ticket {
+  id: number
+  user_id: number
+  event_id: number
+  ticket_type_id: number
+  token: string
+  status: 'active' | 'refunded' | 'cancelled' | 'expired'
+  is_used: boolean
+  used_at: string | null
+  refunded_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Payment {
+  id: number
+  user_id: number
+  order_id: string | null
+  yookassa_payment_id: string | null
+  telegram_payment_charge_id: string | null
+  amount: number
+  status: 'pending' | 'succeeded' | 'cancelled' | 'refunded'
+  created_at: string
+  updated_at: string
+}
+
+export interface Order {
+  id: number
+  order_id: string
+  user_id: number
+  event_id: number
+  ticket_type_id: number
+  quantity: number
+  promocode: string | null
+  payment_id: number | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Promocode {
+  id: number
+  code: string
+  discount_percent: number | null
+  discount_amount: number | null
+  valid_from: string
+  valid_until: string
+  usage_limit: number | null
+  usage_count: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+// Create/Update types
+export interface EventCreate {
+  name: string
+  description?: string | null
+  date: string
+  time: string
+  djs?: string[] | null
+  is_active?: boolean
+}
+
+export interface EventUpdate {
+  name?: string | null
+  description?: string | null
+  date?: string | null
+  time?: string | null
+  djs?: string[] | null
+  is_active?: boolean | null
+}
+
+export interface TicketTypeCreate {
+  event_id: number
+  name: string
+  price: number
+  available_quantity: number
+  total_quantity: number
+  is_active?: boolean
+}
+
+export interface TicketTypeUpdate {
+  name?: string | null
+  price?: number | null
+  available_quantity?: number | null
+  total_quantity?: number | null
+  is_active?: boolean | null
+}
+
+export interface UserUpdate {
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
+}
+
+export interface TicketUpdate {
+  status?: 'active' | 'refunded' | 'cancelled' | 'expired' | null
+  is_used?: boolean | null
+}
+
+export interface PaymentUpdate {
+  status?: 'pending' | 'succeeded' | 'cancelled' | 'refunded' | null
+}
+
+export interface PromocodeCreate {
+  code: string
+  discount_percent?: number | null
+  discount_amount?: number | null
+  valid_from: string
+  valid_until: string
+  usage_limit?: number | null
+  is_active?: boolean
+}
+
+export interface PromocodeUpdate {
+  code?: string | null
+  discount_percent?: number | null
+  discount_amount?: number | null
+  valid_from?: string | null
+  valid_until?: string | null
+  usage_limit?: number | null
+  is_active?: boolean | null
+}
+
