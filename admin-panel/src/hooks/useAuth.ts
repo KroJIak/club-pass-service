@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { authService } from '../services/auth'
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const navigate = useNavigate()
 
   useEffect(() => {
     const token = localStorage.getItem('token')
@@ -34,7 +32,8 @@ export const useAuth = () => {
       const response = await authService.login({ username, password })
       localStorage.setItem('token', response.access_token)
       setIsAuthenticated(true)
-      navigate('/')
+      // Use window.location for navigation to ensure state update
+      window.location.href = '/'
       return { success: true }
     } catch (error: any) {
       return {
@@ -47,7 +46,7 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem('token')
     setIsAuthenticated(false)
-    navigate('/login')
+    window.location.href = '/login'
   }
 
   return {
