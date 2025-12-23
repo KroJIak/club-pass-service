@@ -11,19 +11,24 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user(
-    user_id: int,
+# Specific routes must be defined before generic ones
+@router.post("/get-or-create", response_model=UserResponse)
+async def get_or_create_user(
+    user_data: UserCreate,
     db: Session = Depends(get_db),
 ):
-    """Get user by ID."""
-    user = UserRepository.get_by_id(db, user_id)
-    if not user:
+    """Get existing user or create a new one (for backward compatibility with bot)."""
+    try:
+        logger.info(f"Getting or creating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
+        user = UserRepository.get_or_create(db, user_data)
+        logger.info(f"User found/created: id={user.id}, telegram_user_id={user.telegram_user_id}, username={user.username}, first_name={user.first_name}, last_name={user.last_name}")
+        return UserResponse.model_validate(user)
+    except Exception as e:
+        logger.error(f"Error getting/creating user: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting/creating user: {str(e)}"
         )
-    return UserResponse.model_validate(user)
 
 
 @router.get("/telegram/{telegram_user_id}", response_model=UserResponse)
@@ -68,6 +73,21 @@ async def create_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating user: {str(e)}"
         )
+
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get user by ID."""
+    user = UserRepository.get_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
+        )
+    return UserResponse.model_validate(user)
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -120,23 +140,4 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting user: {str(e)}"
-        )
-
-
-@router.post("/get-or-create", response_model=UserResponse)
-async def get_or_create_user(
-    user_data: UserCreate,
-    db: Session = Depends(get_db),
-):
-    """Get existing user or create a new one (for backward compatibility with bot)."""
-    try:
-        logger.info(f"Getting or creating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
-        user = UserRepository.get_or_create(db, user_data)
-        logger.info(f"User found/created: id={user.id}, telegram_user_id={user.telegram_user_id}, username={user.username}, first_name={user.first_name}, last_name={user.last_name}")
-        return UserResponse.model_validate(user)
-    except Exception as e:
-        logger.error(f"Error getting/creating user: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error getting/creating user: {str(e)}"
         )

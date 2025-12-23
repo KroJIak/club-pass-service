@@ -22,16 +22,20 @@ class UserRepository:
     @staticmethod
     def create(db: Session, user_data: UserCreate) -> User:
         """Create a new user."""
-        user = User(
-            telegram_user_id=user_data.telegram_user_id,
-            username=user_data.username,
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        return user
+        try:
+            user = User(
+                telegram_user_id=user_data.telegram_user_id,
+                username=user_data.username,
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return user
+        except Exception as e:
+            db.rollback()
+            raise
     
     @staticmethod
     def update(db: Session, user_id: int, user_data: UserUpdate) -> Optional[User]:
@@ -72,22 +76,26 @@ class UserRepository:
     @staticmethod
     def get_or_create(db: Session, user_data: UserCreate) -> User:
         """Get existing user or create a new one."""
-        user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
-        if user:
-            # Update user info if provided
-            updated = False
-            if user_data.username is not None:
-                user.username = user_data.username
-                updated = True
-            if user_data.first_name is not None:
-                user.first_name = user_data.first_name
-                updated = True
-            if user_data.last_name is not None:
-                user.last_name = user_data.last_name
-                updated = True
-            if updated:
-                user.updated_at = datetime.utcnow()
-                db.commit()
-                db.refresh(user)
-            return user
-        return UserRepository.create(db, user_data)
+        try:
+            user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
+            if user:
+                # Update user info if provided
+                updated = False
+                if user_data.username is not None:
+                    user.username = user_data.username
+                    updated = True
+                if user_data.first_name is not None:
+                    user.first_name = user_data.first_name
+                    updated = True
+                if user_data.last_name is not None:
+                    user.last_name = user_data.last_name
+                    updated = True
+                if updated:
+                    user.updated_at = datetime.utcnow()
+                    db.commit()
+                    db.refresh(user)
+                return user
+            return UserRepository.create(db, user_data)
+        except Exception as e:
+            db.rollback()
+            raise
