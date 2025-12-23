@@ -45,18 +45,18 @@ class UserRepository:
             return None
         
         updated = False
-        if user_data.username is not None:
+        if user_data.username is not None and user.username != user_data.username:
             user.username = user_data.username
             updated = True
-        if user_data.first_name is not None:
+        if user_data.first_name is not None and user.first_name != user_data.first_name:
             user.first_name = user_data.first_name
             updated = True
-        if user_data.last_name is not None:
+        if user_data.last_name is not None and user.last_name != user_data.last_name:
             user.last_name = user_data.last_name
             updated = True
         
         if updated:
-            user.updated_at = datetime.utcnow()
+            # Don't manually set updated_at - let SQLAlchemy handle it via onupdate
             db.commit()
             db.refresh(user)
         
@@ -81,17 +81,17 @@ class UserRepository:
             if user:
                 # Update user info if provided
                 updated = False
-                if user_data.username is not None:
+                if user_data.username is not None and user.username != user_data.username:
                     user.username = user_data.username
                     updated = True
-                if user_data.first_name is not None:
+                if user_data.first_name is not None and user.first_name != user_data.first_name:
                     user.first_name = user_data.first_name
                     updated = True
-                if user_data.last_name is not None:
+                if user_data.last_name is not None and user.last_name != user_data.last_name:
                     user.last_name = user_data.last_name
                     updated = True
                 if updated:
-                    user.updated_at = datetime.utcnow()
+                    # Don't manually set updated_at - let SQLAlchemy handle it via onupdate
                     db.commit()
                     db.refresh(user)
                 return user
