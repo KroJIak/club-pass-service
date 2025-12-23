@@ -15,10 +15,16 @@ async def create_or_update_user(
     db: Session = Depends(get_db),
 ):
     """Create or update a user."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"Creating/updating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
         user = UserRepository.get_or_create(db, user_data)
+        logger.info(f"User created/updated: id={user.id}, telegram_user_id={user.telegram_user_id}")
         return UserResponse.model_validate(user)
     except Exception as e:
+        logger.error(f"Error creating/updating user: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error creating/updating user: {str(e)}"

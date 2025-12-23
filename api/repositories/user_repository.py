@@ -38,13 +38,20 @@ class UserRepository:
         user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
         if user:
             # Update user info if provided
+            updated = False
             if user_data.username is not None:
                 user.username = user_data.username
+                updated = True
             if user_data.first_name is not None:
                 user.first_name = user_data.first_name
+                updated = True
             if user_data.last_name is not None:
                 user.last_name = user_data.last_name
-            db.commit()
-            db.refresh(user)
+                updated = True
+            if updated:
+                from datetime import datetime
+                user.updated_at = datetime.utcnow()
+                db.commit()
+                db.refresh(user)
             return user
         return UserRepository.create(db, user_data)
