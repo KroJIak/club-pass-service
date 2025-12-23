@@ -17,6 +17,13 @@ class UserCreate(BaseModel):
     last_name: Optional[str] = None
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating a user."""
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
 class UserResponse(BaseModel):
     """Schema for user response."""
     id: int

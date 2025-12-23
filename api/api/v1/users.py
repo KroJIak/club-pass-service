@@ -1,33 +1,142 @@
 """Users endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import logging
 
 from api.core.db import get_db
 from api.repositories.user_repository import UserRepository
-from api.api.v1.schemas import UserCreate, UserResponse
+from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
-@router.post("/", response_model=UserResponse)
-async def create_or_update_user(
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get user by ID."""
+    user = UserRepository.get_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
+        )
+    return UserResponse.model_validate(user)
+
+
+@router.get("/telegram/{telegram_user_id}", response_model=UserResponse)
+async def get_user_by_telegram_id(
+    telegram_user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get user by Telegram user ID."""
+    user = UserRepository.get_by_telegram_id(db, telegram_user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with telegram_user_id {telegram_user_id} not found"
+        )
+    return UserResponse.model_validate(user)
+
+
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
 ):
-    """Create or update a user."""
-    import logging
-    logger = logging.getLogger(__name__)
-    
+    """Create a new user."""
     try:
-        logger.info(f"Creating/updating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
-        user = UserRepository.get_or_create(db, user_data)
-        logger.info(f"User created/updated: id={user.id}, telegram_user_id={user.telegram_user_id}, username={user.username}, first_name={user.first_name}, last_name={user.last_name}")
-        response = UserResponse.model_validate(user)
-        logger.info(f"UserResponse created successfully: id={response.id}")
-        return response
+        # Check if user with this telegram_user_id already exists
+        existing_user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"User with telegram_user_id {user_data.telegram_user_id} already exists"
+            )
+        
+        logger.info(f"Creating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
+        user = UserRepository.create(db, user_data)
+        logger.info(f"User created: id={user.id}, telegram_user_id={user.telegram_user_id}")
+        return UserResponse.model_validate(user)
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error creating/updating user: {e}", exc_info=True)
+        logger.error(f"Error creating user: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating/updating user: {str(e)}"
+            detail=f"Error creating user: {str(e)}"
+        )
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update an existing user."""
+    try:
+        logger.info(f"Updating user: id={user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
+        user = UserRepository.update(db, user_id, user_data)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {user_id} not found"
+            )
+        logger.info(f"User updated: id={user.id}, telegram_user_id={user.telegram_user_id}")
+        return UserResponse.model_validate(user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user: {str(e)}"
+        )
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete a user."""
+    try:
+        logger.info(f"Deleting user: id={user_id}")
+        deleted = UserRepository.delete(db, user_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {user_id} not found"
+            )
+        logger.info(f"User deleted: id={user_id}")
+        return None
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting user: {str(e)}"
+        )
+
+
+@router.post("/get-or-create", response_model=UserResponse)
+async def get_or_create_user(
+    user_data: UserCreate,
+    db: Session = Depends(get_db),
+):
+    """Get existing user or create a new one (for backward compatibility with bot)."""
+    try:
+        logger.info(f"Getting or creating user: telegram_user_id={user_data.telegram_user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
+        user = UserRepository.get_or_create(db, user_data)
+        logger.info(f"User found/created: id={user.id}, telegram_user_id={user.telegram_user_id}, username={user.username}, first_name={user.first_name}, last_name={user.last_name}")
+        return UserResponse.model_validate(user)
+    except Exception as e:
+        logger.error(f"Error getting/creating user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting/creating user: {str(e)}"
         )

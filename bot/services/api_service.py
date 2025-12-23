@@ -162,7 +162,7 @@ class APIService:
                 "last_name": last_name
             }
             response = await self.client.post(
-                f"{self.base_url}/v1/users",
+                f"{self.base_url}/v1/users/get-or-create",
                 json=request_data
             )
             response.raise_for_status()
