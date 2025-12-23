@@ -6,10 +6,9 @@ import {
   CardContent,
   Grid,
   Typography,
-  IconButton,
   Chip,
 } from '@mui/material'
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Add as AddIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { TicketType } from '../../types'
 

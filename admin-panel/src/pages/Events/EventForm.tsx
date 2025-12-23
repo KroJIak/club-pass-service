@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  Box,
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
@@ -44,7 +43,7 @@ const EventForm = ({ open, event, onClose }: EventFormProps) => {
     },
   })
 
-  const isActive = watch('is_active')
+  const isActive = watch('is_active') ?? true
 
   useEffect(() => {
     if (event) {

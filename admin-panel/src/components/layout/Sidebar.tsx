@@ -13,7 +13,7 @@ import {
   Event as EventIcon,
   ConfirmationNumber as TicketTypeIcon,
   People as UsersIcon,
-  Ticket as TicketIcon,
+  ConfirmationNumber as TicketIcon,
   Payment as PaymentIcon,
   ShoppingCart as OrderIcon,
   LocalOffer as PromocodeIcon,
