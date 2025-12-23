@@ -34,23 +34,16 @@ const Login = () => {
     try {
       const result = await login(username, password)
       
-      if (result.success) {
-        // Don't navigate here - let useEffect handle it
-        // This prevents double navigation
-      } else {
+      if (!result.success) {
         setError(result.error || 'Login failed')
         setLoading(false)
       }
+      // If success, useEffect will handle navigation when isAuthenticated becomes true
     } catch (error) {
       console.error('Unexpected error:', error)
       setError('An unexpected error occurred')
       setLoading(false)
     }
-  }
-
-  const login = async (username: string, password: string) => {
-    const { login: loginFn } = useAuth()
-    return await loginFn(username, password)
   }
 
   return (
