@@ -60,7 +60,14 @@
       "select_quantity": "🔢 <b>Select Quantity</b>\n\n<b>Ticket Type:</b> {ticket_type_name}\n💰 <b>Price:</b> {price} ₽\n📊 <b>Available:</b> {available} pcs.\n\nHow many tickets would you like to buy?",
       "confirm_order": "✅ <b>Order Confirmation</b>\n\n<b>Event:</b> {event_name}\n📅 <b>Date:</b> {event_date}\n🕐 <b>Time:</b> {event_time}\n\n<b>Ticket Type:</b> {ticket_type_name}\n🔢 <b>Quantity:</b> {quantity} pcs.\n💰 <b>Price per ticket:</b> {price_per_ticket} ₽\n\n💵 <b>Total:</b> {total_price} ₽\n\nConfirm your order:",
       "processing_payment": "💳 <b>Processing Payment</b>\n\nYour order is being processed. You will be redirected to the payment page shortly...",
-      "order_cancelled": "❌ <b>Order Cancelled</b>\n\nYou have cancelled the order. You can start over anytime."
+      "order_cancelled": "❌ <b>Order Cancelled</b>\n\nYou have cancelled the order. You can start over anytime.",
+      "order_error": "❌ <b>Order Creation Error</b>\n\nAn error occurred while creating the order. Please try again later.",
+      "invoice_sent": "💳 <b>Invoice Sent</b>\n\nCheck your messages from the bot for payment.",
+      "invoice_error": "❌ <b>Invoice Error</b>\n\nFailed to send payment invoice. Please try again later.",
+      "payment_success": "✅ <b>Payment Successful!</b>\n\nYour tickets ({tickets_count} pcs.) have been successfully created. You can find them in \"My Tickets\" section.",
+      "payment_processed": "✅ <b>Payment Processed</b>\n\nYour payment has been successfully processed.",
+      "payment_error": "❌ <b>Payment Processing Error</b>\n\nAn error occurred while processing the payment. Please contact support.",
+      "no_ticket_types": "😔 <b>No Available Ticket Types</b>\n\nThere are no available ticket types for this event."
     },
     "tickets": {
       "select_ticket": "🎟️ <b>My Tickets</b>\n\nSelect a ticket to view QR code:",

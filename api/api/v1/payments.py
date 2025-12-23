@@ -72,17 +72,17 @@ async def process_payment(
         )
 
 
-@router.post("/payments/process")
-async def process_payment(
-    payment_data: ProcessPaymentRequest,
+@router.post("/orders/{order_id}/complete-mock")
+async def complete_order_mock(
+    order_id: str,
     db: Session = Depends(get_db),
 ):
-    """Process successful payment and create tickets."""
+    """Mock payment completion - creates tickets without real payment (for testing)."""
     try:
         result = PaymentService.handle_payment_success(
             db=db,
-            order_id=payment_data.order_id,
-            telegram_payment_charge_id=payment_data.telegram_payment_charge_id,
+            order_id=order_id,
+            telegram_payment_charge_id="MOCK_PAYMENT_" + order_id,
         )
         return result
     except ValueError as e:
