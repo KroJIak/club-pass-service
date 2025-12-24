@@ -4,14 +4,20 @@ import { Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Order } from '../../types'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
+import FilterPanel from '../../components/filters/FilterPanel'
+import OrdersFilter, { OrdersFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/OrdersFilter'
+import { useFilterPanel } from '../../hooks/useFilterPanel'
 
 const OrdersList = () => {
   const [orders, setOrders] = useState<Order[]>([])
+  const [allOrders, setAllOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; orderId: number | null }>({
     open: false,
     orderId: null,
   })
+  const [filterState, setFilterState] = useState<OrdersFilterState>(DEFAULT_FILTER_STATE)
+  const { setFilterPanel } = useFilterPanel()
 
   useEffect(() => {
     fetchOrders()
