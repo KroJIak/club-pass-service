@@ -22,6 +22,8 @@ from api.api.v1.schemas import (
     UserResponse, UserUpdate,
     TicketResponse, TicketDetailResponse,
     PaymentResponse,
+    ExpirationSettingsResponse,
+    ExpirationSettingsUpdate,
 )
 from api.models import Event, TicketType, Ticket, Payment, Order, Promocode
 from api.models.ticket import TicketStatus
@@ -692,3 +694,31 @@ async def delete_promocode(
             detail=f"Promocode with id {promocode_id} not found"
         )
     return {"message": f"Promocode {promocode_id} deactivated successfully"}
+
+
+# Expiration Settings
+@router.get("/admin/expiration-settings", response_model=ExpirationSettingsResponse)
+async def get_expiration_settings(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get expiration service settings."""
+    from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
+    settings = ExpirationSettingsRepository.get_settings(db)
+    return ExpirationSettingsResponse.model_validate(settings)
+
+
+@router.put("/admin/expiration-settings", response_model=ExpirationSettingsResponse)
+async def update_expiration_settings(
+    settings_update: ExpirationSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update expiration service settings."""
+    from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
+    settings = ExpirationSettingsRepository.update_settings(
+        db,
+        ticket_expiration_enabled=settings_update.ticket_expiration_enabled,
+        event_deactivation_enabled=settings_update.event_deactivation_enabled
+    )
+    return ExpirationSettingsResponse.model_validate(settings)

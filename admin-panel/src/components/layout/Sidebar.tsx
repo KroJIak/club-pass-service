@@ -17,6 +17,7 @@ import {
   Payment as PaymentIcon,
   ShoppingCart as OrderIcon,
   LocalOffer as PromocodeIcon,
+  Settings as SettingsIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -32,6 +33,7 @@ const menuItems = [
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
+  { text: 'Expiration Settings', icon: <SettingsIcon />, path: '/expiration-settings' },
 ]
 
 const Sidebar = () => {

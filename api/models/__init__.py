@@ -6,6 +6,7 @@ from api.models.ticket import Ticket, TicketStatus
 from api.models.payment import Payment, PaymentStatus
 from api.models.promocode import Promocode
 from api.models.order import Order
+from api.models.expiration_settings import ExpirationSettings
 
 __all__ = [
     "User",
@@ -17,5 +18,6 @@ __all__ = [
     "PaymentStatus",
     "Promocode",
     "Order",
+    "ExpirationSettings",
 ]
 

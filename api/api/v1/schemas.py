@@ -196,3 +196,21 @@ class TicketMarkUsedResponse(BaseModel):
     used_at: datetime
     message: str
 
+
+# Expiration Settings schemas
+class ExpirationSettingsResponse(BaseModel):
+    """Schema for expiration settings response."""
+    id: int
+    ticket_expiration_enabled: bool
+    event_deactivation_enabled: bool
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ExpirationSettingsUpdate(BaseModel):
+    """Schema for updating expiration settings."""
+    ticket_expiration_enabled: bool | None = None
+    event_deactivation_enabled: bool | None = None
+
