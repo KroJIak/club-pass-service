@@ -10,14 +10,14 @@ const Layout = () => {
   const showFilter = location.pathname !== '/expiration-settings'
 
   // Calculate side margins based on viewport width
-  // At 1280px: 0.18 * width
-  // At 600px: 0.084375 * width (0.18 * 600/1280)
+  // At 1280px: 0.15 * width
+  // At 600px: 0.0703125 * width (0.15 * 600/1280)
   // Linear interpolation between 600 and 1280
   const getSideMargin = () => {
     return {
-      xs: 'calc(0.084375 * 100vw)', // <= 600px
-      sm: 'calc(0.084375 * 100vw + (0.18 - 0.084375) * (100vw - 600px) / (1280 - 600))', // 600-1280px
-      md: 'calc(0.18 * 100vw)', // >= 1280px
+      xs: 'calc(0.0703125 * 100vw)', // <= 600px
+      sm: 'calc(0.0703125 * 100vw + (0.15 - 0.0703125) * (100vw - 600px) / (1280 - 600))', // 600-1280px
+      md: 'calc(0.15 * 100vw)', // >= 1280px
     }
   }
 
