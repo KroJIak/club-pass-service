@@ -46,11 +46,6 @@ const EventsList = () => {
     setFormOpen(true)
   }
 
-  const handleEdit = (event: Event) => {
-    setEditingEvent(event)
-    setExpandedEvent(event.id)
-  }
-
   const handleDelete = async (eventId: number) => {
     try {
       await api.delete(`/admin/events/${eventId}`)
