@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from src.config import settings
 from src.db import SessionLocal
 from src.services.expiration_service import TicketExpirationService
+from src.services.settings_service import SettingsService
 
 # Configure logging
 logging.basicConfig(
@@ -26,6 +27,11 @@ def check_and_mark_expired_tickets():
     """Check and mark expired tickets."""
     db: Session = SessionLocal()
     try:
+        # Check if ticket expiration is enabled
+        if not SettingsService.is_ticket_expiration_enabled(db):
+            logger.debug("Ticket expiration is disabled, skipping check")
+            return 0
+        
         logger.info("Starting expired tickets check...")
         expired_count = TicketExpirationService.mark_expired_tickets(db)
         if expired_count > 0:
@@ -45,6 +51,11 @@ def check_and_deactivate_events():
     """Check and deactivate past events."""
     db: Session = SessionLocal()
     try:
+        # Check if event deactivation is enabled
+        if not SettingsService.is_event_deactivation_enabled(db):
+            logger.debug("Event deactivation is disabled, skipping check")
+            return 0
+        
         logger.info("Starting events deactivation check...")
         deactivated_count = TicketExpirationService.deactivate_past_events(db)
         if deactivated_count > 0:

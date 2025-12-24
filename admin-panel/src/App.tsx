@@ -10,6 +10,7 @@ import TicketsList from './pages/Tickets/TicketsList'
 import PaymentsList from './pages/Payments/PaymentsList'
 import OrdersList from './pages/Orders/OrdersList'
 import PromocodesList from './pages/Promocodes/PromocodesList'
+import ExpirationSettings from './pages/ExpirationSettings/ExpirationSettings'
 import { useAuth } from './hooks/useAuth'
 
 const theme = createTheme({
@@ -61,6 +62,7 @@ function App() {
             <Route path="payments" element={<PaymentsList />} />
             <Route path="orders" element={<OrdersList />} />
             <Route path="promocodes" element={<PromocodesList />} />
+            <Route path="expiration-settings" element={<ExpirationSettings />} />
           </Route>
         </Routes>
       </BrowserRouter>

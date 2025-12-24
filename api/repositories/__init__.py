@@ -6,6 +6,7 @@ from api.repositories.ticket_repository import TicketRepository
 from api.repositories.order_repository import OrderRepository
 from api.repositories.payment_repository import PaymentRepository
 from api.repositories.promocode_repository import PromocodeRepository
+from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 
 __all__ = [
     "UserRepository",

@@ -15,6 +15,7 @@ from api.repositories.ticket_repository import TicketRepository
 from api.repositories.payment_repository import PaymentRepository
 from api.repositories.order_repository import OrderRepository
 from api.repositories.promocode_repository import PromocodeRepository
+from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 from api.api.v1.schemas import (
     EventResponse, EventListResponse,
     TicketTypeResponse, TicketTypeListResponse,
