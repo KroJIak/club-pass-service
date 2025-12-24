@@ -12,12 +12,17 @@ import {
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
-import { Event } from '../../types'
+import { Event, TicketType } from '../../types'
 import EventForm from './EventForm'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
+import FilterPanel from '../../components/filters/FilterPanel'
+import EventsFilter, { EventsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/EventsFilter'
+import { useFilterPanel } from '../../hooks/useFilterPanel'
 
 const EventsList = () => {
   const [events, setEvents] = useState<Event[]>([])
+  const [allEvents, setAllEvents] = useState<Event[]>([])
+  const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState<Event | null>(null)
@@ -26,11 +31,15 @@ const EventsList = () => {
     open: false,
     eventId: null,
   })
+  const [filterState, setFilterState] = useState<EventsFilterState>(DEFAULT_FILTER_STATE)
+  const { setFilterPanel } = useFilterPanel()
 
   const fetchEvents = async () => {
     try {
       const response = await api.get('/admin/events')
-      setEvents(response.data.events)
+      const fetchedEvents = response.data.events
+      setAllEvents(fetchedEvents)
+      setEvents(fetchedEvents)
     } catch (error) {
       console.error('Failed to fetch events:', error)
     } finally {
@@ -38,9 +47,121 @@ const EventsList = () => {
     }
   }
 
+  const fetchTicketTypes = async () => {
+    try {
+      const response = await api.get('/admin/ticket-types')
+      setTicketTypes(response.data.ticket_types)
+    } catch (error) {
+      console.error('Failed to fetch ticket types:', error)
+    }
+  }
+
   useEffect(() => {
     fetchEvents()
+    fetchTicketTypes()
   }, [])
+
+  // Set up filter panel
+  useEffect(() => {
+    setFilterPanel(
+      <FilterPanel
+        searchValue={filterState.search}
+        onSearchChange={(value) => setFilterState({ ...filterState, search: value })}
+      >
+        <EventsFilter
+          events={allEvents}
+          ticketTypes={ticketTypes}
+          filterState={filterState}
+          onFilterChange={setFilterState}
+        />
+      </FilterPanel>
+    )
+
+    return () => {
+      setFilterPanel(null)
+    }
+  }, [allEvents, ticketTypes, filterState, setFilterPanel])
+
+  // Filter events based on filter state
+  useEffect(() => {
+    let filtered = [...allEvents]
+
+    // Search filter
+    if (filterState.search.trim()) {
+      const searchLower = filterState.search.toLowerCase()
+      filtered = filtered.filter((event) => {
+        const nameMatch = event.name?.toLowerCase().includes(searchLower)
+        const dateMatch = event.date?.toLowerCase().includes(searchLower)
+        const djsMatch = event.djs?.some((dj) => dj.toLowerCase().includes(searchLower))
+        const descMatch = event.description?.toLowerCase().includes(searchLower)
+        
+        // Check ticket type names for this event
+        const eventTicketTypes = ticketTypes.filter((tt) => tt.event_id === event.id)
+        const ticketTypeMatch = eventTicketTypes.some((tt) => tt.name.toLowerCase().includes(searchLower))
+
+        return nameMatch || dateMatch || djsMatch || descMatch || ticketTypeMatch
+      })
+    }
+
+    // Price filter
+    if (filterState.minPrice > 0 || filterState.maxPrice < 10000) {
+      filtered = filtered.filter((event) => {
+        const eventTicketTypes = ticketTypes.filter((tt) => tt.event_id === event.id)
+        return eventTicketTypes.some((tt) => {
+          return tt.price >= filterState.minPrice && tt.price <= filterState.maxPrice
+        })
+      })
+    }
+
+    // DJs filter
+    if (filterState.selectedDjs.length > 0) {
+      filtered = filtered.filter((event) => {
+        return event.djs?.some((dj) => filterState.selectedDjs.includes(dj))
+      })
+    }
+
+    // Date range filter
+    if (filterState.dateFrom) {
+      const fromDate = new Date(filterState.dateFrom)
+      filtered = filtered.filter((event) => {
+        const eventDate = parseDate(event.date)
+        return eventDate >= fromDate
+      })
+    }
+    if (filterState.dateTo) {
+      const toDate = new Date(filterState.dateTo)
+      toDate.setHours(23, 59, 59, 999) // End of day
+      filtered = filtered.filter((event) => {
+        const eventDate = parseDate(event.date)
+        return eventDate <= toDate
+      })
+    }
+
+    // Ticket types filter
+    if (filterState.selectedTicketTypes.length > 0) {
+      filtered = filtered.filter((event) => {
+        const eventTicketTypes = ticketTypes.filter((tt) => tt.event_id === event.id)
+        return eventTicketTypes.some((tt) => filterState.selectedTicketTypes.includes(tt.name))
+      })
+    }
+
+    // Active/Inactive filter
+    if (filterState.isActive !== 'all') {
+      filtered = filtered.filter((event) => {
+        return filterState.isActive === 'active' ? event.is_active : !event.is_active
+      })
+    }
+
+    setEvents(filtered)
+  }, [allEvents, ticketTypes, filterState])
+
+  // Helper function to parse DD.MM.YYYY date
+  const parseDate = (dateStr: string): Date => {
+    if (!dateStr) return new Date(0)
+    const [day, month, year] = dateStr.split('.')
+    if (!day || !month || !year) return new Date(0)
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+  }
 
   const handleCreate = () => {
     setEditingEvent(null)

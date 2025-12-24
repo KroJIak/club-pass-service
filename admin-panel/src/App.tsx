@@ -11,6 +11,7 @@ import OrdersList from './pages/Orders/OrdersList'
 import PromocodesList from './pages/Promocodes/PromocodesList'
 import ExpirationSettings from './pages/ExpirationSettings/ExpirationSettings'
 import { useAuth } from './hooks/useAuth'
+import { FilterPanelProvider } from './hooks/useFilterPanel'
 
 const theme = createTheme({
   palette: {
@@ -42,28 +43,30 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Layout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="/events" replace />} />
-            <Route path="events" element={<EventsList />} />
-            <Route path="users" element={<UsersList />} />
-            <Route path="tickets" element={<TicketsList />} />
-            <Route path="payments" element={<PaymentsList />} />
-            <Route path="orders" element={<OrdersList />} />
-            <Route path="promocodes" element={<PromocodesList />} />
-            <Route path="expiration-settings" element={<ExpirationSettings />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <FilterPanelProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/events" replace />} />
+              <Route path="events" element={<EventsList />} />
+              <Route path="users" element={<UsersList />} />
+              <Route path="tickets" element={<TicketsList />} />
+              <Route path="payments" element={<PaymentsList />} />
+              <Route path="orders" element={<OrdersList />} />
+              <Route path="promocodes" element={<PromocodesList />} />
+              <Route path="expiration-settings" element={<ExpirationSettings />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </FilterPanelProvider>
     </ThemeProvider>
   )
 }

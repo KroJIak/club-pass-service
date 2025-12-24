@@ -1,9 +1,14 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Box } from '@mui/material'
 import Sidebar from './Sidebar'
 import Header from './Header'
+import { useFilterPanel } from '../../hooks/useFilterPanel'
 
 const Layout = () => {
+  const location = useLocation()
+  const { filterPanel } = useFilterPanel()
+  const showFilter = location.pathname !== '/expiration-settings'
+
   // Calculate side margins based on viewport width
   // At 1280px: 0.18 * width
   // At 600px: 0.084375 * width (0.18 * 600/1280)
@@ -39,6 +44,7 @@ const Layout = () => {
             >
               <Outlet />
             </Box>
+            {showFilter && filterPanel}
           </Box>
         </Box>
       </Box>
