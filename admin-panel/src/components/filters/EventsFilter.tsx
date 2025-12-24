@@ -8,6 +8,7 @@ import {
   Checkbox,
   Slider,
   Button,
+  Typography,
 } from '@mui/material'
 import { FilterSection } from './FilterPanel'
 import { Event, TicketType } from '../../types'
@@ -116,7 +117,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               type="number"
               value={localFilter.minPrice}
               onChange={(e) => handleFilterChange({ minPrice: Number(e.target.value) })}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
             />
             <TextField
               size="small"
@@ -124,7 +125,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               type="number"
               value={localFilter.maxPrice}
               onChange={(e) => handleFilterChange({ maxPrice: Number(e.target.value) })}
-              sx={{ flex: 1 }}
+              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
             />
           </Box>
           <Slider
@@ -144,23 +145,24 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
       <FilterSection title="DJs">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {visibleDjs.map((dj) => (
-            <FormControlLabel
-              key={dj}
-              control={
-                <Checkbox
-                  checked={localFilter.selectedDjs.includes(dj)}
-                  onChange={() => handleDjToggle(dj)}
-                  size="small"
-                />
-              }
-              label={dj}
-            />
+              <FormControlLabel
+                key={dj}
+                control={
+                  <Checkbox
+                    checked={localFilter.selectedDjs.includes(dj)}
+                    onChange={() => handleDjToggle(dj)}
+                    size="small"
+                    sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: '0.8rem' }}>{dj}</Typography>}
+              />
           ))}
           {allDjs.length > 5 && (
             <Button
               size="small"
               onClick={() => setDjsExpanded(!djsExpanded)}
-              sx={{ mt: 1, alignSelf: 'flex-start' }}
+              sx={{ mt: 1, alignSelf: 'flex-start', fontSize: '0.75rem' }}
             >
               {djsExpanded ? 'Show Less' : `Show All (${allDjs.length})`}
             </Button>
@@ -177,6 +179,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
             value={localFilter.dateFrom}
             onChange={(e) => handleFilterChange({ dateFrom: e.target.value })}
             InputLabelProps={{ shrink: true }}
+            sx={{ '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
           />
           <TextField
             size="small"
@@ -185,6 +188,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
             value={localFilter.dateTo}
             onChange={(e) => handleFilterChange({ dateTo: e.target.value })}
             InputLabelProps={{ shrink: true }}
+            sx={{ '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
           />
         </Box>
       </FilterSection>
@@ -192,23 +196,24 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
       <FilterSection title="Ticket Types">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {visibleTicketTypes.map((name) => (
-            <FormControlLabel
-              key={name}
-              control={
-                <Checkbox
-                  checked={localFilter.selectedTicketTypes.includes(name)}
-                  onChange={() => handleTicketTypeToggle(name)}
-                  size="small"
-                />
-              }
-              label={name}
-            />
+              <FormControlLabel
+                key={name}
+                control={
+                  <Checkbox
+                    checked={localFilter.selectedTicketTypes.includes(name)}
+                    onChange={() => handleTicketTypeToggle(name)}
+                    size="small"
+                    sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
+                  />
+                }
+                label={<Typography sx={{ fontSize: '0.8rem' }}>{name}</Typography>}
+              />
           ))}
           {allTicketTypeNames.length > 5 && (
             <Button
               size="small"
               onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
-              sx={{ mt: 1, alignSelf: 'flex-start' }}
+              sx={{ mt: 1, alignSelf: 'flex-start', fontSize: '0.75rem' }}
             >
               {ticketTypesExpanded ? 'Show Less' : `Show All (${allTicketTypeNames.length})`}
             </Button>
@@ -221,9 +226,21 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
           value={localFilter.isActive}
           onChange={(e) => handleFilterChange({ isActive: e.target.value as 'all' | 'active' | 'inactive' })}
         >
-          <FormControlLabel value="all" control={<Radio size="small" />} label="All" />
-          <FormControlLabel value="active" control={<Radio size="small" />} label="Active" />
-          <FormControlLabel value="inactive" control={<Radio size="small" />} label="Inactive" />
+          <FormControlLabel 
+            value="all" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>All</Typography>} 
+          />
+          <FormControlLabel 
+            value="active" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Active</Typography>} 
+          />
+          <FormControlLabel 
+            value="inactive" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Inactive</Typography>} 
+          />
         </RadioGroup>
       </FilterSection>
     </Box>

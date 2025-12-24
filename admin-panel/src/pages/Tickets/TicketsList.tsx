@@ -70,11 +70,15 @@ const TicketsList = () => {
                     <Typography variant="body2" color="text.secondary">
                       Token: {ticket.token}
                     </Typography>
-                    {ticket.username && (
+                    {ticket.username ? (
                       <Typography variant="body2" color="text.secondary">
                         @{ticket.username}
                       </Typography>
-                    )}
+                    ) : (ticket.first_name || ticket.last_name) ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {`${ticket.first_name || ''} ${ticket.last_name || ''}`.trim()}
+                      </Typography>
+                    ) : null}
                     <Chip
                       label={ticket.status}
                       color={

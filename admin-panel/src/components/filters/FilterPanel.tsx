@@ -31,7 +31,7 @@ const FilterPanel = ({ searchValue, onSearchChange, children }: FilterPanelProps
       }}
     >
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="subtitle1" sx={{ mb: 2, fontSize: '0.875rem' }}>
           Filters
         </Typography>
         <TextField
@@ -40,10 +40,10 @@ const FilterPanel = ({ searchValue, onSearchChange, children }: FilterPanelProps
           placeholder="Search..."
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{ mb: 2, '& .MuiInputBase-input': { fontSize: '0.8rem' } }}
         />
       </Box>
-      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+      <Box sx={{ flex: 1, overflow: 'auto', p: 1.5 }}>
         {children}
       </Box>
     </Box>
@@ -71,7 +71,7 @@ export const FilterSection = ({ title, children, defaultExpanded = true }: Filte
         }}
         onClick={() => setExpanded(!expanded)}
       >
-        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+        <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
           {title}
         </Typography>
         <IconButton size="small" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}>

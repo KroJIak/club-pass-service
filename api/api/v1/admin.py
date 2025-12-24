@@ -486,10 +486,12 @@ async def get_all_tickets(
     ticket_responses = []
     for ticket in tickets:
         ticket_data = TicketResponse.model_validate(ticket)
-        # Get username from user
+        # Get user info from user
         user = UserRepository.get_by_id(db, ticket.user_id)
         if user:
             ticket_data.username = user.username
+            ticket_data.first_name = user.first_name
+            ticket_data.last_name = user.last_name
         ticket_responses.append(ticket_data)
     
     return TicketListResponse(tickets=ticket_responses)

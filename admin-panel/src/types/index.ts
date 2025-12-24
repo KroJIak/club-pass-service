@@ -42,6 +42,8 @@ export interface Ticket {
   created_at: string
   updated_at: string
   username: string | null
+  first_name: string | null
+  last_name: string | null
 }
 
 export interface Payment {

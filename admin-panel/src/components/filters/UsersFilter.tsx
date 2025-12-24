@@ -4,6 +4,7 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
+  Typography,
 } from '@mui/material'
 import { FilterSection } from './FilterPanel'
 
@@ -42,9 +43,21 @@ const UsersFilter = ({ filterState, onFilterChange }: UsersFilterProps) => {
           value={localFilter.hasUsername}
           onChange={(e) => handleFilterChange({ hasUsername: e.target.value as 'all' | 'yes' | 'no' })}
         >
-          <FormControlLabel value="all" control={<Radio size="small" />} label="All" />
-          <FormControlLabel value="yes" control={<Radio size="small" />} label="Has username" />
-          <FormControlLabel value="no" control={<Radio size="small" />} label="No username" />
+          <FormControlLabel 
+            value="all" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>All</Typography>} 
+          />
+          <FormControlLabel 
+            value="yes" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>Has username</Typography>} 
+          />
+          <FormControlLabel 
+            value="no" 
+            control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
+            label={<Typography sx={{ fontSize: '0.8rem' }}>No username</Typography>} 
+          />
         </RadioGroup>
       </FilterSection>
     </Box>

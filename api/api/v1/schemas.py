@@ -97,6 +97,8 @@ class TicketResponse(BaseModel):
     event: Optional[EventResponse] = None
     ticket_type: Optional[TicketTypeResponse] = None
     username: Optional[str] = None  # Telegram username
+    first_name: Optional[str] = None  # User first name
+    last_name: Optional[str] = None  # User last name
 
     class Config:
         from_attributes = True
