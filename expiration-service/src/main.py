@@ -83,11 +83,53 @@ def run_all_checks():
     logger.info("=" * 50)
 
 
+def update_scheduler_interval(scheduler: BlockingScheduler):
+    """Update scheduler interval from database settings."""
+    db: Session = SessionLocal()
+    try:
+        interval = SettingsService.get_check_interval_minutes(db)
+        job = scheduler.get_job('check_expirations')
+        
+        if job:
+            # Check if interval has changed
+            current_interval = job.trigger.interval.total_seconds() / 60
+            if current_interval != interval:
+                logger.info(f"Updating check interval from {current_interval} to {interval} minutes")
+                scheduler.reschedule_job(
+                    'check_expirations',
+                    trigger=IntervalTrigger(minutes=interval)
+                )
+        else:
+            # Job doesn't exist, create it
+            logger.info(f"Creating check job with interval {interval} minutes")
+            scheduler.add_job(
+                run_all_checks,
+                trigger=IntervalTrigger(minutes=interval),
+                id='check_expirations',
+                name='Check expired tickets and deactivate past events',
+                replace_existing=True
+            )
+    except Exception as e:
+        logger.error(f"Error updating scheduler interval: {e}", exc_info=True)
+    finally:
+        db.close()
+
+
 def main():
     """Main function to run the scheduler."""
     logger.info("Starting Expiration Service...")
     logger.info(f"Database: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}")
-    logger.info(f"Check interval: {settings.CHECK_INTERVAL_MINUTES} minutes")
+    
+    # Get initial interval from database
+    db: Session = SessionLocal()
+    try:
+        initial_interval = SettingsService.get_check_interval_minutes(db)
+        logger.info(f"Initial check interval: {initial_interval} minutes")
+    except Exception as e:
+        logger.warning(f"Could not get interval from database, using default: {e}")
+        initial_interval = settings.CHECK_INTERVAL_MINUTES
+    finally:
+        db.close()
     
     # Run initial check
     logger.info("Running initial check...")
@@ -100,12 +142,23 @@ def main():
     # Setup scheduler
     scheduler = BlockingScheduler()
     
-    # Schedule periodic checks for tickets and events
+    # Schedule periodic checks for tickets and events with initial interval
     scheduler.add_job(
         run_all_checks,
-        trigger=IntervalTrigger(minutes=settings.CHECK_INTERVAL_MINUTES),
+        trigger=IntervalTrigger(minutes=initial_interval),
         id='check_expirations',
         name='Check expired tickets and deactivate past events',
+        replace_existing=True
+    )
+    
+    # Schedule a job to periodically check and update the interval from database
+    # Check every 5 minutes if interval has changed
+    scheduler.add_job(
+        update_scheduler_interval,
+        trigger=IntervalTrigger(minutes=5),
+        args=[scheduler],
+        id='update_interval',
+        name='Update check interval from database',
         replace_existing=True
     )
     
