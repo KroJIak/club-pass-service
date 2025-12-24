@@ -1,6 +1,6 @@
 """Ticket ORM model and Pydantic schemas."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, TypeDecorator
 from sqlalchemy.orm import relationship
 import enum
 from api.core.db import Base
@@ -15,6 +15,29 @@ class TicketStatus(str, enum.Enum):
     USED = "used"
 
 
+class TicketStatusType(TypeDecorator):
+    """Custom type decorator to ensure enum values are stored as strings."""
+    impl = String
+    cache_ok = True
+    
+    def __init__(self, length=20):
+        super().__init__(length)
+    
+    def process_bind_param(self, value, dialect):
+        """Convert enum to its string value when binding to database."""
+        if value is None:
+            return None
+        if isinstance(value, TicketStatus):
+            return value.value
+        return str(value)
+    
+    def process_result_value(self, value, dialect):
+        """Convert string value back to enum when reading from database."""
+        if value is None:
+            return None
+        return TicketStatus(value)
+
+
 class Ticket(Base):
     """Ticket model."""
     __tablename__ = "tickets"
@@ -24,7 +47,7 @@ class Ticket(Base):
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
     ticket_type_id = Column(Integer, ForeignKey("ticket_types.id", ondelete="RESTRICT"), nullable=False)
     token = Column(String, unique=True, nullable=False, index=True)  # For QR code
-    status = Column(SQLEnum(TicketStatus, native_enum=False, create_constraint=False, length=20), default=TicketStatus.ACTIVE, nullable=False)
+    status = Column(TicketStatusType(20), default=TicketStatus.ACTIVE, nullable=False)
     used_at = Column(DateTime, nullable=True)
     refunded_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

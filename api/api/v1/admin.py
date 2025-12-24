@@ -527,9 +527,11 @@ async def update_ticket(
         )
     
     if ticket_data.status is not None:
-        ticket.status = ticket_data.status
+        # Explicitly convert to enum using the value to ensure SQLAlchemy uses the correct string
+        status_value = ticket_data.status.value if isinstance(ticket_data.status, TicketStatus) else ticket_data.status
+        ticket.status = TicketStatus(status_value)
         # Set used_at when status changes to USED
-        if ticket_data.status == TicketStatus.USED and not ticket.used_at:
+        if ticket.status == TicketStatus.USED and not ticket.used_at:
             ticket.used_at = datetime.utcnow()
     
     db.commit()
