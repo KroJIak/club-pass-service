@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # Service
     CHECK_INTERVAL_MINUTES: int = 30  # How often to check for expired tickets
     LOG_LEVEL: str = "INFO"
+    API_PORT: int = 8001  # Port for FastAPI
     
     class Config:
         env_file = ".env"

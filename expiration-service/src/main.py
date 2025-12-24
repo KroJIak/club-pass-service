@@ -1,15 +1,18 @@
 """Main entry point for expiration service."""
 import logging
 import sys
+import threading
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from sqlalchemy.orm import Session
+import uvicorn
 
 from src.config import settings
 from src.db import SessionLocal
 from src.services.expiration_service import TicketExpirationService
 from src.services.settings_service import SettingsService
+from src.api import app, set_scheduler
 
 # Configure logging
 logging.basicConfig(
@@ -83,36 +86,14 @@ def run_all_checks():
     logger.info("=" * 50)
 
 
-def update_scheduler_interval(scheduler: BlockingScheduler):
-    """Update scheduler interval from database settings."""
-    db: Session = SessionLocal()
-    try:
-        interval = SettingsService.get_check_interval_minutes(db)
-        job = scheduler.get_job('check_expirations')
-        
-        if job:
-            # Check if interval has changed
-            current_interval = job.trigger.interval.total_seconds() / 60
-            if current_interval != interval:
-                logger.info(f"Updating check interval from {current_interval} to {interval} minutes")
-                scheduler.reschedule_job(
-                    'check_expirations',
-                    trigger=IntervalTrigger(minutes=interval)
-                )
-        else:
-            # Job doesn't exist, create it
-            logger.info(f"Creating check job with interval {interval} minutes")
-            scheduler.add_job(
-                run_all_checks,
-                trigger=IntervalTrigger(minutes=interval),
-                id='check_expirations',
-                name='Check expired tickets and deactivate past events',
-                replace_existing=True
-            )
-    except Exception as e:
-        logger.error(f"Error updating scheduler interval: {e}", exc_info=True)
-    finally:
-        db.close()
+def run_api_server():
+    """Run FastAPI server in a separate thread."""
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=settings.API_PORT,
+        log_level=settings.LOG_LEVEL.lower()
+    )
 
 
 def main():
@@ -142,6 +123,9 @@ def main():
     # Setup scheduler
     scheduler = BlockingScheduler()
     
+    # Set scheduler in API for endpoints
+    set_scheduler(scheduler)
+    
     # Schedule periodic checks for tickets and events with initial interval
     scheduler.add_job(
         run_all_checks,
@@ -151,16 +135,10 @@ def main():
         replace_existing=True
     )
     
-    # Schedule a job to periodically check and update the interval from database
-    # Check every 5 minutes if interval has changed
-    scheduler.add_job(
-        update_scheduler_interval,
-        trigger=IntervalTrigger(minutes=5),
-        args=[scheduler],
-        id='update_interval',
-        name='Update check interval from database',
-        replace_existing=True
-    )
+    # Start FastAPI server in a separate thread
+    api_thread = threading.Thread(target=run_api_server, daemon=True)
+    api_thread.start()
+    logger.info(f"FastAPI server started on port {settings.API_PORT}")
     
     logger.info("Scheduler started. Press Ctrl+C to exit.")
     

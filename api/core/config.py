@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # Telegram Bot (for notifications)
     TELEGRAM_BOT_TOKEN: Optional[str] = None
     
+    # Expiration Service
+    EXPIRATION_SERVICE_URL: str = "http://expiration-service:8001"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

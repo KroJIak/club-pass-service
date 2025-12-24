@@ -795,6 +795,12 @@ async def update_expiration_settings(
 ):
     """Update expiration service settings."""
     from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
+    from api.core.config import settings as api_settings
+    import httpx
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
     try:
         settings = ExpirationSettingsRepository.update_settings(
             db,
@@ -802,6 +808,23 @@ async def update_expiration_settings(
             event_deactivation_enabled=settings_update.event_deactivation_enabled,
             check_interval_minutes=settings_update.check_interval_minutes
         )
+        
+        # If check_interval_minutes was updated, notify expiration-service
+        if settings_update.check_interval_minutes is not None:
+            try:
+                async with httpx.AsyncClient(timeout=5.0) as client:
+                    response = await client.post(
+                        f"{api_settings.EXPIRATION_SERVICE_URL}/update-interval",
+                        json={"check_interval_minutes": settings.check_interval_minutes}
+                    )
+                    if response.status_code == 200:
+                        logger.info(f"Successfully updated expiration service interval to {settings.check_interval_minutes} minutes")
+                    else:
+                        logger.warning(f"Failed to update expiration service interval: {response.status_code} - {response.text}")
+            except Exception as e:
+                logger.error(f"Error notifying expiration service: {e}", exc_info=True)
+                # Don't fail the request if expiration service is unreachable
+        
         return ExpirationSettingsResponse.model_validate(settings)
     except ValueError as e:
         raise HTTPException(
