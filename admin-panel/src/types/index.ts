@@ -165,11 +165,13 @@ export interface ExpirationSettings {
   id: number
   ticket_expiration_enabled: boolean
   event_deactivation_enabled: boolean
+  check_interval_minutes: number
   updated_at: string
 }
 
 export interface ExpirationSettingsUpdate {
   ticket_expiration_enabled?: boolean
   event_deactivation_enabled?: boolean
+  check_interval_minutes?: number
 }
 

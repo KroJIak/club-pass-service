@@ -62,4 +62,35 @@ class SettingsService:
             logger.error(f"Error checking event deactivation setting: {e}")
             # Default to enabled on error
             return True
+    
+    @staticmethod
+    def get_check_interval_minutes(db: Session) -> int:
+        """
+        Get check interval in minutes.
+        
+        Args:
+            db: Database session
+        
+        Returns:
+            Check interval in minutes (defaults to 30 if settings don't exist)
+        """
+        try:
+            result = db.execute(
+                text("SELECT check_interval_minutes FROM expiration_settings WHERE id = 1")
+            ).first()
+            
+            if result:
+                interval = int(result[0])
+                if interval < 1:
+                    logger.warning(f"Invalid check_interval_minutes value: {interval}, using default 30")
+                    return 30
+                return interval
+            
+            # Default to 30 minutes if settings don't exist
+            logger.warning("Expiration settings not found, defaulting to 30 minutes")
+            return 30
+        except Exception as e:
+            logger.error(f"Error checking check_interval_minutes setting: {e}")
+            # Default to 30 minutes on error
+            return 30
 

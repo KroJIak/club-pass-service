@@ -11,6 +11,7 @@ class ExpirationSettings(Base):
     id = Column(Integer, primary_key=True, index=True, default=1)
     ticket_expiration_enabled = Column(Boolean, default=True, nullable=False)
     event_deactivation_enabled = Column(Boolean, default=True, nullable=False)
+    check_interval_minutes = Column(Integer, default=30, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     __table_args__ = (

@@ -9,6 +9,7 @@ import {
   Button,
   Alert,
   CircularProgress,
+  TextField,
 } from '@mui/material'
 import api from '../../services/api'
 import type { ExpirationSettings, ExpirationSettingsUpdate } from '../../types'
@@ -46,6 +47,18 @@ const ExpirationSettings = () => {
     })
   }
 
+  const handleIntervalChange = (value: string) => {
+    if (!settings) return
+    
+    const numValue = parseInt(value, 10)
+    if (!isNaN(numValue) && numValue >= 1) {
+      setSettings({
+        ...settings,
+        check_interval_minutes: numValue,
+      })
+    }
+  }
+
   const handleSave = async () => {
     if (!settings) return
 
@@ -57,6 +70,7 @@ const ExpirationSettings = () => {
       const update: ExpirationSettingsUpdate = {
         ticket_expiration_enabled: settings.ticket_expiration_enabled,
         event_deactivation_enabled: settings.event_deactivation_enabled,
+        check_interval_minutes: settings.check_interval_minutes,
       }
 
       const response = await api.put<ExpirationSettings>('/admin/expiration-settings', update)
@@ -143,6 +157,18 @@ const ExpirationSettings = () => {
           </Typography>
         </Box>
 
+        <Box sx={{ mb: 4 }}>
+          <TextField
+            label="Check Interval (minutes)"
+            type="number"
+            value={settings.check_interval_minutes}
+            onChange={(e) => handleIntervalChange(e.target.value)}
+            inputProps={{ min: 1 }}
+            helperText="How often the expiration service checks for expired tickets and events (minimum 1 minute)"
+            sx={{ width: '100%', maxWidth: 400 }}
+          />
+        </Box>
+
         <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
           <Button
             variant="contained"
@@ -160,10 +186,11 @@ const ExpirationSettings = () => {
                 setError(null)
                 setSuccess(false)
                 
-                // Reset to default values (both enabled)
+                // Reset to default values (both enabled, 30 minutes interval)
                 const update: ExpirationSettingsUpdate = {
                   ticket_expiration_enabled: true,
                   event_deactivation_enabled: true,
+                  check_interval_minutes: 30,
                 }
                 
                 const response = await api.put<ExpirationSettings>('/admin/expiration-settings', update)

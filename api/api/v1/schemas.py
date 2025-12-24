@@ -207,6 +207,7 @@ class ExpirationSettingsResponse(BaseModel):
     id: int
     ticket_expiration_enabled: bool
     event_deactivation_enabled: bool
+    check_interval_minutes: int
     updated_at: datetime
 
     class Config:
@@ -217,4 +218,5 @@ class ExpirationSettingsUpdate(BaseModel):
     """Schema for updating expiration settings."""
     ticket_expiration_enabled: bool | None = None
     event_deactivation_enabled: bool | None = None
+    check_interval_minutes: int | None = None
 

@@ -71,13 +71,14 @@ class TicketExpirationService:
         if current_time is None:
             current_time = datetime.utcnow()
         
-        # Skip if already expired, refunded, cancelled, or used
-        if ticket.status in [TicketStatus.EXPIRED, TicketStatus.REFUNDED, TicketStatus.CANCELLED, TicketStatus.USED]:
+        # Only process tickets with ACTIVE status
+        if ticket.status != TicketStatus.ACTIVE:
             return False
         
-        # Check if event is loaded
+        # If event doesn't exist, ticket should be marked as expired
         if not ticket.event:
-            return False
+            logger.warning(f"Ticket {ticket.id} (token: {ticket.token}) has no associated event, marking as expired")
+            return True
         
         expiration_dt = TicketExpirationService._calculate_expiration_datetime(
             ticket.event.date,
@@ -90,6 +91,11 @@ class TicketExpirationService:
     def mark_expired_tickets(db: Session, current_time: datetime = None) -> int:
         """
         Find and mark expired tickets as expired.
+        
+        Only marks tickets with ACTIVE status. Tickets with other statuses
+        (REFUNDED, CANCELLED, USED, EXPIRED) are skipped.
+        
+        Also marks tickets as expired if their associated event doesn't exist.
         
         Args:
             db: Database session
@@ -112,6 +118,11 @@ class TicketExpirationService:
         
         expired_count = 0
         for ticket in tickets:
+            # Double-check status is still ACTIVE (defensive programming)
+            if ticket.status != TicketStatus.ACTIVE:
+                logger.debug(f"Skipping ticket {ticket.id} - status is {ticket.status}, not ACTIVE")
+                continue
+            
             if TicketExpirationService.is_ticket_expired(ticket, current_time):
                 logger.info(f"Marking ticket {ticket.id} (token: {ticket.token}) as expired")
                 ticket.status = TicketStatus.EXPIRED

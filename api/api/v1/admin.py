@@ -795,9 +795,16 @@ async def update_expiration_settings(
 ):
     """Update expiration service settings."""
     from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
-    settings = ExpirationSettingsRepository.update_settings(
-        db,
-        ticket_expiration_enabled=settings_update.ticket_expiration_enabled,
-        event_deactivation_enabled=settings_update.event_deactivation_enabled
-    )
-    return ExpirationSettingsResponse.model_validate(settings)
+    try:
+        settings = ExpirationSettingsRepository.update_settings(
+            db,
+            ticket_expiration_enabled=settings_update.ticket_expiration_enabled,
+            event_deactivation_enabled=settings_update.event_deactivation_enabled,
+            check_interval_minutes=settings_update.check_interval_minutes
+        )
+        return ExpirationSettingsResponse.model_validate(settings)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )

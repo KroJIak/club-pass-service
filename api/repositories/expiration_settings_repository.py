@@ -23,7 +23,8 @@ class ExpirationSettingsRepository:
             settings = ExpirationSettings(
                 id=1,
                 ticket_expiration_enabled=True,
-                event_deactivation_enabled=True
+                event_deactivation_enabled=True,
+                check_interval_minutes=30
             )
             db.add(settings)
             db.commit()
@@ -36,7 +37,8 @@ class ExpirationSettingsRepository:
     def update_settings(
         db: Session,
         ticket_expiration_enabled: bool = None,
-        event_deactivation_enabled: bool = None
+        event_deactivation_enabled: bool = None,
+        check_interval_minutes: int = None
     ) -> ExpirationSettings:
         """
         Update expiration settings.
@@ -45,6 +47,7 @@ class ExpirationSettingsRepository:
             db: Database session
             ticket_expiration_enabled: Enable/disable ticket expiration
             event_deactivation_enabled: Enable/disable event deactivation
+            check_interval_minutes: Check interval in minutes (minimum 1)
         
         Returns:
             Updated settings
@@ -57,6 +60,11 @@ class ExpirationSettingsRepository:
         if event_deactivation_enabled is not None:
             settings.event_deactivation_enabled = event_deactivation_enabled
         
+        if check_interval_minutes is not None:
+            if check_interval_minutes < 1:
+                raise ValueError("check_interval_minutes must be at least 1")
+            settings.check_interval_minutes = check_interval_minutes
+        
         settings.updated_at = datetime.utcnow()
         
         db.commit()
@@ -65,7 +73,8 @@ class ExpirationSettingsRepository:
         logger.info(
             f"Updated expiration settings: "
             f"ticket_expiration={settings.ticket_expiration_enabled}, "
-            f"event_deactivation={settings.event_deactivation_enabled}"
+            f"event_deactivation={settings.event_deactivation_enabled}, "
+            f"check_interval={settings.check_interval_minutes} minutes"
         )
         
         return settings
