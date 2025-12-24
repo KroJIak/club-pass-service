@@ -165,20 +165,24 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
         await callback.answer("Ticket type not found", show_alert=True)
         return
     
-    total_price = float(ticket_type.get("price", 0)) * quantity
+    price_per_ticket = float(ticket_type.get("price", 0))
+    total_price = price_per_ticket * quantity
     
-    djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else event.get("name", "")
+    # Format prices without .0 if integer
+    price_per_ticket_formatted = int(price_per_ticket) if price_per_ticket.is_integer() else price_per_ticket
+    total_price_formatted = int(total_price) if total_price.is_integer() else total_price
+    
+    event_name = event.get("name", "")
     text = t(
         locale,
         "messages.purchase.confirm_order",
-        event_name=djs_text,
+        event_name=event_name,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
         ticket_type_name=ticket_type.get("name", ""),
         quantity=quantity,
-        price_per_ticket=float(ticket_type.get("price", 0)),
-        total_price=total_price,
+        price_per_ticket=price_per_ticket_formatted,
+        total_price=total_price_formatted,
     )
     
     await safe_edit_message(

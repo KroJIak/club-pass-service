@@ -33,12 +33,9 @@ def get_events_keyboard(locale: str, events: list) -> InlineKeyboardMarkup:
     """Get events list keyboard."""
     builder = InlineKeyboardBuilder()
     for event in events:
-        djs = event.get('djs', [])
-        if djs:
-            djs_text = ", ".join(djs)
-            event_text = f"🎧 {djs_text}\n📅 {event.get('date', '')} {event.get('time', '')}"
-        else:
-            event_text = f"🎉 {event.get('name', 'Event')}\n📅 {event.get('date', '')} {event.get('time', '')}"
+        event_name = event.get('name', 'Event')
+        event_date = event.get('date', '')
+        event_text = f"{event_name}\n{event_date}"
         builder.add(InlineKeyboardButton(
             text=event_text,
             callback_data=f"event_{event.get('id')}"
@@ -71,7 +68,7 @@ def get_quantity_keyboard(locale: str, max_quantity: int = 5) -> InlineKeyboardM
     """Get quantity selection keyboard."""
     builder = InlineKeyboardBuilder()
     for i in range(1, min(max_quantity + 1, 6)):
-        builder.add(InlineKeyboardButton(text=f"🔢 {i}", callback_data=f"quantity_{i}"))
+        builder.add(InlineKeyboardButton(text=str(i), callback_data=f"quantity_{i}"))
     builder.adjust(3)
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_ticket_types"))
     return builder.as_markup()
