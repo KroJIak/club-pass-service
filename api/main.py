@@ -1,7 +1,5 @@
 """API Service Entry Point."""
 import logging
-import subprocess
-import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -43,26 +41,6 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.API_PREFIX)
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Run database migrations on startup."""
-    try:
-        logger.info("Running database migrations...")
-        result = subprocess.run(
-            ["alembic", "upgrade", "head"],
-            cwd="/app",
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        if result.returncode == 0:
-            logger.info("Database migrations completed successfully")
-        else:
-            logger.error(f"Migration failed: {result.stderr}")
-            # Don't exit - let the app start anyway, migrations can be run manually
-    except Exception as e:
-        logger.error(f"Error running migrations: {e}", exc_info=True)
-        # Don't exit - let the app start anyway, migrations can be run manually
 
 
 @app.get("/")
