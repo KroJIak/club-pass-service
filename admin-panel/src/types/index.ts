@@ -70,6 +70,8 @@ export interface Order {
   created_at: string
   updated_at: string
   username: string | null
+  event_name: string | null
+  ticket_type_name: string | null
 }
 
 export interface Promocode {

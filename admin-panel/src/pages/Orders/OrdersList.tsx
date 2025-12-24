@@ -50,9 +50,18 @@ const OrdersList = () => {
           <Grid item xs={12} sm={6} md={4} key={order.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Order {order.order_id}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        fontWeight: 500,
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word'
+                      }}
+                    >
+                      Order {order.order_id}
+                    </Typography>
                     {order.username && (
                       <Typography variant="body2" color="text.secondary">
                         @{order.username}
@@ -62,10 +71,16 @@ const OrdersList = () => {
                       Quantity: {order.quantity}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Event ID: {order.event_id}
+                      {order.event_name 
+                        ? `Event: ${order.event_name} (ID: ${order.event_id})`
+                        : `Event ID: ${order.event_id}`
+                      }
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Ticket Type ID: {order.ticket_type_id}
+                      {order.ticket_type_name 
+                        ? `Type: ${order.ticket_type_name} (ID: ${order.ticket_type_id})`
+                        : `Ticket Type ID: ${order.ticket_type_id}`
+                      }
                     </Typography>
                     {order.promocode && (
                       <Typography variant="body2" color="text.secondary">
@@ -77,6 +92,7 @@ const OrdersList = () => {
                     size="small"
                     color="error"
                     onClick={() => setDeleteDialog({ open: true, orderId: order.id })}
+                    sx={{ flexShrink: 0 }}
                   >
                     <DeleteIcon />
                   </IconButton>

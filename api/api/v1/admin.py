@@ -618,6 +618,8 @@ async def get_all_orders(
 ):
     """Get all orders (admin only)."""
     from api.repositories.user_repository import UserRepository
+    from api.repositories.event_repository import EventRepository
+    from api.repositories.ticket_type_repository import TicketTypeRepository
     
     orders = OrderRepository.get_all(db)
     order_responses = []
@@ -627,6 +629,14 @@ async def get_all_orders(
         user = UserRepository.get_by_id(db, order.user_id)
         if user:
             order_data.username = user.username
+        # Get event name
+        event = EventRepository.get_by_id(db, order.event_id)
+        if event:
+            order_data.event_name = event.name
+        # Get ticket type name
+        ticket_type = TicketTypeRepository.get_by_id(db, order.ticket_type_id)
+        if ticket_type:
+            order_data.ticket_type_name = ticket_type.name
         order_responses.append(order_data)
     
     return OrderListResponse(orders=order_responses)
@@ -647,11 +657,22 @@ async def get_order(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Order with id {order_id} not found"
         )
+    from api.repositories.event_repository import EventRepository
+    from api.repositories.ticket_type_repository import TicketTypeRepository
+    
     order_data = OrderAdminResponse.model_validate(order)
     # Get username from user
     user = UserRepository.get_by_id(db, order.user_id)
     if user:
         order_data.username = user.username
+    # Get event name
+    event = EventRepository.get_by_id(db, order.event_id)
+    if event:
+        order_data.event_name = event.name
+    # Get ticket type name
+    ticket_type = TicketTypeRepository.get_by_id(db, order.ticket_type_id)
+    if ticket_type:
+        order_data.ticket_type_name = ticket_type.name
     return order_data
 
 
