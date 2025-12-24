@@ -1,9 +1,12 @@
 import axios from 'axios'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use relative path if VITE_API_URL is not set or empty (for production with nginx proxy)
+// Otherwise use the provided URL (for development)
+const API_URL = import.meta.env.VITE_API_URL || ''
+const baseURL = API_URL ? `${API_URL}/api/v1` : '/api/v1'
 
 const api = axios.create({
-  baseURL: `${API_URL}/api/v1`,
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },

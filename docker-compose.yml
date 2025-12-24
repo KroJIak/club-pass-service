@@ -29,6 +29,7 @@ services:
       DB_NAME: ${DB_NAME:-club_pass}
       DEBUG: ${DEBUG:-false}
       EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -65,7 +66,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile.admin
       args:
-        VITE_API_URL: http://localhost:${API_PORT:-8000}
+        VITE_API_URL: ""  # Use relative paths with nginx proxy
     container_name: club-pass-admin
     ports:
       - "${ADMIN_PORT:-3000}:80"

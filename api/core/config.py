@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     # Expiration Service
     EXPIRATION_SERVICE_URL: str = "http://expiration-service:8001"
     
+    # CORS
+    CORS_ORIGINS: str = "*"  # Comma-separated list of allowed origins, or "*" for all
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
