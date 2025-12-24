@@ -13,7 +13,7 @@ interface OrdersFilterProps {
   onFilterChange: (filter: OrdersFilterState) => void
 }
 
-const OrdersFilter = ({ filterState, onFilterChange }: OrdersFilterProps) => {
+const OrdersFilter = (_props: OrdersFilterProps) => {
   return <Box />
 }
 
