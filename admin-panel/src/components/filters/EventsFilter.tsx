@@ -117,7 +117,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               type="number"
               value={localFilter.minPrice}
               onChange={(e) => handleFilterChange({ minPrice: Number(e.target.value) })}
-              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.84rem' }, '& .MuiInputLabel-root': { fontSize: '0.84rem' } }}
             />
             <TextField
               size="small"
@@ -125,7 +125,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               type="number"
               value={localFilter.maxPrice}
               onChange={(e) => handleFilterChange({ maxPrice: Number(e.target.value) })}
-              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+              sx={{ flex: 1, '& .MuiInputBase-input': { fontSize: '0.84rem' }, '& .MuiInputLabel-root': { fontSize: '0.84rem' } }}
             />
           </Box>
           <Slider
@@ -155,7 +155,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
                     sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
                   />
                 }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>{dj}</Typography>}
+                label={<Typography sx={{ fontSize: '0.84rem' }}>{dj}</Typography>}
               />
           ))}
           {allDjs.length > 5 && (
@@ -179,7 +179,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
             value={localFilter.dateFrom}
             onChange={(e) => handleFilterChange({ dateFrom: e.target.value })}
             InputLabelProps={{ shrink: true }}
-            sx={{ '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+            sx={{ '& .MuiInputBase-input': { fontSize: '0.84rem' }, '& .MuiInputLabel-root': { fontSize: '0.84rem' } }}
           />
           <TextField
             size="small"
@@ -188,7 +188,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
             value={localFilter.dateTo}
             onChange={(e) => handleFilterChange({ dateTo: e.target.value })}
             InputLabelProps={{ shrink: true }}
-            sx={{ '& .MuiInputBase-input': { fontSize: '0.8rem' }, '& .MuiInputLabel-root': { fontSize: '0.8rem' } }}
+            sx={{ '& .MuiInputBase-input': { fontSize: '0.84rem' }, '& .MuiInputLabel-root': { fontSize: '0.84rem' } }}
           />
         </Box>
       </FilterSection>
@@ -206,7 +206,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
                     sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
                   />
                 }
-                label={<Typography sx={{ fontSize: '0.8rem' }}>{name}</Typography>}
+                label={<Typography sx={{ fontSize: '0.84rem' }}>{name}</Typography>}
               />
           ))}
           {allTicketTypeNames.length > 5 && (
@@ -229,17 +229,17 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
           <FormControlLabel 
             value="all" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>All</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>All</Typography>} 
           />
           <FormControlLabel 
             value="active" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>Active</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>Active</Typography>} 
           />
           <FormControlLabel 
             value="inactive" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>Inactive</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>Inactive</Typography>} 
           />
         </RadioGroup>
       </FilterSection>

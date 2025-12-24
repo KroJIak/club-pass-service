@@ -46,17 +46,17 @@ const UsersFilter = ({ filterState, onFilterChange }: UsersFilterProps) => {
           <FormControlLabel 
             value="all" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>All</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>All</Typography>} 
           />
           <FormControlLabel 
             value="yes" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>Has username</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>Has username</Typography>} 
           />
           <FormControlLabel 
             value="no" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.8rem' }}>No username</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>No username</Typography>} 
           />
         </RadioGroup>
       </FilterSection>
