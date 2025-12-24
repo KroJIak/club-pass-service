@@ -44,15 +44,15 @@ const UsersList = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>Users</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>Users</Typography>
       <Grid container spacing={3}>
         {users.map((user) => (
           <Grid item xs={12} sm={6} md={4} key={user.id}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6">
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       {user.first_name || user.last_name 
                         ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
                         : 'No name'}
