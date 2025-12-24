@@ -2,7 +2,7 @@
 
 ## check_expired_tickets.py
 
-Скрипт для проверки и пометки просроченных билетов.
+Скрипт для одноразовой проверки и пометки просроченных билетов.
 
 ### Логика просрочки
 
@@ -19,24 +19,34 @@ python api/scripts/check_expired_tickets.py
 docker compose exec api python api/scripts/check_expired_tickets.py
 ```
 
-### Автоматический запуск (cron)
+## ticket-expiration-worker (Рекомендуется)
 
-Добавьте в crontab для запуска каждый час:
+Отдельный фоновый сервис, который постоянно работает и автоматически проверяет просроченные билеты.
 
-```bash
-0 * * * * cd /path/to/club-pass-service && docker compose exec -T api python api/scripts/check_expired_tickets.py
-```
-
-Или для запуска каждые 30 минут:
+### Запуск
 
 ```bash
-*/30 * * * * cd /path/to/club-pass-service && docker compose exec -T api python api/scripts/check_expired_tickets.py
+# Через Docker Compose (автоматически запускается)
+docker compose up ticket-expiration-worker
+
+# Или как часть всех сервисов
+docker compose up
 ```
 
-### Интеграция с системой
+### Конфигурация
 
-Скрипт можно интегрировать в:
-- **Celery** с периодическими задачами
-- **cron** для простого планирования
-- **systemd timer** для более продвинутого планирования
-- **Kubernetes CronJob** для контейнеризованных сред
+Интервал проверки настраивается через переменную окружения `EXPIRATION_CHECK_INTERVAL_MINUTES` (по умолчанию 30 минут).
+
+### Логи
+
+Логи сервиса можно просмотреть через:
+
+```bash
+docker compose logs -f ticket-expiration-worker
+```
+
+### Остановка
+
+```bash
+docker compose stop ticket-expiration-worker
+```
