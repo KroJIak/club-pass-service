@@ -21,4 +21,3 @@ class Event(Base):
     
     # Relationships
     tickets = relationship("Ticket", back_populates="event", lazy="dynamic")
-

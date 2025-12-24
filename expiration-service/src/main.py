@@ -41,16 +41,47 @@ def check_and_mark_expired_tickets():
         db.close()
 
 
+def check_and_deactivate_events():
+    """Check and deactivate past events."""
+    db: Session = SessionLocal()
+    try:
+        logger.info("Starting events deactivation check...")
+        deactivated_count = TicketExpirationService.deactivate_past_events(db)
+        if deactivated_count > 0:
+            logger.info(f"Deactivated {deactivated_count} event(s).")
+        else:
+            logger.debug("No events found to deactivate.")
+        return deactivated_count
+    except Exception as e:
+        logger.error(f"Error deactivating events: {e}", exc_info=True)
+        db.rollback()
+        raise
+    finally:
+        db.close()
+
+
+def run_all_checks():
+    """Run all expiration and deactivation checks."""
+    logger.info("=" * 50)
+    logger.info("Running all expiration checks...")
+    
+    tickets_count = check_and_mark_expired_tickets()
+    events_count = check_and_deactivate_events()
+    
+    logger.info(f"Checks completed: {tickets_count} tickets expired, {events_count} events deactivated")
+    logger.info("=" * 50)
+
+
 def main():
     """Main function to run the scheduler."""
-    logger.info("Starting Ticket Expiration Service...")
+    logger.info("Starting Expiration Service...")
     logger.info(f"Database: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}")
     logger.info(f"Check interval: {settings.CHECK_INTERVAL_MINUTES} minutes")
     
     # Run initial check
     logger.info("Running initial check...")
     try:
-        check_and_mark_expired_tickets()
+        run_all_checks()
     except Exception as e:
         logger.error(f"Initial check failed: {e}", exc_info=True)
         sys.exit(1)
@@ -58,12 +89,12 @@ def main():
     # Setup scheduler
     scheduler = BlockingScheduler()
     
-    # Schedule periodic checks
+    # Schedule periodic checks for tickets and events
     scheduler.add_job(
-        check_and_mark_expired_tickets,
+        run_all_checks,
         trigger=IntervalTrigger(minutes=settings.CHECK_INTERVAL_MINUTES),
-        id='check_expired_tickets',
-        name='Check and mark expired tickets',
+        id='check_expirations',
+        name='Check expired tickets and deactivate past events',
         replace_existing=True
     )
     

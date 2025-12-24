@@ -1,4 +1,4 @@
-"""Service for checking and updating expired tickets."""
+"""Service for checking and updating expired tickets and deactivating past events."""
 import logging
 from datetime import datetime, timedelta
 from typing import List

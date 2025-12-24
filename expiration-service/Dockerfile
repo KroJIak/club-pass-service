@@ -9,13 +9,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY ticket-expiration-service/requirements.txt .
+COPY expiration-service/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY ticket-expiration-service/src/ ./src/
+COPY expiration-service/src/ ./src/
 
 # Set Python path
 ENV PYTHONPATH=/app
