@@ -78,13 +78,18 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
   const minPriceValue = prices.length > 0 ? Math.min(...prices) : 0
   const maxPriceValue = prices.length > 0 ? Math.max(...prices) : 10000
 
-  // Initialize price range if not set
+  // Initialize price range if not set (only once)
   useEffect(() => {
-    if (localFilter.minPrice === 0 && localFilter.maxPrice === 10000 && maxPriceValue > 0) {
+    if (
+      localFilter.minPrice === DEFAULT_FILTER_STATE.minPrice &&
+      localFilter.maxPrice === DEFAULT_FILTER_STATE.maxPrice &&
+      maxPriceValue > 0 &&
+      minPriceValue !== maxPriceValue
+    ) {
       handleFilterChange({ minPrice: minPriceValue, maxPrice: maxPriceValue })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minPriceValue, maxPriceValue])
+  }, [])
 
   const handleDjToggle = (dj: string) => {
     const newDjs = localFilter.selectedDjs.includes(dj)
