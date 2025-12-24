@@ -17,11 +17,14 @@ depends_on = None
 
 def upgrade() -> None:
     # Add USED value to ticketstatus enum
-    # Note: Initial migration created enum with uppercase values (ACTIVE, REFUNDED, CANCELLED)
-    # The model uses lowercase, but TypeDecorator handles conversion
-    # We'll add both uppercase and lowercase to be safe, or just uppercase to match existing
-    op.execute("ALTER TYPE ticketstatus ADD VALUE IF NOT EXISTS 'USED'")
+    # Note: PostgreSQL requires new enum values to be committed in a separate transaction
+    # before they can be used. We need to execute this outside of Alembic's transaction.
+    # Use autocommit mode to execute the ALTER TYPE in its own transaction
+    connection = op.get_bind()
+    autocommit_conn = connection.execution_options(autocommit=True)
+    autocommit_conn.execute(sa.text("ALTER TYPE ticketstatus ADD VALUE IF NOT EXISTS 'USED'"))
     
+    # Now we can use the new enum value
     # Update existing tickets: if is_used is True, set status to USED
     # Must use uppercase 'ACTIVE' to match the enum value from initial migration
     op.execute("""
