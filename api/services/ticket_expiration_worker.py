@@ -7,10 +7,16 @@ from datetime import datetime
 from typing import Optional
 
 from api.core.db import SessionLocal
-from api.core.config import settings
 from api.services.ticket_expiration_service import TicketExpirationService
 
 logger = logging.getLogger(__name__)
+
+# Import settings only when needed to avoid circular imports
+try:
+    from api.core.config import settings
+    CHECK_INTERVAL = settings.EXPIRATION_CHECK_INTERVAL_MINUTES
+except:
+    CHECK_INTERVAL = 30  # Default to 30 minutes
 
 class TicketExpirationWorker:
     """Background worker that periodically checks and marks expired tickets."""
@@ -90,6 +96,9 @@ class TicketExpirationWorker:
 
 def main():
     """Main entry point for the worker."""
+    # Import settings here to ensure config is loaded
+    from api.core.config import settings
+    
     # Configure logging
     logging.basicConfig(
         level=logging.DEBUG if settings.DEBUG else logging.INFO,
@@ -97,7 +106,7 @@ def main():
     )
     
     # Create and start worker
-    check_interval = settings.EXPIRATION_CHECK_INTERVAL_MINUTES
+    check_interval = getattr(settings, 'EXPIRATION_CHECK_INTERVAL_MINUTES', 30)
     logger.info(f"Starting ticket expiration worker with check interval: {check_interval} minutes")
     worker = TicketExpirationWorker(check_interval_minutes=check_interval)
     worker.start()
