@@ -110,6 +110,27 @@ class TicketService:
         return TicketRepository.refund_ticket(db, ticket_id)
     
     @staticmethod
+    def get_ticket_by_token(
+        db: Session,
+        token: str,
+    ) -> Optional[TicketDetailResponse]:
+        """
+        Get ticket by token with all related data.
+        
+        Args:
+            db: Database session
+            token: Ticket token
+        
+        Returns:
+            Ticket detail response or None
+        """
+        ticket = TicketRepository.get_by_token(db, token)
+        if not ticket:
+            return None
+        
+        return TicketDetailResponse.model_validate(ticket)
+    
+    @staticmethod
     def mark_ticket_as_used(
         db: Session,
         ticket_id: int,

@@ -31,7 +31,8 @@ class TicketRepository:
         """Get ticket by token."""
         return db.query(Ticket).options(
             joinedload(Ticket.event),
-            joinedload(Ticket.ticket_type)
+            joinedload(Ticket.ticket_type),
+            joinedload(Ticket.user)
         ).filter(Ticket.token == token).first()
     
     @staticmethod

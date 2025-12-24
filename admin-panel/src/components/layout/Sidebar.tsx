@@ -14,6 +14,7 @@ import {
   ShoppingCart as OrderIcon,
   LocalOffer as PromocodeIcon,
   Settings as SettingsIcon,
+  QrCodeScanner as QrCodeIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -24,6 +25,7 @@ const menuItems = [
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
+  { text: 'Скан QR', icon: <QrCodeIcon />, path: '/qr-scanner' },
   { text: 'Expiration Settings', icon: <SettingsIcon />, path: '/expiration-settings' },
 ]
 

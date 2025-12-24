@@ -18,7 +18,8 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/x-date-pickers": "^6.19.7",
-    "dayjs": "^1.11.10"
+    "dayjs": "^1.11.10",
+    "html5-qrcode": "^2.3.8"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

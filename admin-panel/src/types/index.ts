@@ -181,3 +181,40 @@ export interface ExpirationSettingsUpdate {
   check_interval_minutes?: number
 }
 
+export interface TicketDetailResponse {
+  id: number
+  user_id: number
+  event_id: number
+  ticket_type_id: number
+  token: string
+  status: 'active' | 'refunded' | 'cancelled' | 'expired' | 'used'
+  used_at: string | null
+  refunded_at: string | null
+  created_at: string
+  updated_at: string
+  event: {
+    id: number
+    name: string
+    description: string | null
+    date: string
+    time: string
+    djs: string[] | null
+    is_active: boolean
+  }
+  ticket_type: {
+    id: number
+    name: string
+    price: number
+    available_quantity: number
+    total_quantity: number
+    is_active: boolean
+  }
+  user?: {
+    id: number
+    telegram_user_id: number
+    username: string | null
+    first_name: string | null
+    last_name: string | null
+  } | null
+}
+

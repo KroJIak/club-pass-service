@@ -128,6 +128,7 @@ class TicketDetailResponse(BaseModel):
     updated_at: datetime
     event: EventResponse
     ticket_type: TicketTypeResponse
+    user: Optional[UserResponse] = None
 
     class Config:
         from_attributes = True

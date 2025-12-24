@@ -16,11 +16,12 @@ from api.repositories.payment_repository import PaymentRepository
 from api.repositories.order_repository import OrderRepository
 from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
+from api.services.ticket_service import TicketService
 from api.api.v1.schemas import (
     EventResponse, EventListResponse,
     TicketTypeResponse, TicketTypeListResponse,
     UserResponse, UserCreate, UserUpdate,
-    TicketResponse, TicketDetailResponse, TicketUpdate,
+    TicketResponse, TicketDetailResponse, TicketUpdate, TicketMarkUsedResponse,
     PaymentResponse,
     ExpirationSettingsResponse,
     ExpirationSettingsUpdate,
@@ -543,6 +544,44 @@ async def update_ticket(
     db.commit()
     db.refresh(ticket)
     return TicketResponse.model_validate(ticket)
+
+
+@router.get("/admin/tickets/token/{token}", response_model=TicketDetailResponse)
+async def get_ticket_by_token(
+    token: str,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get ticket by token (admin only)."""
+    ticket = TicketService.get_ticket_by_token(db, token)
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket with token {token} not found"
+        )
+    return ticket
+
+
+@router.post("/admin/tickets/{ticket_id}/mark-used", response_model=TicketMarkUsedResponse)
+async def mark_ticket_as_used_admin(
+    ticket_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Mark ticket as used (admin only)."""
+    ticket = TicketService.mark_ticket_as_used(db, ticket_id)
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket with id {ticket_id} not found"
+        )
+    
+    return TicketMarkUsedResponse(
+        ticket_id=ticket.id,
+        status=ticket.status,
+        used_at=ticket.used_at or datetime.utcnow(),
+        message="Ticket marked as used successfully"
+    )
 
 
 @router.delete("/admin/tickets/{ticket_id}")
