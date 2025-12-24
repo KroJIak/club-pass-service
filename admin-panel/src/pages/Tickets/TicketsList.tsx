@@ -82,6 +82,12 @@ const TicketsList = () => {
                           ? 'success' 
                           : ticket.status === 'used'
                           ? 'warning'
+                          : ticket.status === 'refunded'
+                          ? 'info'
+                          : ticket.status === 'expired'
+                          ? 'error'
+                          : ticket.status === 'cancelled'
+                          ? 'default'
                           : 'default'
                       }
                       size="small"

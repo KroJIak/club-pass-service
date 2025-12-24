@@ -196,14 +196,10 @@ async def handle_refund_confirm_yes(callback: CallbackQuery, state: FSMContext):
     
     if not result:
         text = t(locale, "messages.tickets.refund_error")
-        from bot.core.message_manager import get_screen_image
-        photo_input = get_screen_image(locale, "refund_confirm")
-        await safe_edit_message(
-            callback,
-            text,
+        await callback.message.edit_caption(
+            caption=text,
             reply_markup=None,
             parse_mode="HTML",
-            photo_input=photo_input,
         )
         await callback.answer()
         return
@@ -218,14 +214,10 @@ async def handle_refund_confirm_yes(callback: CallbackQuery, state: FSMContext):
         else:
             text = t(locale, "messages.tickets.refund_error")
         
-        from bot.core.message_manager import get_screen_image
-        photo_input = get_screen_image(locale, "refund_confirm")
-        await safe_edit_message(
-            callback,
-            text,
+        await callback.message.edit_caption(
+            caption=text,
             reply_markup=None,
             parse_mode="HTML",
-            photo_input=photo_input,
         )
         await callback.answer()
         return
@@ -236,7 +228,6 @@ async def handle_refund_confirm_yes(callback: CallbackQuery, state: FSMContext):
     # Create keyboard with back to menu button
     from aiogram.types import InlineKeyboardButton
     from aiogram.utils.keyboard import InlineKeyboardBuilder
-    from bot.core.message_manager import get_screen_image
     
     back_builder = InlineKeyboardBuilder()
     back_builder.add(InlineKeyboardButton(
@@ -245,13 +236,10 @@ async def handle_refund_confirm_yes(callback: CallbackQuery, state: FSMContext):
     ))
     back_keyboard = back_builder.as_markup()
     
-    photo_input = get_screen_image(locale, "refund_confirm")
-    await safe_edit_message(
-        callback,
-        text,
+    await callback.message.edit_caption(
+        caption=text,
         reply_markup=back_keyboard,
         parse_mode="HTML",
-        photo_input=photo_input,
     )
     
     # Clear state
@@ -315,13 +303,10 @@ async def handle_refund_confirm_no(callback: CallbackQuery, state: FSMContext):
     keyboard_builder.adjust(1)
     ticket_keyboard = keyboard_builder.as_markup()
     
-    # Edit message back to ticket view using safe_edit_message
-    await safe_edit_message(
-        callback,
-        text,
+    # Edit message back to ticket view
+    await callback.message.edit_media(
+        media=InputMediaPhoto(media=qr_file, caption=text, parse_mode="HTML"),
         reply_markup=ticket_keyboard,
-        parse_mode="HTML",
-        photo_input=qr_file,
     )
     
     await callback.answer()

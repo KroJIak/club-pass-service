@@ -96,21 +96,7 @@ def get_tickets_keyboard(locale: str, tickets: list) -> InlineKeyboardMarkup:
     """Get tickets list keyboard."""
     builder = InlineKeyboardBuilder()
     for ticket in tickets:
-        status = ticket.get("status", "active")
-        # Different emojis for different statuses
-        if status == "active":
-            status_emoji = "✅"
-        elif status == "refunded":
-            status_emoji = "↩️"
-        elif status == "expired":
-            status_emoji = "⏰"
-        elif status == "cancelled":
-            status_emoji = "❌"
-        elif status == "used":
-            status_emoji = "🎫"
-        else:
-            status_emoji = "❓"
-        
+        status_emoji = "✅" if ticket.get("status") == "active" else "❌"
         ticket_text = f"{status_emoji} {ticket.get('event_name', 'Event')}\n{ticket.get('event_date', '')} {ticket.get('event_time', '')}"
         builder.add(InlineKeyboardButton(
             text=ticket_text,
