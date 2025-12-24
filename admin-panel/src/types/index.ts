@@ -154,3 +154,15 @@ export interface PromocodeUpdate {
   is_active?: boolean | null
 }
 
+export interface ExpirationSettings {
+  id: number
+  ticket_expiration_enabled: boolean
+  event_deactivation_enabled: boolean
+  updated_at: string
+}
+
+export interface ExpirationSettingsUpdate {
+  ticket_expiration_enabled?: boolean
+  event_deactivation_enabled?: boolean
+}
+
