@@ -249,7 +249,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                         {tt.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Price: {tt.price} ₽ | Available: {tt.available_quantity} / {tt.total_quantity}
+                        Price: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽ | Available: {tt.available_quantity} / {tt.total_quantity}
                       </Typography>
                     </Box>
                     <IconButton

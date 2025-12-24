@@ -50,7 +50,7 @@ const TicketTypesList = () => {
               <CardContent>
                 <Typography variant="h6">{tt.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Price: {tt.price} ₽
+                  Price: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Available: {tt.available_quantity} / {tt.total_quantity}

@@ -54,7 +54,8 @@ def get_ticket_types_keyboard(locale: str, ticket_types: list) -> InlineKeyboard
         price = ticket_type.get('price', 0)
         if isinstance(price, str):
             price = float(price)
-        ticket_text = f"🎫 {ticket_type.get('name', 'Type')} - {price} ₽{available_text}"
+        price_formatted = int(price) if isinstance(price, float) and price.is_integer() or isinstance(price, int) else price
+        ticket_text = f"🎫 {ticket_type.get('name', 'Type')} - {price_formatted} ₽{available_text}"
         builder.add(InlineKeyboardButton(
             text=ticket_text,
             callback_data=f"ticket_type_{ticket_type.get('id')}"

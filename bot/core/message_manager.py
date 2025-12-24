@@ -335,10 +335,15 @@ def format_ticket_info(locale: str, ticket: Dict[str, Any]) -> str:
 
 def format_order_summary(locale: str, order: Dict[str, Any]) -> str:
     """Format order summary message."""
+    total_amount = order.get('total_amount', 0)
+    if isinstance(total_amount, (int, float)):
+        total_amount_formatted = int(total_amount) if isinstance(total_amount, float) and total_amount.is_integer() else total_amount
+    else:
+        total_amount_formatted = total_amount
     return (
         f"📋 <b>{t(locale, 'buttons.confirm')}</b>\n\n"
         f"🎉 {order.get('event_name', '')}\n"
         f"🎟️ {order.get('ticket_type_name', '')}\n"
         f"🔢 {order.get('quantity', 0)}\n"
-        f"💰 {order.get('total_amount', 0)} ₽"
+        f"💰 {total_amount_formatted} ₽"
     )
