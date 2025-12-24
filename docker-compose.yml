@@ -16,6 +16,23 @@ services:
       timeout: 5s
       retries: 5
 
+  db-init:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: club-pass-db-init
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_NAME: ${DB_NAME:-club_pass}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: python -m api.scripts.init_db
+    restart: "no"
+
   api:
     build:
       context: .
@@ -35,10 +52,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     volumes:
       - ./api:/app/api
-      - ./alembic:/app/alembic
-      - ./alembic.ini:/app/alembic.ini
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
 
   bot:
     build:
@@ -93,6 +111,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     restart: unless-stopped
 
 volumes:

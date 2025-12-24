@@ -17,10 +17,7 @@ depends_on = None
 
 def upgrade() -> None:
     # Add EXPIRED value to ticket_status enum
-    # Note: PostgreSQL enum values are case-sensitive
-    # Initial migration uses uppercase (ACTIVE, REFUNDED, CANCELLED)
-    # But model uses lowercase, so we add lowercase to match model
-    # The TypeDecorator in the model handles conversion
+    # Note: PostgreSQL requires creating a new enum type and altering the column
     op.execute("ALTER TYPE ticketstatus ADD VALUE IF NOT EXISTS 'expired'")
 
 

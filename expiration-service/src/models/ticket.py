@@ -28,11 +28,8 @@ class TicketStatusType(TypeDecorator):
         if value is None:
             return None
         if isinstance(value, TicketStatus):
-            # Convert to uppercase to match enum values in database
-            # Database enum contains uppercase values (ACTIVE, REFUNDED, etc.)
-            return value.value.upper()
-        # If it's already a string, convert to uppercase
-        return str(value).upper()
+            return value.value
+        return str(value)
     
     def process_result_value(self, value, dialect):
         """Convert string value back to enum when reading from database."""
