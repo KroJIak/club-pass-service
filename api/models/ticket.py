@@ -35,7 +35,16 @@ class TicketStatusType(TypeDecorator):
         """Convert string value back to enum when reading from database."""
         if value is None:
             return None
-        return TicketStatus(value)
+        # Convert to lowercase to handle both old uppercase values and new lowercase values
+        value_lower = str(value).lower()
+        try:
+            return TicketStatus(value_lower)
+        except ValueError:
+            # If value doesn't match, try to find by case-insensitive match
+            for status in TicketStatus:
+                if status.value.lower() == value_lower:
+                    return status
+            raise ValueError(f"Invalid ticket status: {value}")
 
 
 class Ticket(Base):
