@@ -1,0 +1,77 @@
+"""Main entry point for ticket expiration service."""
+import logging
+import sys
+from datetime import datetime
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+from sqlalchemy.orm import Session
+
+from src.config import settings
+from src.db import SessionLocal
+from src.services.expiration_service import TicketExpirationService
+
+# Configure logging
+logging.basicConfig(
+    level=getattr(logging, settings.LOG_LEVEL),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+
+def check_and_mark_expired_tickets():
+    """Check and mark expired tickets."""
+    db: Session = SessionLocal()
+    try:
+        logger.info("Starting expired tickets check...")
+        expired_count = TicketExpirationService.mark_expired_tickets(db)
+        logger.info(f"Marked {expired_count} tickets as expired.")
+        return expired_count
+    except Exception as e:
+        logger.error(f"Error checking expired tickets: {e}", exc_info=True)
+        raise
+    finally:
+        db.close()
+
+
+def main():
+    """Main function to run the scheduler."""
+    logger.info("Starting Ticket Expiration Service...")
+    logger.info(f"Database: {settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}")
+    logger.info(f"Check interval: {settings.CHECK_INTERVAL_MINUTES} minutes")
+    
+    # Run initial check
+    logger.info("Running initial check...")
+    try:
+        check_and_mark_expired_tickets()
+    except Exception as e:
+        logger.error(f"Initial check failed: {e}", exc_info=True)
+        sys.exit(1)
+    
+    # Setup scheduler
+    scheduler = BlockingScheduler()
+    
+    # Schedule periodic checks
+    scheduler.add_job(
+        check_and_mark_expired_tickets,
+        trigger=IntervalTrigger(minutes=settings.CHECK_INTERVAL_MINUTES),
+        id='check_expired_tickets',
+        name='Check and mark expired tickets',
+        replace_existing=True
+    )
+    
+    logger.info("Scheduler started. Press Ctrl+C to exit.")
+    
+    try:
+        scheduler.start()
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Scheduler stopped.")
+        scheduler.shutdown()
+
+
+if __name__ == "__main__":
+    main()
+

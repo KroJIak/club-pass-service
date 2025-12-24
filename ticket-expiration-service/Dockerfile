@@ -9,20 +9,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements
-COPY expiration-service/requirements.txt .
+COPY ticket-expiration-service/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy expiration service code
-COPY expiration-service/ ./expiration-service/
+# Copy source code
+COPY ticket-expiration-service/ ./ticket-expiration-service/
 
-# Copy shared API code (for models, services, etc.)
-COPY api/ ./api/
-
-# Set Python path to include parent directory
+# Set Python path
 ENV PYTHONPATH=/app
 
 # Run the service
-CMD ["python", "expiration-service/main.py"]
+CMD ["python", "-m", "ticket-expiration-service.src.main"]
 
