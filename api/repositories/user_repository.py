@@ -71,10 +71,17 @@ class UserRepository:
     def delete(db: Session, user_id: int) -> bool:
         """Delete a user."""
         from api.models.payment import Payment
+        from api.models.ticket import Ticket
         
         user = UserRepository.get_by_id(db, user_id)
         if not user:
             return False
+        
+        # Explicitly delete related tickets first to avoid constraint violations
+        # Tickets have CASCADE, but SQLAlchemy may try to set user_id to NULL which violates NOT NULL
+        tickets = db.query(Ticket).filter(Ticket.user_id == user_id).all()
+        for ticket in tickets:
+            db.delete(ticket)
         
         # Explicitly delete related payments first to avoid constraint violations
         # Payments have CASCADE, but SQLAlchemy may not handle it correctly
