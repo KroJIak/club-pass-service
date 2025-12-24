@@ -125,7 +125,6 @@ const EventsList = () => {
                     <Switch
                       checked={event.is_active}
                       onChange={(e) => handleToggleActive(event, e)}
-                      size="small"
                       onClick={(e) => e.stopPropagation()}
                     />
                     <Chip
