@@ -5,9 +5,13 @@ import api from '../../services/api'
 import { Ticket } from '../../types'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
 import TicketForm from './TicketForm'
+import FilterPanel from '../../components/filters/FilterPanel'
+import TicketsFilter, { TicketsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/TicketsFilter'
+import { useFilterPanel } from '../../hooks/useFilterPanel'
 
 const TicketsList = () => {
   const [tickets, setTickets] = useState<Ticket[]>([])
+  const [allTickets, setAllTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
   const [editingTicket, setEditingTicket] = useState<Ticket | null>(null)
@@ -15,6 +19,8 @@ const TicketsList = () => {
     open: false,
     ticketId: null,
   })
+  const [filterState, setFilterState] = useState<TicketsFilterState>(DEFAULT_FILTER_STATE)
+  const { setFilterPanel } = useFilterPanel()
 
   useEffect(() => {
     fetchTickets()
@@ -23,13 +29,62 @@ const TicketsList = () => {
   const fetchTickets = async () => {
     try {
       const response = await api.get('/admin/tickets')
-      setTickets(response.data.tickets)
+      const fetchedTickets = response.data.tickets
+      setAllTickets(fetchedTickets)
+      setTickets(fetchedTickets)
     } catch (error) {
       console.error('Failed to fetch tickets:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  // Set up filter panel
+  useEffect(() => {
+    setFilterPanel(
+      <FilterPanel
+        searchValue={filterState.search}
+        onSearchChange={(value) => setFilterState({ ...filterState, search: value })}
+      >
+        <TicketsFilter
+          filterState={filterState}
+          onFilterChange={setFilterState}
+        />
+      </FilterPanel>
+    )
+
+    return () => {
+      setFilterPanel(null)
+    }
+  }, [filterState, setFilterPanel])
+
+  // Filter tickets based on filter state
+  useEffect(() => {
+    let filtered = [...allTickets]
+
+    // Search filter - по номеру тикета (id), токену, имени/username пользователя
+    if (filterState.search.trim()) {
+      const searchLower = filterState.search.toLowerCase()
+      filtered = filtered.filter((ticket) => {
+        const ticketIdMatch = ticket.id.toString().includes(searchLower)
+        const tokenMatch = ticket.token.toLowerCase().includes(searchLower)
+        const usernameMatch = ticket.username?.toLowerCase().includes(searchLower) || false
+        const firstNameMatch = ticket.first_name?.toLowerCase().includes(searchLower) || false
+        const lastNameMatch = ticket.last_name?.toLowerCase().includes(searchLower) || false
+        
+        return ticketIdMatch || tokenMatch || usernameMatch || firstNameMatch || lastNameMatch
+      })
+    }
+
+    // Status filter
+    if (filterState.status !== 'all') {
+      filtered = filtered.filter((ticket) => {
+        return ticket.status === filterState.status
+      })
+    }
+
+    setTickets(filtered)
+  }, [allTickets, filterState])
 
   const handleEdit = (ticket: Ticket) => {
     setEditingTicket(ticket)
