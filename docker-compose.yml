@@ -28,6 +28,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-club_pass}
       DEBUG: ${DEBUG:-false}
+      EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
