@@ -10,7 +10,7 @@ import {
   IconButton,
   Divider,
 } from '@mui/material'
-import { Close as CloseIcon, Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Close as CloseIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
 import { Event, EventCreate, EventUpdate, TicketType } from '../../types'
@@ -20,6 +20,7 @@ import TimeField from '../../components/forms/TimeField'
 import ArrayField from '../../components/forms/ArrayField'
 import BooleanField from '../../components/forms/BooleanField'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
+import TicketTypeForm from './TicketTypeForm'
 
 interface EventFormProps {
   open?: boolean
