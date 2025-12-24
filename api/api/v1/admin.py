@@ -132,6 +132,8 @@ class OrderAdminResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     username: Optional[str] = None  # Telegram username
+    event_name: Optional[str] = None  # Event name
+    ticket_type_name: Optional[str] = None  # Ticket type name
 
     class Config:
         from_attributes = True
