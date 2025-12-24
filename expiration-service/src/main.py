@@ -1,4 +1,4 @@
-"""Main entry point for ticket expiration service."""
+"""Main entry point for expiration service."""
 import logging
 import sys
 from datetime import datetime
