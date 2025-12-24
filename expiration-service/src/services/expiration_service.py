@@ -129,8 +129,13 @@ class TicketExpirationService:
                 expired_count += 1
         
         if expired_count > 0:
-            db.commit()
-            logger.info(f"Successfully marked {expired_count} ticket(s) as expired")
+            try:
+                db.commit()
+                logger.info(f"Successfully marked {expired_count} ticket(s) as expired")
+            except Exception as e:
+                logger.error(f"Error committing expired tickets: {e}", exc_info=True)
+                db.rollback()
+                raise
         else:
             logger.debug("No tickets found to expire")
         
