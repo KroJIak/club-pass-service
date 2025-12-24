@@ -252,13 +252,13 @@ async def update_event(
     return EventResponse.model_validate(event)
 
 
-@router.delete("/admin/events/{event_id}")
+@router.delete("/admin/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete an event (soft delete by setting is_active=False)."""
+    """Delete an event (hard delete)."""
     event = EventRepository.get_by_id(db, event_id)
     if not event:
         raise HTTPException(
@@ -266,9 +266,9 @@ async def delete_event(
             detail=f"Event with id {event_id} not found"
         )
     
-    event.is_active = False
+    db.delete(event)
     db.commit()
-    return {"message": f"Event {event_id} deactivated successfully"}
+    return None
 
 
 # TicketTypes CRUD
@@ -358,13 +358,13 @@ async def update_ticket_type(
     return TicketTypeResponse.model_validate(ticket_type)
 
 
-@router.delete("/admin/ticket-types/{ticket_type_id}")
+@router.delete("/admin/ticket-types/{ticket_type_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket_type(
     ticket_type_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a ticket type (soft delete by setting is_active=False)."""
+    """Delete a ticket type (hard delete)."""
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
     if not ticket_type:
         raise HTTPException(
@@ -372,9 +372,9 @@ async def delete_ticket_type(
             detail=f"Ticket type with id {ticket_type_id} not found"
         )
     
-    ticket_type.is_active = False
+    db.delete(ticket_type)
     db.commit()
-    return {"message": f"Ticket type {ticket_type_id} deactivated successfully"}
+    return None
 
 
 # Users CRUD
