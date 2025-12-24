@@ -110,7 +110,6 @@ const EventsList = () => {
                 display: 'flex', 
                 flexDirection: 'column',
                 cursor: 'pointer',
-                position: 'relative',
               }}
               onClick={() => toggleExpand(event.id)}
             >
@@ -143,6 +142,16 @@ const EventsList = () => {
                     >
                       <EditIcon />
                     </IconButton>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDeleteDialog({ open: true, eventId: event.id })
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   </Box>
                 </Box>
                 {event.djs && event.djs.length > 0 && (
@@ -155,18 +164,6 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
-                <Box sx={{ position: 'absolute', bottom: 8, right: 8 }}>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDeleteDialog({ open: true, eventId: event.id })
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
               </CardContent>
             </Card>
 
