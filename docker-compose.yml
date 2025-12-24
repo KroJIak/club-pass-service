@@ -83,9 +83,12 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-club_pass}
       DEBUG: ${DEBUG:-false}
+      EXPIRATION_CHECK_INTERVAL_MINUTES: ${EXPIRATION_CHECK_INTERVAL_MINUTES:-30}
     depends_on:
       db:
         condition: service_healthy
+      api:
+        condition: service_started
     volumes:
       - ./api:/app/api
     command: python -m api.services.ticket_expiration_worker
