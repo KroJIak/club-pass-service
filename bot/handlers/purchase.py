@@ -119,11 +119,13 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
         await callback.answer("Ticket type not found", show_alert=True)
         return
     
+    price = float(ticket_type.get("price", 0))
+    price_formatted = int(price) if price.is_integer() else price
     text = t(
         locale,
         "messages.purchase.select_quantity",
         ticket_type_name=ticket_type.get("name", ""),
-        price=float(ticket_type.get("price", 0)),
+        price=price_formatted,
         available=ticket_type.get("available_quantity", 0),
     )
     
@@ -352,11 +354,13 @@ async def handle_back_to_quantity(callback: CallbackQuery, state: FSMContext):
         await callback.answer("Ticket type not found", show_alert=True)
         return
     
+    price = float(ticket_type.get("price", 0))
+    price_formatted = int(price) if price.is_integer() else price
     text = t(
         locale,
         "messages.purchase.select_quantity",
         ticket_type_name=ticket_type.get("name", ""),
-        price=float(ticket_type.get("price", 0)),
+        price=price_formatted,
         available=ticket_type.get("available_quantity", 0),
     )
     
@@ -429,12 +433,11 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     
     ticket_types = await api_service.get_ticket_types(event_id)
     
-    djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else event.get("name", "")
+    event_name = event.get("name", "")
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
-        event_name=djs_text,
+        event_name=event_name,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
     )
