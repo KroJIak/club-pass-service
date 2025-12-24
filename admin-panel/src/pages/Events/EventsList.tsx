@@ -8,6 +8,7 @@ import {
   IconButton,
   Chip,
   Drawer,
+  Switch,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
@@ -56,12 +57,12 @@ const EventsList = () => {
     setDeleteDialog({ open: false, eventId: null })
   }
 
-  const handleToggleActive = async (event: Event, e: React.MouseEvent) => {
+  const handleToggleActive = async (event: Event, e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
     try {
       await api.put(`/admin/events/${event.id}`, {
         ...event,
-        is_active: !event.is_active,
+        is_active: e.target.checked,
       })
       fetchEvents()
     } catch (error) {
@@ -102,9 +103,9 @@ const EventsList = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {events.map((event) => (
           <Box key={event.id} sx={{ display: 'flex', gap: 2, position: 'relative' }}>
-            <Card sx={{ flex: 1, minHeight: 120, display: 'flex', flexDirection: 'column', maxWidth: 400 }}>
-              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+            <Card sx={{ flex: 1, minHeight: 80, display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="h6" sx={{ display: 'inline', mr: 1 }}>{event.name}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
@@ -112,12 +113,15 @@ const EventsList = () => {
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Switch
+                      checked={event.is_active}
+                      onChange={(e) => handleToggleActive(event, e)}
+                      size="small"
+                    />
                     <Chip
                       label={event.is_active ? 'Active' : 'Inactive'}
                       color={event.is_active ? 'success' : 'default'}
                       size="small"
-                      onClick={(e) => handleToggleActive(event, e)}
-                      sx={{ cursor: 'pointer' }}
                     />
                     <IconButton
                       size="small"
