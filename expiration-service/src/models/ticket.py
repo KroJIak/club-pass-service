@@ -1,6 +1,6 @@
 """Ticket model."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 import enum
 from src.db import Base
@@ -12,6 +12,7 @@ class TicketStatus(str, enum.Enum):
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
     EXPIRED = "expired"
+    USED = "used"
 
 
 class Ticket(Base):
@@ -19,12 +20,11 @@ class Ticket(Base):
     __tablename__ = "tickets"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, nullable=False, index=True)  # No FK constraint - users table not in this service
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
-    ticket_type_id = Column(Integer, ForeignKey("ticket_types.id", ondelete="RESTRICT"), nullable=False)
+    ticket_type_id = Column(Integer, nullable=False)  # No FK constraint - ticket_types table not in this service
     token = Column(String, unique=True, nullable=False, index=True)
     status = Column(SQLEnum(TicketStatus), default=TicketStatus.ACTIVE, nullable=False)
-    is_used = Column(Boolean, default=False, nullable=False)
     used_at = Column(DateTime, nullable=True)
     refunded_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

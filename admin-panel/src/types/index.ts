@@ -36,12 +36,12 @@ export interface Ticket {
   event_id: number
   ticket_type_id: number
   token: string
-  status: 'active' | 'refunded' | 'cancelled' | 'expired'
-  is_used: boolean
+  status: 'active' | 'refunded' | 'cancelled' | 'expired' | 'used'
   used_at: string | null
   refunded_at: string | null
   created_at: string
   updated_at: string
+  username: string | null
 }
 
 export interface Payment {
@@ -67,6 +67,7 @@ export interface Order {
   payment_id: number | null
   created_at: string
   updated_at: string
+  username: string | null
 }
 
 export interface Promocode {
@@ -119,6 +120,13 @@ export interface TicketTypeUpdate {
   is_active?: boolean | null
 }
 
+export interface UserCreate {
+  telegram_user_id: number
+  username?: string | null
+  first_name?: string | null
+  last_name?: string | null
+}
+
 export interface UserUpdate {
   username?: string | null
   first_name?: string | null
@@ -126,8 +134,7 @@ export interface UserUpdate {
 }
 
 export interface TicketUpdate {
-  status?: 'active' | 'refunded' | 'cancelled' | 'expired' | null
-  is_used?: boolean | null
+  status?: 'active' | 'refunded' | 'cancelled' | 'expired' | 'used' | null
 }
 
 export interface PaymentUpdate {

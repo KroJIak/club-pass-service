@@ -1,32 +1,45 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet } from 'react-router-dom'
 import { Box } from '@mui/material'
 import Sidebar from './Sidebar'
 import Header from './Header'
 
-const getPageTitle = (pathname: string): string => {
-  const titles: Record<string, string> = {
-    '/events': 'Events',
-    '/ticket-types': 'Ticket Types',
-    '/users': 'Users',
-    '/tickets': 'Tickets',
-    '/payments': 'Payments',
-    '/orders': 'Orders',
-    '/promocodes': 'Promocodes',
-  }
-  return titles[pathname] || 'Admin Panel'
-}
-
 const Layout = () => {
-  const location = useLocation()
-  const title = getPageTitle(location.pathname)
+  // Calculate side margins based on viewport width
+  // At 1280px: 0.18 * width
+  // At 600px: 0.084375 * width (0.18 * 600/1280)
+  // Linear interpolation between 600 and 1280
+  const getSideMargin = () => {
+    return {
+      xs: 'calc(0.084375 * 100vw)', // <= 600px
+      sm: 'calc(0.084375 * 100vw + (0.18 - 0.084375) * (100vw - 600px) / (1280 - 600))', // 600-1280px
+      md: 'calc(0.18 * 100vw)', // >= 1280px
+    }
+  }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      <Sidebar />
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <Header title={title} />
-        <Box sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
-          <Outlet />
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <Header />
+      <Box sx={{ flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            width: '100%',
+            px: getSideMargin(),
+          }}
+        >
+          <Box sx={{ display: 'flex', width: '100%', maxWidth: '100%', gap: 2 }}>
+            <Sidebar />
+            <Box
+              sx={{
+                flexGrow: 1,
+                overflow: 'auto',
+                py: 3,
+              }}
+            >
+              <Outlet />
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -34,4 +47,3 @@ const Layout = () => {
 }
 
 export default Layout
-

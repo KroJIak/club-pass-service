@@ -108,7 +108,7 @@ async def mark_ticket_as_used(
     
     return TicketMarkUsedResponse(
         ticket_id=ticket.id,
-        is_used=ticket.is_used,
+        status=ticket.status,
         used_at=ticket.used_at or datetime.utcnow(),
         message="Ticket marked as used successfully"
     )

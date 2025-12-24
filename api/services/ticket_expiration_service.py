@@ -68,11 +68,8 @@ class TicketExpirationService:
         if current_time is None:
             current_time = datetime.utcnow()
         
-        # Skip if already expired, refunded, or used
-        if ticket.status in [TicketStatus.EXPIRED, TicketStatus.REFUNDED, TicketStatus.CANCELLED]:
-            return False
-        
-        if ticket.is_used:
+        # Skip if already expired, refunded, cancelled, or used
+        if ticket.status in [TicketStatus.EXPIRED, TicketStatus.REFUNDED, TicketStatus.CANCELLED, TicketStatus.USED]:
             return False
         
         # Check if event is loaded
@@ -106,8 +103,7 @@ class TicketExpirationService:
         tickets = db.query(Ticket).options(
             joinedload(Ticket.event)
         ).filter(
-            Ticket.status == TicketStatus.ACTIVE,
-            Ticket.is_used == False
+            Ticket.status == TicketStatus.ACTIVE
         ).all()
         
         expired_count = 0
@@ -140,8 +136,7 @@ class TicketExpirationService:
         tickets = db.query(Ticket).options(
             joinedload(Ticket.event)
         ).filter(
-            Ticket.status == TicketStatus.ACTIVE,
-            Ticket.is_used == False
+            Ticket.status == TicketStatus.ACTIVE
         ).all()
         
         expired = []

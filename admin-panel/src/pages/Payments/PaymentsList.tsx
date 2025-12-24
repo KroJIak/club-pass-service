@@ -27,13 +27,13 @@ const PaymentsList = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>Payments</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>Payments</Typography>
       <Grid container spacing={3}>
         {payments.map((payment) => (
           <Grid item xs={12} sm={6} md={4} key={payment.id}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Payment #{payment.id}</Typography>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>Payment #{payment.id}</Typography>
                 <Typography variant="body2" color="text.secondary">
                   Amount: {payment.amount} ₽
                 </Typography>

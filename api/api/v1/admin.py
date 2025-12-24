@@ -19,8 +19,8 @@ from api.repositories.expiration_settings_repository import ExpirationSettingsRe
 from api.api.v1.schemas import (
     EventResponse, EventListResponse,
     TicketTypeResponse, TicketTypeListResponse,
-    UserResponse, UserUpdate,
-    TicketResponse, TicketDetailResponse,
+    UserResponse, UserCreate, UserUpdate,
+    TicketResponse, TicketDetailResponse, TicketUpdate,
     PaymentResponse,
     ExpirationSettingsResponse,
     ExpirationSettingsUpdate,
@@ -83,7 +83,6 @@ class UserListResponse(BaseModel):
 class TicketUpdate(BaseModel):
     """Schema for updating a ticket."""
     status: Optional[TicketStatus] = None
-    is_used: Optional[bool] = None
 
 
 class TicketListResponse(BaseModel):
@@ -120,9 +119,27 @@ class OrderResponse(BaseModel):
         from_attributes = True
 
 
+class OrderAdminResponse(BaseModel):
+    """Schema for order in admin panel."""
+    id: int
+    order_id: str
+    user_id: int
+    event_id: int
+    ticket_type_id: int
+    quantity: int
+    promocode: Optional[str] = None
+    payment_id: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    username: Optional[str] = None  # Telegram username
+
+    class Config:
+        from_attributes = True
+
+
 class OrderListResponse(BaseModel):
     """Schema for list of orders."""
-    orders: List[OrderResponse]
+    orders: List[OrderAdminResponse]
 
 
 # Promocode schemas
@@ -404,6 +421,25 @@ async def get_user(
     return UserResponse.model_validate(user)
 
 
+@router.post("/admin/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+async def create_user(
+    user_data: UserCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Create a new user (admin only)."""
+    # Check if user with this telegram_user_id already exists
+    existing_user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"User with telegram_user_id {user_data.telegram_user_id} already exists"
+        )
+    
+    user = UserRepository.create(db, user_data)
+    return UserResponse.model_validate(user)
+
+
 @router.put("/admin/users/{user_id}", response_model=UserResponse)
 async def update_user(
     user_id: int,
@@ -444,8 +480,19 @@ async def get_all_tickets(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Get all tickets (admin only)."""
+    from api.repositories.user_repository import UserRepository
+    
     tickets = TicketRepository.get_all(db)
-    return TicketListResponse(tickets=[TicketResponse.model_validate(ticket) for ticket in tickets])
+    ticket_responses = []
+    for ticket in tickets:
+        ticket_data = TicketResponse.model_validate(ticket)
+        # Get username from user
+        user = UserRepository.get_by_id(db, ticket.user_id)
+        if user:
+            ticket_data.username = user.username
+        ticket_responses.append(ticket_data)
+    
+    return TicketListResponse(tickets=ticket_responses)
 
 
 @router.get("/admin/tickets/{ticket_id}", response_model=TicketDetailResponse)
@@ -481,12 +528,9 @@ async def update_ticket(
     
     if ticket_data.status is not None:
         ticket.status = ticket_data.status
-    if ticket_data.is_used is not None:
-        ticket.is_used = ticket_data.is_used
-        if ticket_data.is_used and not ticket.used_at:
+        # Set used_at when status changes to USED
+        if ticket_data.status == TicketStatus.USED and not ticket.used_at:
             ticket.used_at = datetime.utcnow()
-        elif not ticket_data.is_used:
-            ticket.used_at = None
     
     db.commit()
     db.refresh(ticket)
@@ -569,24 +613,42 @@ async def get_all_orders(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Get all orders (admin only)."""
+    from api.repositories.user_repository import UserRepository
+    
     orders = OrderRepository.get_all(db)
-    return OrderListResponse(orders=[OrderResponse.model_validate(order) for order in orders])
+    order_responses = []
+    for order in orders:
+        order_data = OrderAdminResponse.model_validate(order)
+        # Get username from user
+        user = UserRepository.get_by_id(db, order.user_id)
+        if user:
+            order_data.username = user.username
+        order_responses.append(order_data)
+    
+    return OrderListResponse(orders=order_responses)
 
 
-@router.get("/admin/orders/{order_id}", response_model=OrderResponse)
+@router.get("/admin/orders/{order_id}", response_model=OrderAdminResponse)
 async def get_order(
     order_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
     """Get order by ID (admin only)."""
+    from api.repositories.user_repository import UserRepository
+    
     order = OrderRepository.get_by_id(db, order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Order with id {order_id} not found"
         )
-    return OrderResponse.model_validate(order)
+    order_data = OrderAdminResponse.model_validate(order)
+    # Get username from user
+    user = UserRepository.get_by_id(db, order.user_id)
+    if user:
+        order_data.username = user.username
+    return order_data
 
 
 # Promocodes CRUD

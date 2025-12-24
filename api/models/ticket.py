@@ -1,6 +1,6 @@
 """Ticket ORM model and Pydantic schemas."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 import enum
 from api.core.db import Base
@@ -12,6 +12,7 @@ class TicketStatus(str, enum.Enum):
     REFUNDED = "refunded"
     CANCELLED = "cancelled"
     EXPIRED = "expired"
+    USED = "used"
 
 
 class Ticket(Base):
@@ -24,7 +25,6 @@ class Ticket(Base):
     ticket_type_id = Column(Integer, ForeignKey("ticket_types.id", ondelete="RESTRICT"), nullable=False)
     token = Column(String, unique=True, nullable=False, index=True)  # For QR code
     status = Column(SQLEnum(TicketStatus), default=TicketStatus.ACTIVE, nullable=False)
-    is_used = Column(Boolean, default=False, nullable=False)
     used_at = Column(DateTime, nullable=True)
     refunded_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

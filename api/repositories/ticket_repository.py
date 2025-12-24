@@ -52,7 +52,7 @@ class TicketRepository:
         ).filter(Ticket.user_id == user_id)
         
         if active_only:
-            # Only return active tickets (exclude expired, refunded, and cancelled)
+            # Only return active tickets (exclude expired, refunded, cancelled, and used)
             query = query.filter(Ticket.status == TicketStatus.ACTIVE)
         
         return query.order_by(Ticket.created_at.desc()).all()
@@ -77,7 +77,6 @@ class TicketRepository:
             ticket_type_id=ticket_type_id,
             token=token,
             status=TicketStatus.ACTIVE,
-            is_used=False,
         )
         db.add(ticket)
         db.commit()
@@ -106,7 +105,7 @@ class TicketRepository:
         if not ticket:
             return None
         
-        if ticket.is_used:
+        if ticket.status == TicketStatus.USED:
             raise ValueError("Cannot refund a used ticket")
         
         if ticket.status == TicketStatus.REFUNDED:
@@ -125,10 +124,10 @@ class TicketRepository:
         if not ticket:
             return None
         
-        if ticket.is_used:
+        if ticket.status == TicketStatus.USED:
             return ticket  # Already used
         
-        ticket.is_used = True
+        ticket.status = TicketStatus.USED
         ticket.used_at = datetime.utcnow()
         db.commit()
         db.refresh(ticket)

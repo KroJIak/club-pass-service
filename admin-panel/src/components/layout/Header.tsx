@@ -1,20 +1,66 @@
-import { AppBar, Toolbar, Typography } from '@mui/material'
+import { Box, Typography, IconButton } from '@mui/material'
+import { Logout as LogoutIcon } from '@mui/icons-material'
+import { useAuth } from '../../hooks/useAuth'
+import { useState, useEffect } from 'react'
+import { authService } from '../../services/auth'
 
-interface HeaderProps {
-  title: string
-}
+const Header = () => {
+  const { logout } = useAuth()
+  const [username, setUsername] = useState<string>('Admin')
 
-const Header = ({ title }: HeaderProps) => {
+  useEffect(() => {
+    const fetchAdminInfo = async () => {
+      try {
+        const info = await authService.getMe()
+        setUsername(info.username)
+      } catch (error) {
+        console.error('Failed to fetch admin info:', error)
+      }
+    }
+    fetchAdminInfo()
+  }, [])
+
   return (
-    <AppBar position="static" elevation={0}>
-      <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          {title}
+    <Box
+      sx={{
+        width: '100%',
+        display: 'flex',
+        justifyContent: 'center',
+        py: 2,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Box
+        sx={{
+          width: '100%',
+          maxWidth: '100%',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          px: {
+            xs: 'calc(0.084375 * 100vw)', // <= 600px
+            sm: 'calc(0.084375 * 100vw + (0.18 - 0.084375) * (100vw - 600px) / (1280 - 600))', // 600-1280px
+            md: 'calc(0.18 * 100vw)', // >= 1280px
+          },
+        }}
+      >
+        <Typography variant="h6" component="div">
+          Admin Panel
         </Typography>
-      </Toolbar>
-    </AppBar>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Typography variant="body1">{username}</Typography>
+          <IconButton
+            color="error"
+            onClick={logout}
+            size="small"
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Box>
+      </Box>
+    </Box>
   )
 }
 
 export default Header
-

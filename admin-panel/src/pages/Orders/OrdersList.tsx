@@ -44,15 +44,20 @@ const OrdersList = () => {
 
   return (
     <Box>
-      <Typography variant="h4" sx={{ mb: 3 }}>Orders</Typography>
+      <Typography variant="h6" sx={{ mb: 3 }}>Orders</Typography>
       <Grid container spacing={3}>
         {orders.map((order) => (
           <Grid item xs={12} sm={6} md={4} key={order.id}>
-            <Card>
-              <CardContent>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6">Order {order.order_id}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Order {order.order_id}</Typography>
+                    {order.username && (
+                      <Typography variant="body2" color="text.secondary">
+                        @{order.username}
+                      </Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       Quantity: {order.quantity}
                     </Typography>

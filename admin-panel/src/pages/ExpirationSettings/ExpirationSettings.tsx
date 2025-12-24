@@ -92,9 +92,9 @@ const ExpirationSettings = () => {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Expiration Service Settings
-        </Typography>
+              <Typography variant="h6" component="h1" gutterBottom>
+                Expiration Service Settings
+              </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
           Manage expiration service functionality
         </Typography>

@@ -4,7 +4,6 @@ import CssBaseline from '@mui/material/CssBaseline'
 import Login from './pages/Login'
 import Layout from './components/layout/Layout'
 import EventsList from './pages/Events/EventsList'
-import TicketTypesList from './pages/TicketTypes/TicketTypesList'
 import UsersList from './pages/Users/UsersList'
 import TicketsList from './pages/Tickets/TicketsList'
 import PaymentsList from './pages/Payments/PaymentsList'
@@ -56,7 +55,6 @@ function App() {
           >
             <Route index element={<Navigate to="/events" replace />} />
             <Route path="events" element={<EventsList />} />
-            <Route path="ticket-types" element={<TicketTypesList />} />
             <Route path="users" element={<UsersList />} />
             <Route path="tickets" element={<TicketsList />} />
             <Route path="payments" element={<PaymentsList />} />

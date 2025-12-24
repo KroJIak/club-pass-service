@@ -89,7 +89,6 @@ class TicketResponse(BaseModel):
     ticket_type_id: int
     token: str
     status: TicketStatus
-    is_used: bool
     used_at: Optional[datetime] = None
     refunded_at: Optional[datetime] = None
     created_at: datetime
@@ -97,9 +96,15 @@ class TicketResponse(BaseModel):
     # Related data
     event: Optional[EventResponse] = None
     ticket_type: Optional[TicketTypeResponse] = None
+    username: Optional[str] = None  # Telegram username
 
     class Config:
         from_attributes = True
+
+
+class TicketUpdate(BaseModel):
+    """Schema for updating a ticket."""
+    status: Optional[TicketStatus] = None
 
 
 class TicketListResponse(BaseModel):
@@ -115,7 +120,6 @@ class TicketDetailResponse(BaseModel):
     ticket_type_id: int
     token: str
     status: TicketStatus
-    is_used: bool
     used_at: Optional[datetime] = None
     refunded_at: Optional[datetime] = None
     created_at: datetime
@@ -192,7 +196,7 @@ class TicketMarkUsedRequest(BaseModel):
 class TicketMarkUsedResponse(BaseModel):
     """Schema for marking ticket as used response."""
     ticket_id: int
-    is_used: bool
+    status: TicketStatus
     used_at: datetime
     message: str
 

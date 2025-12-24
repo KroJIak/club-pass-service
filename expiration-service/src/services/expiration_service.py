@@ -72,10 +72,7 @@ class TicketExpirationService:
             current_time = datetime.utcnow()
         
         # Skip if already expired, refunded, cancelled, or used
-        if ticket.status in [TicketStatus.EXPIRED, TicketStatus.REFUNDED, TicketStatus.CANCELLED]:
-            return False
-        
-        if ticket.is_used:
+        if ticket.status in [TicketStatus.EXPIRED, TicketStatus.REFUNDED, TicketStatus.CANCELLED, TicketStatus.USED]:
             return False
         
         # Check if event is loaded
@@ -108,8 +105,7 @@ class TicketExpirationService:
         tickets = db.query(Ticket).options(
             joinedload(Ticket.event)
         ).filter(
-            Ticket.status == TicketStatus.ACTIVE,
-            Ticket.is_used == False
+            Ticket.status == TicketStatus.ACTIVE
         ).all()
         
         logger.debug(f"Checking {len(tickets)} active tickets for expiration...")
@@ -147,8 +143,7 @@ class TicketExpirationService:
         tickets = db.query(Ticket).options(
             joinedload(Ticket.event)
         ).filter(
-            Ticket.status == TicketStatus.ACTIVE,
-            Ticket.is_used == False
+            Ticket.status == TicketStatus.ACTIVE
         ).all()
         
         expired = []
@@ -157,4 +152,47 @@ class TicketExpirationService:
                 expired.append(ticket)
         
         return expired
+    
+    @staticmethod
+    def deactivate_past_events(db: Session, current_time: datetime = None) -> int:
+        """
+        Deactivate events that have passed their expiration time.
+        
+        Logic: Same as ticket expiration - if event time is before 12:00, 
+        deactivate at 12:00 same day; if at or after 12:00, deactivate at 12:00 next day.
+        
+        Args:
+            db: Database session
+            current_time: Current datetime (defaults to now)
+        
+        Returns:
+            Number of events deactivated
+        """
+        if current_time is None:
+            current_time = datetime.utcnow()
+        
+        # Get all active events
+        events = db.query(Event).filter(Event.is_active == True).all()
+        
+        logger.debug(f"Checking {len(events)} active events for deactivation...")
+        
+        deactivated_count = 0
+        for event in events:
+            expiration_dt = TicketExpirationService._calculate_expiration_datetime(
+                event.date,
+                event.time
+            )
+            
+            if current_time >= expiration_dt:
+                logger.info(f"Deactivating event {event.id} ({event.name})")
+                event.is_active = False
+                deactivated_count += 1
+        
+        if deactivated_count > 0:
+            db.commit()
+            logger.info(f"Successfully deactivated {deactivated_count} event(s)")
+        else:
+            logger.debug("No events found to deactivate")
+        
+        return deactivated_count
 
