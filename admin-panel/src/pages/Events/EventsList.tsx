@@ -8,7 +8,6 @@ import {
   IconButton,
   Chip,
   Drawer,
-  Divider,
 } from '@mui/material'
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material'
 import api from '../../services/api'
