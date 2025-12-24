@@ -15,11 +15,11 @@ COPY ticket-expiration-service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY ticket-expiration-service/ ./ticket-expiration-service/
+COPY ticket-expiration-service/src/ ./src/
 
 # Set Python path
 ENV PYTHONPATH=/app
 
 # Run the service
-CMD ["python", "-m", "ticket-expiration-service.src.main"]
+CMD ["python", "-m", "src.main"]
 

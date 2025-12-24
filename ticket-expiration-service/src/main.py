@@ -28,10 +28,14 @@ def check_and_mark_expired_tickets():
     try:
         logger.info("Starting expired tickets check...")
         expired_count = TicketExpirationService.mark_expired_tickets(db)
-        logger.info(f"Marked {expired_count} tickets as expired.")
+        if expired_count > 0:
+            logger.info(f"Marked {expired_count} ticket(s) as expired.")
+        else:
+            logger.debug("No expired tickets found.")
         return expired_count
     except Exception as e:
         logger.error(f"Error checking expired tickets: {e}", exc_info=True)
+        db.rollback()
         raise
     finally:
         db.close()

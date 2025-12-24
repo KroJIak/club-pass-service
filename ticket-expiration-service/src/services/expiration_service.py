@@ -1,9 +1,12 @@
 """Service for checking and updating expired tickets."""
+import logging
 from datetime import datetime, timedelta
 from typing import List
 from sqlalchemy.orm import Session, joinedload
 from src.models.ticket import Ticket, TicketStatus
 from src.models.event import Event
+
+logger = logging.getLogger(__name__)
 
 
 class TicketExpirationService:
@@ -109,14 +112,20 @@ class TicketExpirationService:
             Ticket.is_used == False
         ).all()
         
+        logger.debug(f"Checking {len(tickets)} active tickets for expiration...")
+        
         expired_count = 0
         for ticket in tickets:
             if TicketExpirationService.is_ticket_expired(ticket, current_time):
+                logger.info(f"Marking ticket {ticket.id} (token: {ticket.token}) as expired")
                 ticket.status = TicketStatus.EXPIRED
                 expired_count += 1
         
         if expired_count > 0:
             db.commit()
+            logger.info(f"Successfully marked {expired_count} ticket(s) as expired")
+        else:
+            logger.debug("No tickets found to expire")
         
         return expired_count
     
