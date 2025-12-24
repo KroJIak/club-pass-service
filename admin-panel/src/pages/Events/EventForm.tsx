@@ -260,10 +260,6 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     </form>
   )
 
-  if (embedded) {
-    return content
-  }
-
   return (
     <>
       {embedded ? (
