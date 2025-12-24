@@ -66,4 +66,14 @@ class OrderRepository:
             joinedload(Order.ticket_type),
             joinedload(Order.payment)
         ).filter(Order.id == order_id).first()
+    
+    @staticmethod
+    def delete(db: Session, order_id: int) -> bool:
+        """Delete an order by its internal ID."""
+        order = db.query(Order).filter(Order.id == order_id).first()
+        if order:
+            db.delete(order)
+            db.commit()
+            return True
+        return False
 

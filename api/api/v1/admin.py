@@ -653,6 +653,21 @@ async def get_order(
     return order_data
 
 
+@router.delete("/admin/orders/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete an order (admin only)."""
+    success = OrderRepository.delete(db, order_id)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order with id {order_id} not found"
+        )
+
+
 # Promocodes CRUD
 @router.get("/admin/promocodes", response_model=PromocodeListResponse)
 async def get_all_promocodes(

@@ -70,9 +70,17 @@ class UserRepository:
     @staticmethod
     def delete(db: Session, user_id: int) -> bool:
         """Delete a user."""
+        from api.models.payment import Payment
+        
         user = UserRepository.get_by_id(db, user_id)
         if not user:
             return False
+        
+        # Explicitly delete related payments first to avoid constraint violations
+        # Payments have CASCADE, but SQLAlchemy may not handle it correctly
+        payments = db.query(Payment).filter(Payment.user_id == user_id).all()
+        for payment in payments:
+            db.delete(payment)
         
         db.delete(user)
         db.commit()
