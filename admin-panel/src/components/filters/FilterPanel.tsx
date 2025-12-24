@@ -19,7 +19,7 @@ const FilterPanel = ({ searchValue, onSearchChange, children }: FilterPanelProps
   return (
     <Box
       sx={{
-        width: '300px',
+        width: '240px',
         flexShrink: 0,
         height: '100%',
         display: 'flex',
