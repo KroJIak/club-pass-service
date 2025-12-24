@@ -48,7 +48,7 @@ const QRScanner = () => {
         (decodedText) => {
           handleScan(decodedText)
         },
-        (errorMessage) => {
+        () => {
           // Ignore scanning errors
         }
       )
