@@ -11,7 +11,7 @@ import {
   CircularProgress,
 } from '@mui/material'
 import api from '../../services/api'
-import { ExpirationSettings, ExpirationSettingsUpdate } from '../../types'
+import type { ExpirationSettings, ExpirationSettingsUpdate } from '../../types'
 
 const ExpirationSettings = () => {
   const [settings, setSettings] = useState<ExpirationSettings | null>(null)
