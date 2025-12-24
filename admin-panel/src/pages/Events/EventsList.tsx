@@ -103,7 +103,16 @@ const EventsList = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {events.map((event) => (
           <Box key={event.id} sx={{ display: 'flex', gap: 2, position: 'relative' }}>
-            <Card sx={{ flex: 1, minHeight: 80, display: 'flex', flexDirection: 'column' }}>
+            <Card 
+              sx={{ 
+                flex: 1, 
+                minHeight: 80, 
+                display: 'flex', 
+                flexDirection: 'column',
+                cursor: 'pointer',
+              }}
+              onClick={() => toggleExpand(event.id)}
+            >
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ flex: 1 }}>
@@ -117,19 +126,35 @@ const EventsList = () => {
                       checked={event.is_active}
                       onChange={(e) => handleToggleActive(event, e)}
                       size="small"
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <Chip
                       label={event.is_active ? 'Active' : 'Inactive'}
                       color={event.is_active ? 'success' : 'default'}
                       size="small"
                     />
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => toggleExpand(event.id)}
-                    >
-                      <EditIcon />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleExpand(event.id)
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteDialog({ open: true, eventId: event.id })
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
                 </Box>
                 {event.djs && event.djs.length > 0 && (
@@ -142,15 +167,6 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
-                <Box sx={{ mt: 'auto', pt: 2 }}>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setDeleteDialog({ open: true, eventId: event.id })}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
               </CardContent>
             </Card>
 
