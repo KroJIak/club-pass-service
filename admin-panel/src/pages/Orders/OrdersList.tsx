@@ -75,16 +75,6 @@ const OrdersList = () => {
       })
     }
 
-    // Promocode filter
-    if (filterState.hasPromocode !== 'all') {
-      filtered = filtered.filter((order) => {
-        if (filterState.hasPromocode === 'yes') {
-          return order.promocode !== null && order.promocode.trim() !== ''
-        } else {
-          return order.promocode === null || order.promocode.trim() === ''
-        }
-      })
-    }
 
     setOrders(filtered)
   }, [allOrders, filterState])
