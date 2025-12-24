@@ -7,7 +7,6 @@ import {
   Typography,
 } from '@mui/material'
 import { FilterSection } from './FilterPanel'
-import { Order } from '../../types'
 
 export interface OrdersFilterState {
   search: string
@@ -20,12 +19,11 @@ const DEFAULT_FILTER_STATE: OrdersFilterState = {
 }
 
 interface OrdersFilterProps {
-  orders: Order[]
   filterState: OrdersFilterState
   onFilterChange: (filter: OrdersFilterState) => void
 }
 
-const OrdersFilter = ({ orders, filterState, onFilterChange }: OrdersFilterProps) => {
+const OrdersFilter = ({ filterState, onFilterChange }: OrdersFilterProps) => {
   const [localFilter, setLocalFilter] = useState<OrdersFilterState>(filterState)
 
   useEffect(() => {

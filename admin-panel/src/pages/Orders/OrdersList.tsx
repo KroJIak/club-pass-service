@@ -26,13 +26,68 @@ const OrdersList = () => {
   const fetchOrders = async () => {
     try {
       const response = await api.get('/admin/orders')
-      setOrders(response.data.orders)
+      const fetchedOrders = response.data.orders
+      setAllOrders(fetchedOrders)
+      setOrders(fetchedOrders)
     } catch (error) {
       console.error('Failed to fetch orders:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  // Set up filter panel
+  useEffect(() => {
+    setFilterPanel(
+      <FilterPanel
+        searchValue={filterState.search}
+        onSearchChange={(value) => setFilterState({ ...filterState, search: value })}
+      >
+        <OrdersFilter
+          filterState={filterState}
+          onFilterChange={setFilterState}
+        />
+      </FilterPanel>
+    )
+
+    return () => {
+      setFilterPanel(null)
+    }
+  }, [filterState, setFilterPanel])
+
+  // Filter orders based on filter state
+  useEffect(() => {
+    let filtered = [...allOrders]
+
+    // Search filter - по order_id, username, имени/фамилии пользователя, event_name, ticket_type_name, promocode
+    if (filterState.search.trim()) {
+      const searchLower = filterState.search.toLowerCase()
+      filtered = filtered.filter((order) => {
+        const orderIdMatch = order.order_id.toLowerCase().includes(searchLower)
+        const usernameMatch = order.username?.toLowerCase().includes(searchLower) || false
+        const firstNameMatch = order.first_name?.toLowerCase().includes(searchLower) || false
+        const lastNameMatch = order.last_name?.toLowerCase().includes(searchLower) || false
+        const eventNameMatch = order.event_name?.toLowerCase().includes(searchLower) || false
+        const ticketTypeNameMatch = order.ticket_type_name?.toLowerCase().includes(searchLower) || false
+        const promocodeMatch = order.promocode?.toLowerCase().includes(searchLower) || false
+        
+        return orderIdMatch || usernameMatch || firstNameMatch || lastNameMatch || eventNameMatch || ticketTypeNameMatch || promocodeMatch
+      })
+    }
+
+    // Promocode filter
+    if (filterState.hasPromocode !== 'all') {
+      filtered = filtered.filter((order) => {
+        if (filterState.hasPromocode === 'yes') {
+          return order.promocode !== null && order.promocode.trim() !== ''
+        } else {
+          return order.promocode === null || order.promocode.trim() === ''
+        }
+      })
+    }
+
+    setOrders(filtered)
+  }, [allOrders, filterState])
 
   const handleDelete = async (orderId: number) => {
     try {
