@@ -110,13 +110,14 @@ const EventsList = () => {
                 display: 'flex', 
                 flexDirection: 'column',
                 cursor: 'pointer',
+                position: 'relative',
               }}
               onClick={() => toggleExpand(event.id)}
             >
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="h6" sx={{ display: 'inline', mr: 1 }}>{event.name}</Typography>
+                    <Typography variant="body1" sx={{ display: 'inline', mr: 1, fontWeight: 500 }}>{event.name}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
                       {event.date} {event.time}
                     </Typography>
@@ -132,28 +133,16 @@ const EventsList = () => {
                       color={event.is_active ? 'success' : 'default'}
                       size="small"
                     />
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleExpand(event.id)
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setDeleteDialog({ open: true, eventId: event.id })
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleExpand(event.id)
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
                   </Box>
                 </Box>
                 {event.djs && event.djs.length > 0 && (
@@ -166,6 +155,18 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
+                <Box sx={{ position: 'absolute', bottom: 8, right: 8 }}>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDeleteDialog({ open: true, eventId: event.id })
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Box>
               </CardContent>
             </Card>
 
