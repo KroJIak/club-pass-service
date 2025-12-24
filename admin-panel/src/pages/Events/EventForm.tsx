@@ -56,6 +56,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       djs: [],
       is_active: true,
     },
+    mode: 'onChange',
   })
 
   const isActive = watch('is_active') ?? true
@@ -88,6 +89,12 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       setTicketTypes([])
     }
   }, [event, reset])
+
+  // Register date and time for validation
+  useEffect(() => {
+    register('date', { required: 'Date is required' })
+    register('time', { required: 'Time is required' })
+  }, [register])
 
   const fetchTicketTypes = async (eventId: number) => {
     setLoadingTicketTypes(true)
@@ -172,12 +179,20 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         <DateField
           label="Date"
           value={watch('date') || null}
-          onChange={(value) => setValue('date', value || '')}
+          onChange={(value) => {
+            setValue('date', value || '', { shouldValidate: true })
+          }}
+          error={!!errors.date}
+          helperText={errors.date?.message}
         />
         <TimeField
           label="Time"
           value={watch('time') || null}
-          onChange={(value) => setValue('time', value || '')}
+          onChange={(value) => {
+            setValue('time', value || '', { shouldValidate: true })
+          }}
+          error={!!errors.time}
+          helperText={errors.time?.message}
         />
         <ArrayField
           label="DJs"
@@ -254,7 +269,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? 'Saving...' : 'Save'}
+          {loading ? (event ? 'Saving...' : 'Creating...') : (event ? 'Save' : 'Create')}
         </Button>
       </DialogActions>
     </form>
