@@ -33,6 +33,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   const [djs, setDjs] = useState<string[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
   const [loadingTicketTypes, setLoadingTicketTypes] = useState(false)
+  const [ticketTypeFormOpen, setTicketTypeFormOpen] = useState(false)
   const [deleteTicketTypeDialog, setDeleteTicketTypeDialog] = useState<{ open: boolean; ticketTypeId: number | null }>({
     open: false,
     ticketTypeId: null,
@@ -120,35 +121,14 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     }
   }
 
-  const handleCreateTicketType = async () => {
+  const handleCreateTicketType = () => {
     if (!eventId) return
-    
-    const name = prompt('Enter ticket type name:')
-    if (!name) return
-    
-    const priceStr = prompt('Enter price:')
-    if (!priceStr) return
-    const price = parseFloat(priceStr)
-    
-    const totalQuantityStr = prompt('Enter total quantity:')
-    if (!totalQuantityStr) return
-    const totalQuantity = parseInt(totalQuantityStr)
-    
-    try {
-      await api.post('/admin/ticket-types', {
-        event_id: eventId,
-        name,
-        price,
-        available_quantity: totalQuantity,
-        total_quantity: totalQuantity,
-        is_active: true,
-      })
-      if (eventId) {
-        fetchTicketTypes(eventId)
-      }
-    } catch (error) {
-      console.error('Failed to create ticket type:', error)
-      alert('Failed to create ticket type')
+    setTicketTypeFormOpen(true)
+  }
+
+  const handleTicketTypeCreated = () => {
+    if (eventId) {
+      fetchTicketTypes(eventId)
     }
   }
 
@@ -222,6 +202,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                 size="small"
                 startIcon={<AddIcon />}
                 onClick={handleCreateTicketType}
+                disabled={!eventId}
               >
                 Add Ticket Type
               </Button>
@@ -283,8 +264,22 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      {content}
+    <>
+      {embedded ? (
+        <Box>{content}</Box>
+      ) : (
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+          {content}
+        </Dialog>
+      )}
+      {eventId && (
+        <TicketTypeForm
+          open={ticketTypeFormOpen}
+          eventId={eventId}
+          onClose={() => setTicketTypeFormOpen(false)}
+          onSuccess={handleTicketTypeCreated}
+        />
+      )}
       <ConfirmDialog
         open={deleteTicketTypeDialog.open}
         title="Delete Ticket Type"
@@ -292,7 +287,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         onConfirm={() => deleteTicketTypeDialog.ticketTypeId && handleDeleteTicketType(deleteTicketTypeDialog.ticketTypeId)}
         onCancel={() => setDeleteTicketTypeDialog({ open: false, ticketTypeId: null })}
       />
-    </Dialog>
+    </>
   )
 }
 
