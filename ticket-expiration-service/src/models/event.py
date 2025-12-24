@@ -20,5 +20,5 @@ class Event(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
     
     # Relationships
-    tickets = relationship("Ticket", back_populates="event")
+    tickets = relationship("Ticket", back_populates="event", lazy="dynamic")
 
