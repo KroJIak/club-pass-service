@@ -154,7 +154,28 @@ const ExpirationSettings = () => {
           </Button>
           <Button
             variant="outlined"
-            onClick={fetchSettings}
+            onClick={async () => {
+              try {
+                setSaving(true)
+                setError(null)
+                setSuccess(false)
+                
+                // Reset to default values (both enabled)
+                const update: ExpirationSettingsUpdate = {
+                  ticket_expiration_enabled: true,
+                  event_deactivation_enabled: true,
+                }
+                
+                const response = await api.put<ExpirationSettings>('/admin/expiration-settings', update)
+                setSettings(response.data)
+                setSuccess(true)
+                setTimeout(() => setSuccess(false), 3000)
+              } catch (err: any) {
+                setError(err.response?.data?.detail || 'Failed to reset settings')
+              } finally {
+                setSaving(false)
+              }
+            }}
             disabled={saving || loading}
             size="large"
           >
