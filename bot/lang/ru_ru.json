@@ -3,7 +3,7 @@
     "locale": "ru_ru",
     "language": "Русский (Россия)"
   },
-  "buttons": {
+    "buttons": {
     "buy_ticket": "🎫 Купить билет",
     "my_tickets": "🎟️ Мои билеты",
     "events": "🎉 Ближайшие вечеринки",
@@ -12,7 +12,10 @@
     "back": "◀️ Назад",
     "back_to_menu": "◀️ Главное меню",
     "cancel": "❌ Отменить",
-    "confirm": "✅ Подтвердить заказ"
+    "confirm": "✅ Подтвердить заказ",
+    "refund_ticket": "↩️ Возврат товара",
+    "yes": "✅ Да",
+    "no": "❌ Нет"
   },
   "labels": {
     "address": "📍 Адрес",
@@ -37,6 +40,9 @@
       "image": "banner.jpg"
     },
     "support": {
+      "image": "banner.jpg"
+    },
+    "refund_confirm": {
       "image": "banner.jpg"
     }
   },
@@ -72,7 +78,12 @@
     "tickets": {
       "select_ticket": "🎟️ <b>Мои билеты</b>\n\nВыберите билет для просмотра QR-кода:",
       "no_tickets": "😔 <b>У вас нет билетов</b>\n\nУ вас пока нет купленных билетов.",
-      "ticket_info": "🎟️ <b>Ваш билет</b>\n\n<b>Событие:</b> {event_name}\n<b>Дата:</b> {event_date}\n<b>Время:</b> {event_time}\n<b>Тип:</b> {ticket_type}\n\n🔑 <b>Код билета:</b> <code>{ticket_token}</code>"
+      "ticket_info": "🎟️ <b>Ваш билет</b>\n\n<b>Событие:</b> {event_name}\n<b>Дата:</b> {event_date}\n<b>Время:</b> {event_time}\n<b>Тип:</b> {ticket_type}\n\n🔑 <b>Код билета:</b> <code>{ticket_token}</code>",
+      "refund_confirm": "❓ <b>Подтверждение возврата</b>\n\nВы точно хотите отменить данный билет? В случае отмены средства вернутся на ваш счет.",
+      "refund_success": "✅ <b>Билет возвращен</b>\n\nВаш билет успешно возвращен. Средства будут возвращены на ваш счет.",
+      "refund_error": "❌ <b>Ошибка возврата</b>\n\nНе удалось вернуть билет. Попробуйте позже или обратитесь в поддержку.",
+      "refund_already_refunded": "⚠️ <b>Билет уже возвращен</b>\n\nЭтот билет уже был возвращен ранее.",
+      "refund_cannot_refund": "⚠️ <b>Невозможно вернуть билет</b>\n\nЭтот билет нельзя вернуть (возможно, он уже использован)."
     }
   }
 }

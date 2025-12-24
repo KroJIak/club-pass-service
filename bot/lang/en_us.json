@@ -3,7 +3,7 @@
     "locale": "en_us",
     "language": "English (US)"
   },
-  "buttons": {
+    "buttons": {
     "buy_ticket": "🎫 Buy ticket",
     "my_tickets": "🎟️ My tickets",
     "events": "🎉 Upcoming events",
@@ -12,7 +12,10 @@
     "back": "◀️ Back",
     "back_to_menu": "◀️ Main menu",
     "cancel": "❌ Cancel",
-    "confirm": "✅ Confirm order"
+    "confirm": "✅ Confirm order",
+    "refund_ticket": "↩️ Refund ticket",
+    "yes": "✅ Yes",
+    "no": "❌ No"
   },
   "labels": {
     "address": "📍 Address",
@@ -37,6 +40,9 @@
       "image": "banner.jpg"
     },
     "support": {
+      "image": "banner.jpg"
+    },
+    "refund_confirm": {
       "image": "banner.jpg"
     }
   },
@@ -72,7 +78,12 @@
     "tickets": {
       "select_ticket": "🎟️ <b>My Tickets</b>\n\nSelect a ticket to view QR code:",
       "no_tickets": "😔 <b>No Tickets</b>\n\nYou don't have any tickets yet.",
-      "ticket_info": "🎟️ <b>Your Ticket</b>\n\n<b>Event:</b> {event_name}\n<b>Date:</b> {event_date}\n<b>Time:</b> {event_time}\n<b>Type:</b> {ticket_type}\n\n🔑 <b>Ticket Code:</b> <code>{ticket_token}</code>"
+      "ticket_info": "🎟️ <b>Your Ticket</b>\n\n<b>Event:</b> {event_name}\n<b>Date:</b> {event_date}\n<b>Time:</b> {event_time}\n<b>Type:</b> {ticket_type}\n\n🔑 <b>Ticket Code:</b> <code>{ticket_token}</code>",
+      "refund_confirm": "❓ <b>Refund Confirmation</b>\n\nAre you sure you want to cancel this ticket? If cancelled, the funds will be returned to your account.",
+      "refund_success": "✅ <b>Ticket Refunded</b>\n\nYour ticket has been successfully refunded. Funds will be returned to your account.",
+      "refund_error": "❌ <b>Refund Error</b>\n\nFailed to refund the ticket. Please try again later or contact support.",
+      "refund_already_refunded": "⚠️ <b>Ticket Already Refunded</b>\n\nThis ticket has already been refunded.",
+      "refund_cannot_refund": "⚠️ <b>Cannot Refund Ticket</b>\n\nThis ticket cannot be refunded (it may have already been used)."
     }
   }
 }

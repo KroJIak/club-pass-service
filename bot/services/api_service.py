@@ -171,6 +171,24 @@ class APIService:
             # Don't log as error - user creation is not critical for /start
             print(f"Error creating/updating user: {e}")
             return None
+    
+    async def refund_ticket(self, ticket_id: int) -> Optional[Dict[str, Any]]:
+        """Refund a ticket (mark as refunded)."""
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/v1/tickets/{ticket_id}/refund"
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            print(f"Error refunding ticket: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json().get("detail", str(e))
+                    print(f"Error detail: {error_detail}")
+                except:
+                    pass
+            return None
 
 
 # Global instance
