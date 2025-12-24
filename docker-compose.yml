@@ -71,27 +71,21 @@ services:
     depends_on:
       - api
 
-  ticket-expiration-worker:
+  expiration:
     build:
       context: .
-      dockerfile: docker/Dockerfile.api
-    container_name: club-pass-ticket-expiration-worker
+      dockerfile: docker/Dockerfile.expiration
+    container_name: club-pass-expiration
     environment:
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-club_pass}
-      DEBUG: ${DEBUG:-false}
-      EXPIRATION_CHECK_INTERVAL_MINUTES: ${EXPIRATION_CHECK_INTERVAL_MINUTES:-30}
+      CHECK_INTERVAL_MINUTES: ${EXPIRATION_CHECK_INTERVAL:-30}
     depends_on:
       db:
         condition: service_healthy
-      api:
-        condition: service_started
-    volumes:
-      - ./api:/app/api
-    command: python -m api.services.ticket_expiration_worker
     restart: unless-stopped
 
 volumes:

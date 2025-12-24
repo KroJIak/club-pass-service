@@ -29,9 +29,6 @@ class Settings(BaseSettings):
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = "admin"
     
-    # Ticket expiration worker
-    EXPIRATION_CHECK_INTERVAL_MINUTES: int = 30
-    
     # YooKassa (will be configured later)
     YOOKASSA_SHOP_ID: Optional[str] = None
     YOOKASSA_SECRET_KEY: Optional[str] = None
