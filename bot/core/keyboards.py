@@ -75,10 +75,14 @@ def get_quantity_keyboard(locale: str, max_quantity: int = 5) -> InlineKeyboardM
     return builder.as_markup()
 
 
-def get_confirm_order_keyboard(locale: str) -> InlineKeyboardMarkup:
+def get_confirm_order_keyboard(locale: str, total_price: float = None) -> InlineKeyboardMarkup:
     """Get order confirmation keyboard."""
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.confirm"), callback_data="confirm_order"))
+    confirm_text = t(locale, "buttons.confirm")
+    if total_price is not None:
+        price_formatted = int(total_price) if isinstance(total_price, float) and total_price.is_integer() else total_price
+        confirm_text = f"{confirm_text} ({price_formatted} ₽)"
+    builder.row(InlineKeyboardButton(text=confirm_text, callback_data="confirm_order"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.back"), callback_data="back_to_quantity"))
     return builder.as_markup()
 

@@ -190,7 +190,7 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     await safe_edit_message(
         callback,
         text,
-        reply_markup=get_confirm_order_keyboard(locale),
+        reply_markup=get_confirm_order_keyboard(locale, total_price_formatted),
         locale=locale,
         screen_key="buy_ticket"
     )
