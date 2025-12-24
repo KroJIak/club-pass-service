@@ -132,6 +132,8 @@ class OrderAdminResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     username: Optional[str] = None  # Telegram username
+    first_name: Optional[str] = None  # User first name
+    last_name: Optional[str] = None  # User last name
     event_name: Optional[str] = None  # Event name
     ticket_type_name: Optional[str] = None  # Ticket type name
 
@@ -627,10 +629,12 @@ async def get_all_orders(
     order_responses = []
     for order in orders:
         order_data = OrderAdminResponse.model_validate(order)
-        # Get username from user
+        # Get user info from user
         user = UserRepository.get_by_id(db, order.user_id)
         if user:
             order_data.username = user.username
+            order_data.first_name = user.first_name
+            order_data.last_name = user.last_name
         # Get event name
         event = EventRepository.get_by_id(db, order.event_id)
         if event:
@@ -663,10 +667,12 @@ async def get_order(
     from api.repositories.ticket_type_repository import TicketTypeRepository
     
     order_data = OrderAdminResponse.model_validate(order)
-    # Get username from user
+    # Get user info from user
     user = UserRepository.get_by_id(db, order.user_id)
     if user:
         order_data.username = user.username
+        order_data.first_name = user.first_name
+        order_data.last_name = user.last_name
     # Get event name
     event = EventRepository.get_by_id(db, order.event_id)
     if event:

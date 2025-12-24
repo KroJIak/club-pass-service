@@ -60,13 +60,17 @@ const OrdersList = () => {
                         overflowWrap: 'break-word'
                       }}
                     >
-                      Order {order.order_id}
+                      {order.order_id}
                     </Typography>
-                    {order.username && (
+                    {order.username ? (
                       <Typography variant="body2" color="text.secondary">
                         @{order.username}
                       </Typography>
-                    )}
+                    ) : (order.first_name || order.last_name) ? (
+                      <Typography variant="body2" color="text.secondary">
+                        {`${order.first_name || ''} ${order.last_name || ''}`.trim()}
+                      </Typography>
+                    ) : null}
                     <Typography variant="body2" color="text.secondary">
                       Quantity: {order.quantity}
                     </Typography>
