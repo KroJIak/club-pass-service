@@ -811,10 +811,17 @@ async def update_expiration_settings(
         
         # If check_interval_minutes was updated, notify expiration-service
         if settings_update.check_interval_minutes is not None:
+            expiration_service_url = api_settings.EXPIRATION_SERVICE_URL
+            if not expiration_service_url:
+                # Build URL from environment variable or default
+                import os
+                expiration_port = os.getenv("EXPIRATION_API_PORT", "8001")
+                expiration_service_url = f"http://expiration-service:{expiration_port}"
+            
             try:
                 async with httpx.AsyncClient(timeout=5.0) as client:
                     response = await client.post(
-                        f"{api_settings.EXPIRATION_SERVICE_URL}/update-interval",
+                        f"{expiration_service_url}/update-interval",
                         json={"check_interval_minutes": settings.check_interval_minutes}
                     )
                     if response.status_code == 200:
