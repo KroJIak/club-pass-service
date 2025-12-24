@@ -24,7 +24,7 @@ class Ticket(Base):
     event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True)
     ticket_type_id = Column(Integer, ForeignKey("ticket_types.id", ondelete="RESTRICT"), nullable=False)
     token = Column(String, unique=True, nullable=False, index=True)  # For QR code
-    status = Column(SQLEnum(TicketStatus), default=TicketStatus.ACTIVE, nullable=False)
+    status = Column(SQLEnum(TicketStatus, native_enum=False, create_constraint=False, length=20), default=TicketStatus.ACTIVE, nullable=False)
     used_at = Column(DateTime, nullable=True)
     refunded_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
