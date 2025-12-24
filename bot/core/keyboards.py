@@ -93,7 +93,7 @@ def get_tickets_keyboard(locale: str, tickets: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for ticket in tickets:
         status_emoji = "✅" if ticket.get("status") == "active" else "❌"
-        ticket_text = f"{status_emoji} {ticket.get('event_djs', 'Event')}\n📅 {ticket.get('event_date', '')} {ticket.get('event_time', '')}"
+        ticket_text = f"{status_emoji} {ticket.get('event_name', 'Event')}\n{ticket.get('event_date', '')} {ticket.get('event_time', '')}"
         builder.add(InlineKeyboardButton(
             text=ticket_text,
             callback_data=f"ticket_{ticket.get('id')}"

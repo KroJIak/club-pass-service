@@ -39,12 +39,11 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
     for ticket in tickets:
         event = ticket.get("event", {})
         ticket_type = ticket.get("ticket_type", {})
-        djs = event.get("djs", [])
-        djs_text = ", ".join(djs) if djs else event.get("name", "")
+        event_name = event.get("name", "")
         
         formatted_tickets.append({
             "id": ticket.get("id"),
-            "event_djs": djs_text,
+            "event_name": event_name,
             "event_date": event.get("date", ""),
             "event_time": event.get("time", ""),
             "ticket_type": ticket_type.get("name", ""),
@@ -77,8 +76,7 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     # Extract data from API response
     event = ticket.get("event", {})
     ticket_type = ticket.get("ticket_type", {})
-    djs = event.get("djs", [])
-    djs_text = ", ".join(djs) if djs else event.get("name", "")
+    event_name = event.get("name", "")
     token = ticket.get("token", "")
     
     # Generate QR code
@@ -89,7 +87,7 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     text = t(
         locale,
         "messages.tickets.ticket_info",
-        event_djs=djs_text,
+        event_name=event_name,
         event_date=event.get("date", ""),
         event_time=event.get("time", ""),
         ticket_type=ticket_type.get("name", ""),
