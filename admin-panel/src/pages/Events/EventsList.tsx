@@ -94,7 +94,7 @@ const EventsList = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Events</Typography>
+        <Typography variant="h6" sx={{ mb: 3 }}>Events</Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
           Create New
         </Button>
