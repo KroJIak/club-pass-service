@@ -17,13 +17,17 @@ depends_on = None
 
 def upgrade() -> None:
     # Add USED value to ticketstatus enum
-    op.execute("ALTER TYPE ticketstatus ADD VALUE IF NOT EXISTS 'used'")
+    # Note: Initial migration created enum with uppercase values (ACTIVE, REFUNDED, CANCELLED)
+    # The model uses lowercase, but TypeDecorator handles conversion
+    # We'll add both uppercase and lowercase to be safe, or just uppercase to match existing
+    op.execute("ALTER TYPE ticketstatus ADD VALUE IF NOT EXISTS 'USED'")
     
     # Update existing tickets: if is_used is True, set status to USED
+    # Must use uppercase 'ACTIVE' to match the enum value from initial migration
     op.execute("""
         UPDATE tickets 
-        SET status = 'used' 
-        WHERE is_used = true AND status = 'active'
+        SET status = 'USED'::ticketstatus
+        WHERE is_used = true AND status = 'ACTIVE'::ticketstatus
     """)
     
     # Drop the is_used column
