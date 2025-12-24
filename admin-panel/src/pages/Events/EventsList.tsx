@@ -9,7 +9,7 @@ import {
   Chip,
   Drawer,
 } from '@mui/material'
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material'
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Event } from '../../types'
 import EventForm from './EventForm'
@@ -107,10 +107,15 @@ const EventsList = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {events.map((event) => (
           <Box key={event.id} sx={{ display: 'flex', gap: 2, position: 'relative' }}>
-            <Card sx={{ flex: 1, minHeight: 120, display: 'flex', flexDirection: 'column' }}>
+            <Card sx={{ flex: 1, minHeight: 120, display: 'flex', flexDirection: 'column', maxWidth: 400 }}>
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                  <Typography variant="h6" sx={{ flex: 1 }}>{event.name}</Typography>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" sx={{ display: 'inline', mr: 1 }}>{event.name}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
+                      {event.date} {event.time}
+                    </Typography>
+                  </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Chip
                       label={event.is_active ? 'Active' : 'Inactive'}
@@ -121,15 +126,13 @@ const EventsList = () => {
                     />
                     <IconButton
                       size="small"
+                      color="primary"
                       onClick={() => toggleExpand(event.id)}
                     >
-                      {expandedEvent === event.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      <EditIcon />
                     </IconButton>
                   </Box>
                 </Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {event.date} {event.time}
-                </Typography>
                 {event.djs && event.djs.length > 0 && (
                   <Typography variant="body2" color="text.secondary" gutterBottom>
                     DJs: {event.djs.join(', ')}
@@ -140,14 +143,7 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
-                <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 2 }}>
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => handleEdit(event)}
-                  >
-                    <EditIcon />
-                  </IconButton>
+                <Box sx={{ mt: 'auto', pt: 2 }}>
                   <IconButton
                     size="small"
                     color="error"
@@ -166,7 +162,7 @@ const EventsList = () => {
                 onClose={() => setExpandedEvent(null)}
                 sx={{
                   '& .MuiDrawer-paper': {
-                    width: 500,
+                    width: 600,
                     p: 3,
                   },
                 }}
