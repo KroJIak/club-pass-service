@@ -58,13 +58,13 @@ class ClubSettingsRepository:
         settings = ClubSettingsRepository.get_settings(db)
         
         if address is not None:
-            settings.address = address if address.strip() else None
+            settings.address = address.strip() if address and address.strip() else None
         
         if phone is not None:
-            settings.phone = phone if phone.strip() else None
+            settings.phone = phone.strip() if phone and phone.strip() else None
         
         if email is not None:
-            settings.email = email if email.strip() else None
+            settings.email = email.strip() if email and email.strip() else None
         
         if auto_deactivate_events is not None:
             settings.auto_deactivate_events = auto_deactivate_events

@@ -65,6 +65,17 @@ def check_tables_exist():
         return False
 
 
+def check_table_exists(table_name: str) -> bool:
+    """Check if a specific table exists in the database."""
+    try:
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
+        return table_name in tables
+    except Exception as e:
+        logger.error(f"Error checking table {table_name}: {e}", exc_info=True)
+        return False
+
+
 def create_tables():
     """Create all tables defined in models."""
     try:
@@ -89,7 +100,28 @@ def init_database():
     
     # Check if tables already exist
     if check_tables_exist():
-        logger.info("Database tables already exist. Skipping initialization.")
+        logger.info("Some tables already exist. Checking for missing tables...")
+        
+        # Check for critical tables that should exist
+        required_tables = [
+            "users", "events", "tickets", "payments", "orders", 
+            "promocodes", "ticket_types", "expiration_settings", "club_settings"
+        ]
+        
+        missing_tables = []
+        for table in required_tables:
+            if not check_table_exists(table):
+                missing_tables.append(table)
+        
+        if missing_tables:
+            logger.info(f"Found missing tables: {', '.join(missing_tables)}. Creating them...")
+            if create_tables():
+                logger.info("Missing tables created successfully")
+            else:
+                logger.error("Failed to create missing tables")
+                sys.exit(1)
+        else:
+            logger.info("All required tables exist. Skipping initialization.")
         return
     
     # Create tables

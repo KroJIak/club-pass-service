@@ -105,14 +105,17 @@ async def handle_club_info(callback: CallbackQuery):
     info_text = ""
     
     if club_settings:
-        if club_settings.get("address"):
-            info_text += f"{t(locale, 'labels.address')}: {club_settings['address']}\n"
+        address = club_settings.get("address")
+        if address and address.strip():
+            info_text += f"{t(locale, 'labels.address')}: {address}\n"
         
-        if club_settings.get("phone"):
-            info_text += f"{t(locale, 'labels.phone')}: {club_settings['phone']}\n"
+        phone = club_settings.get("phone")
+        if phone and phone.strip():
+            info_text += f"{t(locale, 'labels.phone')}: {phone}\n"
         
-        if club_settings.get("email"):
-            info_text += f"{t(locale, 'labels.email')}: {club_settings['email']}\n"
+        email = club_settings.get("email")
+        if email and email.strip():
+            info_text += f"{t(locale, 'labels.email')}: {email}\n"
     
     # Fallback to settings if API fails (backward compatibility)
     if not info_text:
