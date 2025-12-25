@@ -53,6 +53,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       description: '',
       date: '',
       time: '',
+      end_date: null,
+      end_time: null,
       djs: [],
       is_active: true,
     },
@@ -69,6 +71,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         description: event.description || '',
         date: event.date,
         time: event.time,
+        end_date: event.end_date || null,
+        end_time: event.end_time || null,
         djs: event.djs || [],
         is_active: event.is_active,
       })
@@ -82,6 +86,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         description: '',
         date: '',
         time: '',
+        end_date: null,
+        end_time: null,
         djs: [],
         is_active: true,
       })
@@ -193,6 +199,24 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           }}
           error={!!errors.time}
           helperText={errors.time?.message}
+        />
+        <DateField
+          label="End Date (optional)"
+          value={watch('end_date') || null}
+          onChange={(value) => {
+            setValue('end_date', value || null, { shouldValidate: true })
+          }}
+          error={!!errors.end_date}
+          helperText={errors.end_date?.message || 'Date when the event ends'}
+        />
+        <TimeField
+          label="End Time (optional)"
+          value={watch('end_time') || null}
+          onChange={(value) => {
+            setValue('end_time', value || null, { shouldValidate: true })
+          }}
+          error={!!errors.end_time}
+          helperText={errors.end_time?.message || 'Time when the event ends'}
         />
         <ArrayField
           label="DJs"

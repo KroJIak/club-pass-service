@@ -23,6 +23,8 @@ from api.models import (
     ClubSettings,
 )
 
+# Import all models to ensure they are registered with Base
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"

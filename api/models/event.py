@@ -14,6 +14,8 @@ class Event(Base):
     description = Column(String, nullable=True)
     date = Column(String, nullable=False)  # Format: "DD.MM.YYYY"
     time = Column(String, nullable=False)  # Format: "HH:MM"
+    end_date = Column(String, nullable=True)  # Format: "DD.MM.YYYY"
+    end_time = Column(String, nullable=True)  # Format: "HH:MM"
     djs = Column(JSON, nullable=True)  # List of DJ names: ["DJ. DIMSY", "EMPYZ", ...]
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

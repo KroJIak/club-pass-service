@@ -8,6 +8,8 @@ import {
   Alert,
   CircularProgress,
   TextField,
+  FormControlLabel,
+  Switch,
 } from '@mui/material'
 import api from '../../services/api'
 import type { ClubSettings, ClubSettingsUpdate } from '../../types'
@@ -22,6 +24,7 @@ const ClubSettings = () => {
     address: '',
     phone: '',
     email: '',
+    auto_deactivate_events: true,
   })
 
   useEffect(() => {
@@ -38,6 +41,7 @@ const ClubSettings = () => {
         address: response.data.address || '',
         phone: response.data.phone || '',
         email: response.data.email || '',
+        auto_deactivate_events: response.data.auto_deactivate_events ?? true,
       })
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load settings')
@@ -55,6 +59,13 @@ const ClubSettings = () => {
     })
   }
 
+  const handleToggleAutoDeactivate = (checked: boolean) => {
+    setFormData({
+      ...formData,
+      auto_deactivate_events: checked,
+    })
+  }
+
   const handleSave = async () => {
     try {
       setSaving(true)
@@ -65,6 +76,7 @@ const ClubSettings = () => {
         address: formData.address.trim() || null,
         phone: formData.phone.trim() || null,
         email: formData.email.trim() || null,
+        auto_deactivate_events: formData.auto_deactivate_events,
       }
 
       const response = await api.put<ClubSettings>('/admin/club-settings', update)
@@ -145,6 +157,22 @@ const ClubSettings = () => {
             helperText="Club email address displayed in the bot"
             sx={{ mb: 2 }}
           />
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.auto_deactivate_events}
+                onChange={(e) => handleToggleAutoDeactivate(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Auto Deactivate Events"
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
+            Automatically deactivate events and expire tickets when event end time is reached
+          </Typography>
         </Box>
 
         <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>

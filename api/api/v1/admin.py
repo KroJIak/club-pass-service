@@ -18,6 +18,7 @@ from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.services.ticket_service import TicketService
+from api.services.event_scheduling_service import schedule_event_deactivation, cancel_event_deactivation
 from api.api.v1.schemas import (
     EventResponse, EventListResponse,
     TicketTypeResponse, TicketTypeListResponse,
@@ -43,6 +44,8 @@ class EventCreate(BaseModel):
     description: Optional[str] = None
     date: str
     time: str
+    end_date: Optional[str] = None
+    end_time: Optional[str] = None
     djs: Optional[List[str]] = None
     is_active: bool = True
 
@@ -53,6 +56,8 @@ class EventUpdate(BaseModel):
     description: Optional[str] = None
     date: Optional[str] = None
     time: Optional[str] = None
+    end_date: Optional[str] = None
+    end_time: Optional[str] = None
     djs: Optional[List[str]] = None
     is_active: Optional[bool] = None
 
@@ -235,12 +240,19 @@ async def create_event(
         description=event_data.description,
         date=event_data.date,
         time=event_data.time,
+        end_date=event_data.end_date,
+        end_time=event_data.end_time,
         djs=event_data.djs,
         is_active=event_data.is_active,
     )
     db.add(event)
     db.commit()
     db.refresh(event)
+    
+    # Schedule event deactivation if end_date and end_time are provided
+    if event_data.end_date and event_data.end_time and event.is_active:
+        await schedule_event_deactivation(db, event.id, event_data.end_date, event_data.end_time)
+    
     return EventResponse.model_validate(event)
 
 
@@ -267,13 +279,39 @@ async def update_event(
         event.date = event_data.date
     if event_data.time is not None:
         event.time = event_data.time
+    if event_data.end_date is not None:
+        event.end_date = event_data.end_date
+    if event_data.end_time is not None:
+        event.end_time = event_data.end_time
     if event_data.djs is not None:
         event.djs = event_data.djs
     if event_data.is_active is not None:
         event.is_active = event_data.is_active
     
+    # Handle end_date and end_time changes
+    end_date_changed = event_data.end_date is not None
+    end_time_changed = event_data.end_time is not None
+    
     db.commit()
     db.refresh(event)
+    
+    # Schedule or cancel deactivation based on changes
+    if (end_date_changed or end_time_changed) and event.is_active:
+        if event.end_date and event.end_time:
+            # Cancel existing and schedule new
+            await cancel_event_deactivation(event.id)
+            await schedule_event_deactivation(db, event.id, event.end_date, event.end_time)
+        else:
+            # Cancel if end_date or end_time removed
+            await cancel_event_deactivation(event.id)
+    elif event_data.is_active is not None:
+        if event.is_active and event.end_date and event.end_time:
+            # Event reactivated, schedule deactivation
+            await schedule_event_deactivation(db, event.id, event.end_date, event.end_time)
+        elif not event.is_active:
+            # Event deactivated, cancel scheduled deactivation
+            await cancel_event_deactivation(event.id)
+    
     return EventResponse.model_validate(event)
 
 
@@ -936,7 +974,8 @@ async def update_club_settings(
             db,
             address=settings_update.address,
             phone=settings_update.phone,
-            email=settings_update.email
+            email=settings_update.email,
+            auto_deactivate_events=settings_update.auto_deactivate_events
         )
         return ClubSettingsResponse.model_validate(settings)
     except Exception as e:

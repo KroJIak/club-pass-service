@@ -46,6 +46,8 @@ class EventResponse(BaseModel):
     description: Optional[str] = None
     date: str
     time: str
+    end_date: Optional[str] = None
+    end_time: Optional[str] = None
     djs: Optional[List[str]] = None
     is_active: bool
     created_at: datetime
@@ -230,6 +232,7 @@ class ClubSettingsResponse(BaseModel):
     address: str | None
     phone: str | None
     email: str | None
+    auto_deactivate_events: bool
     updated_at: datetime
 
     class Config:
@@ -241,4 +244,5 @@ class ClubSettingsUpdate(BaseModel):
     address: str | None = None
     phone: str | None = None
     email: str | None = None
+    auto_deactivate_events: bool | None = None
 

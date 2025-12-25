@@ -24,7 +24,8 @@ class ClubSettingsRepository:
                 id=1,
                 address=None,
                 phone=None,
-                email=None
+                email=None,
+                auto_deactivate_events=True
             )
             db.add(settings)
             db.commit()
@@ -38,7 +39,8 @@ class ClubSettingsRepository:
         db: Session,
         address: str = None,
         phone: str = None,
-        email: str = None
+        email: str = None,
+        auto_deactivate_events: bool = None
     ) -> ClubSettings:
         """
         Update club settings.
@@ -48,6 +50,7 @@ class ClubSettingsRepository:
             address: Club address
             phone: Club phone
             email: Club email
+            auto_deactivate_events: Enable/disable automatic event deactivation
         
         Returns:
             Updated settings
@@ -63,6 +66,9 @@ class ClubSettingsRepository:
         if email is not None:
             settings.email = email if email.strip() else None
         
+        if auto_deactivate_events is not None:
+            settings.auto_deactivate_events = auto_deactivate_events
+        
         settings.updated_at = datetime.utcnow()
         
         db.commit()
@@ -72,7 +78,8 @@ class ClubSettingsRepository:
             f"Updated club settings: "
             f"address={settings.address}, "
             f"phone={settings.phone}, "
-            f"email={settings.email}"
+            f"email={settings.email}, "
+            f"auto_deactivate_events={settings.auto_deactivate_events}"
         )
         
         return settings

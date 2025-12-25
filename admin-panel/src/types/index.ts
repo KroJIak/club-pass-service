@@ -14,6 +14,8 @@ export interface Event {
   description: string | null
   date: string // DD.MM.YYYY
   time: string // HH:MM
+  end_date: string | null // DD.MM.YYYY
+  end_time: string | null // HH:MM
   djs: string[] | null
   is_active: boolean
   created_at: string
