@@ -91,7 +91,6 @@ services:
       - "${ADMIN_PORT:-3000}:80"
     depends_on:
       - api
-    restart: unless-stopped
 
   expiration-service:
     build:
@@ -116,32 +115,5 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  cloudpub-init:
-    image: alpine:latest
-    container_name: club-pass-cloudpub-init
-    volumes:
-      - ./cloudpub-config:/cloudpub-config
-    command: sh -c "mkdir -p /cloudpub-config/cloudpub-admin-panel && chmod -R 777 /cloudpub-config"
-    restart: "no"
-
-  cloudpub-admin-panel:
-    image: cloudpub/cloudpub:latest
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    environment:
-      - TOKEN=${CLOUDPUB_TOKEN}
-      - HTTP=localhost:${ADMIN_PORT:-3000}
-    command: run
-    depends_on:
-      admin:
-        condition: service_started
-      cloudpub-init:
-        condition: service_completed_successfully
-    volumes:
-      - ./cloudpub-config/cloudpub-admin-panel:/home/cloudpub
-
 volumes:
   postgres_data:
-
