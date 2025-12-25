@@ -20,17 +20,22 @@ class ClubSettingsRepository:
         
         if not settings:
             # Create default settings
-            settings = ClubSettings(
-                id=1,
-                address=None,
-                phone=None,
-                email=None,
-                auto_deactivate_events=True
-            )
-            db.add(settings)
-            db.commit()
-            db.refresh(settings)
-            logger.info("Created default club settings")
+            try:
+                settings = ClubSettings(
+                    id=1,
+                    address=None,
+                    phone=None,
+                    email=None,
+                    auto_deactivate_events=True
+                )
+                db.add(settings)
+                db.commit()
+                db.refresh(settings)
+                logger.info("Created default club settings")
+            except Exception as e:
+                logger.error(f"Error creating default club settings: {e}", exc_info=True)
+                db.rollback()
+                raise
         
         return settings
     
