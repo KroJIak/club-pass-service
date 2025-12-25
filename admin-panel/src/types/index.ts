@@ -181,6 +181,20 @@ export interface ExpirationSettingsUpdate {
   check_interval_minutes?: number
 }
 
+export interface ClubSettings {
+  id: number
+  address: string | null
+  phone: string | null
+  email: string | null
+  updated_at: string
+}
+
+export interface ClubSettingsUpdate {
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+}
+
 export interface TicketDetailResponse {
   id: number
   user_id: number

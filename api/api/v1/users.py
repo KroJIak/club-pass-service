@@ -5,7 +5,8 @@ import logging
 
 from api.core.db import get_db
 from api.repositories.user_repository import UserRepository
-from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse
+from api.repositories.club_settings_repository import ClubSettingsRepository
+from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -140,4 +141,20 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting user: {str(e)}"
+        )
+
+
+@router.get("/club-settings", response_model=ClubSettingsResponse)
+async def get_club_settings_public(
+    db: Session = Depends(get_db),
+):
+    """Get club settings (public endpoint for bot)."""
+    try:
+        settings = ClubSettingsRepository.get_settings(db)
+        return ClubSettingsResponse.model_validate(settings)
+    except Exception as e:
+        logger.error(f"Error getting club settings: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting club settings: {str(e)}"
         )

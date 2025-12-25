@@ -223,3 +223,22 @@ class ExpirationSettingsUpdate(BaseModel):
     event_deactivation_enabled: bool | None = None
     check_interval_minutes: int | None = None
 
+
+class ClubSettingsResponse(BaseModel):
+    """Schema for club settings response."""
+    id: int
+    address: str | None
+    phone: str | None
+    email: str | None
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ClubSettingsUpdate(BaseModel):
+    """Schema for updating club settings."""
+    address: str | None = None
+    phone: str | None = None
+    email: str | None = None
+

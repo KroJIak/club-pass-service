@@ -20,6 +20,7 @@ from api.models import (
     Promocode,
     Order,
     ExpirationSettings,
+    ClubSettings,
 )
 
 logging.basicConfig(

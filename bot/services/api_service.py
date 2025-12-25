@@ -189,6 +189,18 @@ class APIService:
                 except:
                     pass
             return None
+    
+    async def get_club_settings(self) -> Optional[Dict[str, Any]]:
+        """Get club settings from API."""
+        try:
+            response = await self.client.get(
+                f"{self.base_url}/v1/users/club-settings"
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            print(f"Error fetching club settings: {e}")
+            return None
 
 
 # Global instance

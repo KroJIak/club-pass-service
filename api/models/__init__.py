@@ -7,6 +7,7 @@ from api.models.payment import Payment, PaymentStatus
 from api.models.promocode import Promocode
 from api.models.order import Order
 from api.models.expiration_settings import ExpirationSettings
+from api.models.club_settings import ClubSettings
 
 __all__ = [
     "User",
@@ -19,5 +20,6 @@ __all__ = [
     "Promocode",
     "Order",
     "ExpirationSettings",
+    "ClubSettings",
 ]
 

@@ -16,6 +16,7 @@ from api.repositories.payment_repository import PaymentRepository
 from api.repositories.order_repository import OrderRepository
 from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
+from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.services.ticket_service import TicketService
 from api.api.v1.schemas import (
     EventResponse, EventListResponse,
@@ -25,6 +26,8 @@ from api.api.v1.schemas import (
     PaymentResponse,
     ExpirationSettingsResponse,
     ExpirationSettingsUpdate,
+    ClubSettingsResponse,
+    ClubSettingsUpdate,
 )
 from api.models import Event, TicketType, Ticket, Payment, Order, Promocode
 from api.models.ticket import TicketStatus
@@ -907,4 +910,37 @@ async def update_expiration_settings(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+
+
+# Club Settings endpoints
+@router.get("/admin/club-settings", response_model=ClubSettingsResponse)
+async def get_club_settings(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get club settings."""
+    settings = ClubSettingsRepository.get_settings(db)
+    return ClubSettingsResponse.model_validate(settings)
+
+
+@router.put("/admin/club-settings", response_model=ClubSettingsResponse)
+async def update_club_settings(
+    settings_update: ClubSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update club settings."""
+    try:
+        settings = ClubSettingsRepository.update_settings(
+            db,
+            address=settings_update.address,
+            phone=settings_update.phone,
+            email=settings_update.email
+        )
+        return ClubSettingsResponse.model_validate(settings)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update club settings: {str(e)}"
         )

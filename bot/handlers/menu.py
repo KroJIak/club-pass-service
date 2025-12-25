@@ -98,18 +98,32 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
 async def handle_club_info(callback: CallbackQuery):
     """Handle 'Club info' button."""
     locale = get_user_locale(callback.from_user.language_code)
-    # Club info: only address, phone, email (no title, no club name)
-    # TODO: Get club info from API instead of settings
+    
+    # Get club settings from API
+    club_settings = await api_service.get_club_settings()
+    
     info_text = ""
     
-    if settings.CLUB_ADDRESS:
-        info_text += f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
+    if club_settings:
+        if club_settings.get("address"):
+            info_text += f"{t(locale, 'labels.address')}: {club_settings['address']}\n"
+        
+        if club_settings.get("phone"):
+            info_text += f"{t(locale, 'labels.phone')}: {club_settings['phone']}\n"
+        
+        if club_settings.get("email"):
+            info_text += f"{t(locale, 'labels.email')}: {club_settings['email']}\n"
     
-    if settings.CLUB_PHONE:
-        info_text += f"{t(locale, 'labels.phone')}: {settings.CLUB_PHONE}\n"
-    
-    if settings.CLUB_EMAIL:
-        info_text += f"{t(locale, 'labels.email')}: {settings.CLUB_EMAIL}\n"
+    # Fallback to settings if API fails (backward compatibility)
+    if not info_text:
+        if settings.CLUB_ADDRESS:
+            info_text += f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
+        
+        if settings.CLUB_PHONE:
+            info_text += f"{t(locale, 'labels.phone')}: {settings.CLUB_PHONE}\n"
+        
+        if settings.CLUB_EMAIL:
+            info_text += f"{t(locale, 'labels.email')}: {settings.CLUB_EMAIL}\n"
     
     if not info_text:
         info_text = t(locale, 'messages.club_info_not_configured', default="Информация о клубе не настроена")

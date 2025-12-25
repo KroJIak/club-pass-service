@@ -15,6 +15,7 @@ import {
   LocalOffer as PromocodeIcon,
   Settings as SettingsIcon,
   QrCodeScanner as QrCodeIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -26,6 +27,7 @@ const menuItems = [
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
   { text: 'Скан QR', icon: <QrCodeIcon />, path: '/qr-scanner' },
+  { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
   { text: 'Expiration Settings', icon: <SettingsIcon />, path: '/expiration-settings' },
 ]
 
