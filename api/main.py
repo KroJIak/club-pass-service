@@ -6,9 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import settings
 from api.api.routes import api_router
 
-# Configure logging
+# Configure logging - always use DEBUG level for detailed output
 logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title=settings.API_TITLE,
     version=settings.API_VERSION,
-    debug=settings.DEBUG,
+    debug=True,  # Always enabled for detailed error messages
 )
 
 # CORS middleware

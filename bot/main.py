@@ -11,9 +11,9 @@ from bot.services.api_service import api_service
 from bot.core.middleware import TemporaryMessagesMiddleware, temporary_messages_middleware
 from bot.core.image_cache import preload_images
 
-# Configure logging
+# Configure logging - always use DEBUG level for detailed output
 logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)

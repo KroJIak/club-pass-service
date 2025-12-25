@@ -99,13 +99,20 @@ async def handle_club_info(callback: CallbackQuery):
     """Handle 'Club info' button."""
     locale = get_user_locale(callback.from_user.language_code)
     # Club info: only address, phone, email (no title, no club name)
-    info_text = f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
+    # TODO: Get club info from API instead of settings
+    info_text = ""
+    
+    if settings.CLUB_ADDRESS:
+        info_text += f"{t(locale, 'labels.address')}: {settings.CLUB_ADDRESS}\n"
     
     if settings.CLUB_PHONE:
         info_text += f"{t(locale, 'labels.phone')}: {settings.CLUB_PHONE}\n"
     
     if settings.CLUB_EMAIL:
         info_text += f"{t(locale, 'labels.email')}: {settings.CLUB_EMAIL}\n"
+    
+    if not info_text:
+        info_text = t(locale, 'messages.club_info_not_configured', default="Информация о клубе не настроена")
     
     await safe_edit_message(
         callback,

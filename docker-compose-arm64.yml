@@ -44,7 +44,6 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-club_pass}
-      DEBUG: ${DEBUG:-false}
       EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
     ports:
@@ -67,11 +66,6 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       API_URL: http://api:8000
       API_PREFIX: /api
-      DEBUG: ${DEBUG:-false}
-      CLUB_NAME: ${CLUB_NAME:-}
-      CLUB_ADDRESS: ${CLUB_ADDRESS:-}
-      CLUB_PHONE: ${CLUB_PHONE:-}
-      CLUB_EMAIL: ${CLUB_EMAIL:-}
       I18N_SUPPORTED_LOCALES: ${I18N_SUPPORTED_LOCALES:-ru_ru,en_us}
       I18N_DEFAULT_LOCALE: ${I18N_DEFAULT_LOCALE:-ru_ru}
     depends_on:
