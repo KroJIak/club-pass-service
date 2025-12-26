@@ -2,8 +2,10 @@
 
 This script checks if database tables exist and creates them if they don't.
 It should be run on first startup to ensure the database is properly initialized.
+It also applies Alembic migrations to ensure the database schema is up to date.
 """
 import sys
+import os
 import time
 import logging
 from sqlalchemy import inspect, text
@@ -11,6 +13,9 @@ from sqlalchemy.exc import OperationalError
 
 from api.core.db import engine, Base
 from api.core.config import settings
+
+# Add api directory to path for Alembic
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from api.models import (
     User,
     Event,
@@ -88,6 +93,38 @@ def create_tables():
         return False
 
 
+def apply_migrations():
+    """Apply Alembic migrations to bring database schema up to date."""
+    try:
+        from alembic import command
+        from alembic.config import Config
+        
+        # Get the path to alembic.ini
+        api_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        alembic_ini_path = os.path.join(api_dir, "alembic.ini")
+        
+        if not os.path.exists(alembic_ini_path):
+            logger.warning(f"Alembic config not found at {alembic_ini_path}. Skipping migrations.")
+            return False
+        
+        logger.info("Applying Alembic migrations...")
+        alembic_cfg = Config(alembic_ini_path)
+        
+        # Set database URL
+        alembic_cfg.set_main_option("sqlalchemy.url", (
+            f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+            f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+        ))
+        
+        # Apply migrations
+        command.upgrade(alembic_cfg, "head")
+        logger.info("Migrations applied successfully")
+        return True
+    except Exception as e:
+        logger.error(f"Error applying migrations: {e}", exc_info=True)
+        return False
+
+
 def init_database():
     """Initialize database if tables don't exist."""
     logger.info("Starting database initialization...")
@@ -97,6 +134,10 @@ def init_database():
     if not check_database_connection():
         logger.error("Cannot connect to database. Exiting.")
         sys.exit(1)
+    
+    # Always try to apply migrations first
+    logger.info("Applying database migrations...")
+    apply_migrations()
     
     # Check if tables already exist
     if check_tables_exist():
@@ -121,7 +162,7 @@ def init_database():
                 logger.error("Failed to create missing tables")
                 sys.exit(1)
         else:
-            logger.info("All required tables exist. Skipping initialization.")
+            logger.info("All required tables exist.")
         return
     
     # Create tables
