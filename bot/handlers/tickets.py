@@ -152,8 +152,8 @@ async def handle_refund_ticket_click(callback: CallbackQuery, state: FSMContext)
         error_text = t(locale, "messages.tickets.refund_status_error")
         await callback.answer(error_text, show_alert=True)
         # Return to main menu
-        from bot.handlers.menu import handle_main_menu
-        await handle_main_menu(callback, state)
+        from bot.handlers.menu import handle_back_to_menu
+        await handle_back_to_menu(callback, state)
         return
     
     # Save ticket_id to state
