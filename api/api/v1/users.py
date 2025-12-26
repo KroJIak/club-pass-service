@@ -76,74 +76,8 @@ async def create_user(
         )
 
 
-@router.get("/{user_id}", response_model=UserResponse)
-async def get_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """Get user by ID."""
-    user = UserRepository.get_by_id(db, user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User with id {user_id} not found"
-        )
-    return UserResponse.model_validate(user)
-
-
-@router.put("/{user_id}", response_model=UserResponse)
-async def update_user(
-    user_id: int,
-    user_data: UserUpdate,
-    db: Session = Depends(get_db),
-):
-    """Update an existing user."""
-    try:
-        logger.info(f"Updating user: id={user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
-        user = UserRepository.update(db, user_id, user_data)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with id {user_id} not found"
-            )
-        logger.info(f"User updated: id={user.id}, telegram_user_id={user.telegram_user_id}")
-        return UserResponse.model_validate(user)
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error updating user: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error updating user: {str(e)}"
-        )
-
-
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """Delete a user."""
-    try:
-        logger.info(f"Deleting user: id={user_id}")
-        deleted = UserRepository.delete(db, user_id)
-        if not deleted:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with id {user_id} not found"
-            )
-        logger.info(f"User deleted: id={user_id}")
-        return None
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting user: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error deleting user: {str(e)}"
-        )
-
-
+# IMPORTANT: Specific routes (like /club-settings) must be defined BEFORE generic routes (like /{user_id})
+# Otherwise FastAPI will try to match /club-settings as /{user_id} and fail with 422
 @router.get("/club-settings")
 async def get_club_settings_public(
     db: Session = Depends(get_db),
@@ -269,4 +203,72 @@ async def get_club_settings_public(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting club settings: {str(e)}"
+        )
+
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get user by ID."""
+    user = UserRepository.get_by_id(db, user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {user_id} not found"
+        )
+    return UserResponse.model_validate(user)
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update an existing user."""
+    try:
+        logger.info(f"Updating user: id={user_id}, username={user_data.username}, first_name={user_data.first_name}, last_name={user_data.last_name}")
+        user = UserRepository.update(db, user_id, user_data)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {user_id} not found"
+            )
+        logger.info(f"User updated: id={user.id}, telegram_user_id={user.telegram_user_id}")
+        return UserResponse.model_validate(user)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating user: {str(e)}"
+        )
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete a user."""
+    try:
+        logger.info(f"Deleting user: id={user_id}")
+        deleted = UserRepository.delete(db, user_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {user_id} not found"
+            )
+        logger.info(f"User deleted: id={user_id}")
+        return None
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting user: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting user: {str(e)}"
         )
