@@ -151,34 +151,73 @@ async def get_club_settings_public(
     """Get club settings (public endpoint for bot)."""
     import json
     from fastapi.responses import JSONResponse
+    from datetime import datetime
+    
+    logger.info("=" * 80)
+    logger.info("CLUB SETTINGS ENDPOINT CALLED")
+    logger.info("=" * 80)
     
     try:
-        logger.info("Starting get_club_settings_public...")
+        logger.info("Step 1: Starting get_club_settings_public function")
+        logger.info(f"Step 2: DB session type: {type(db)}")
+        
+        logger.info("Step 3: Calling ClubSettingsRepository.get_settings(db)")
         settings = ClubSettingsRepository.get_settings(db)
-        logger.info(f"Settings retrieved: id={settings.id}")
+        logger.info(f"Step 4: Settings retrieved successfully")
+        logger.info(f"  - Settings object: {settings}")
+        logger.info(f"  - Settings type: {type(settings)}")
+        logger.info(f"  - Settings id: {settings.id}")
+        logger.info(f"  - Settings address: {settings.address}")
+        logger.info(f"  - Settings phone: {settings.phone}")
+        logger.info(f"  - Settings email: {settings.email}")
+        logger.info(f"  - Settings updated_at: {settings.updated_at} (type: {type(settings.updated_at)})")
         
         # Handle case where auto_deactivate_events might not exist in DB
+        logger.info("Step 5: Checking auto_deactivate_events attribute")
         try:
+            logger.info("  - Attempting getattr(settings, 'auto_deactivate_events', None)")
             auto_deactivate = getattr(settings, 'auto_deactivate_events', None)
+            logger.info(f"  - getattr result: {auto_deactivate} (type: {type(auto_deactivate)})")
             if auto_deactivate is None:
+                logger.warning("  - auto_deactivate is None, setting to True")
                 auto_deactivate = True
-            logger.info(f"auto_deactivate_events: {auto_deactivate} (type: {type(auto_deactivate)})")
-        except AttributeError:
+            else:
+                logger.info(f"  - auto_deactivate value: {auto_deactivate}")
+        except AttributeError as e:
+            logger.warning(f"  - AttributeError caught: {e}")
             auto_deactivate = True
-            logger.warning("auto_deactivate_events attribute not found, using default True")
+            logger.warning("  - Setting auto_deactivate to True (default)")
+        
+        logger.info(f"Step 6: Final auto_deactivate value: {auto_deactivate} (type: {type(auto_deactivate)})")
         
         # Ensure updated_at is a datetime object
+        logger.info("Step 7: Processing updated_at")
         updated_at = settings.updated_at
+        logger.info(f"  - updated_at value: {updated_at}")
+        logger.info(f"  - updated_at type: {type(updated_at)}")
+        
         if updated_at is None:
-            from datetime import datetime
+            logger.warning("  - updated_at is None, creating new datetime")
             updated_at = datetime.utcnow()
-            logger.warning("updated_at was None, using current time")
+            logger.info(f"  - Created new datetime: {updated_at}")
+        else:
+            logger.info(f"  - updated_at is not None, using existing value")
         
         # Serialize datetime to ISO format string
-        updated_at_str = updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
-        logger.info(f"updated_at_str: {updated_at_str}")
+        logger.info("Step 8: Serializing updated_at to ISO format")
+        if hasattr(updated_at, 'isoformat'):
+            logger.info("  - updated_at has isoformat method")
+            updated_at_str = updated_at.isoformat()
+            logger.info(f"  - ISO format result: {updated_at_str}")
+        else:
+            logger.warning("  - updated_at does not have isoformat method, using str()")
+            updated_at_str = str(updated_at)
+            logger.info(f"  - String result: {updated_at_str}")
+        
+        logger.info(f"Step 9: Final updated_at_str: {updated_at_str} (type: {type(updated_at_str)})")
         
         # Build response dict - return directly without Pydantic validation
+        logger.info("Step 10: Building response_data dictionary")
         response_data = {
             "id": int(settings.id),
             "address": settings.address if settings.address else None,
@@ -188,14 +227,45 @@ async def get_club_settings_public(
             "updated_at": updated_at_str
         }
         
-        logger.info(f"Response data prepared: {response_data}")
+        logger.info("Step 11: Response data dictionary created:")
+        for key, value in response_data.items():
+            logger.info(f"  - {key}: {value} (type: {type(value)})")
         
-        # Return JSONResponse directly to bypass any FastAPI validation
-        return JSONResponse(content=response_data)
+        # Validate JSON serialization
+        logger.info("Step 12: Testing JSON serialization")
+        try:
+            json_str = json.dumps(response_data)
+            logger.info(f"  - JSON serialization successful: {json_str[:200]}...")
+        except Exception as json_error:
+            logger.error(f"  - JSON serialization failed: {json_error}")
+            raise
+        
+        logger.info("Step 13: Creating JSONResponse")
+        json_response = JSONResponse(content=response_data)
+        logger.info(f"  - JSONResponse created: {json_response}")
+        logger.info(f"  - JSONResponse status_code: {json_response.status_code}")
+        logger.info(f"  - JSONResponse headers: {json_response.headers}")
+        
+        logger.info("Step 14: Returning JSONResponse")
+        logger.info("=" * 80)
+        return json_response
+        
+    except HTTPException as http_exc:
+        logger.error("=" * 80)
+        logger.error("HTTPException caught in get_club_settings_public")
+        logger.error(f"  - Status code: {http_exc.status_code}")
+        logger.error(f"  - Detail: {http_exc.detail}")
+        logger.error("=" * 80)
+        raise
     except Exception as e:
-        logger.error(f"Error getting club settings: {e}", exc_info=True)
+        logger.error("=" * 80)
+        logger.error("EXCEPTION in get_club_settings_public")
+        logger.error(f"  - Exception type: {type(e)}")
+        logger.error(f"  - Exception message: {str(e)}")
+        logger.error(f"  - Exception args: {e.args}")
         import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"  - Full traceback:\n{traceback.format_exc()}")
+        logger.error("=" * 80)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting club settings: {str(e)}"
