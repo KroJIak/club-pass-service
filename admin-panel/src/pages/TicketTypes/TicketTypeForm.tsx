@@ -45,6 +45,7 @@ const TicketTypeForm = ({
 
   const {
     control,
+    register,
     handleSubmit,
     reset,
     setValue,
@@ -215,7 +216,7 @@ const TicketTypeForm = ({
 
         <TextField
           label="Name"
-          {...control.register('name', { required: 'Name is required' })}
+          {...register('name', { required: 'Name is required' })}
           error={!!errors.name}
           helperText={errors.name?.message}
         />
