@@ -10,7 +10,7 @@ import {
   Chip,
   IconButton,
 } from '@mui/material'
-import { Add as AddIcon, Star as StarIcon, StarBorder as StarBorderIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Add as AddIcon, StarBorder as StarBorderIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { TicketType } from '../../types'
 import TicketTypeForm from './TicketTypeForm'

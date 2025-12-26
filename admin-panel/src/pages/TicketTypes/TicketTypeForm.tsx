@@ -49,7 +49,6 @@ const TicketTypeForm = ({
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<TicketTypeCreate | TicketTypeUpdate>({
     defaultValues: {
@@ -203,8 +202,8 @@ const TicketTypeForm = ({
                   <MuiTextField
                     {...params}
                     label="Event"
-                    error={!!errors.event_id}
-                    helperText={errors.event_id?.message}
+                    error={!!(errors as any).event_id}
+                    helperText={(errors as any).event_id?.message}
                     required={!ticketType}
                     sx={{ mb: 2 }}
                   />
