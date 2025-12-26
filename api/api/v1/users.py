@@ -151,15 +151,26 @@ async def get_club_settings_public(
     """Get club settings (public endpoint for bot)."""
     try:
         settings = ClubSettingsRepository.get_settings(db)
+        
+        # Log settings object for debugging
+        logger.debug(f"Settings object: {settings}")
+        logger.debug(f"Settings type: {type(settings)}")
+        logger.debug(f"Settings attributes: {dir(settings)}")
+        
         # Handle case where auto_deactivate_events might not exist in DB
-        # Use model_dump if available, otherwise build dict manually
         try:
-            # Try to get auto_deactivate_events attribute
             auto_deactivate = getattr(settings, 'auto_deactivate_events', None)
             if auto_deactivate is None:
                 auto_deactivate = True
         except AttributeError:
             auto_deactivate = True
+        
+        # Ensure updated_at is a datetime object
+        updated_at = settings.updated_at
+        if updated_at is None:
+            from datetime import datetime
+            updated_at = datetime.utcnow()
+            logger.warning("updated_at was None, using current time")
         
         # Build response dict
         response_data = {
@@ -168,10 +179,26 @@ async def get_club_settings_public(
             "phone": settings.phone,
             "email": settings.email,
             "auto_deactivate_events": auto_deactivate,
-            "updated_at": settings.updated_at
+            "updated_at": updated_at
         }
         
-        return ClubSettingsResponse(**response_data)
+        logger.debug(f"Response data: {response_data}")
+        logger.debug(f"Response data types: {[(k, type(v)) for k, v in response_data.items()]}")
+        
+        # Try to create response and log any validation errors
+        try:
+            response = ClubSettingsResponse(**response_data)
+            logger.debug(f"Response created successfully: {response}")
+            return response
+        except Exception as validation_error:
+            logger.error(f"Pydantic validation error: {validation_error}", exc_info=True)
+            logger.error(f"Failed data: {response_data}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Validation error: {str(validation_error)}"
+            )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
         raise HTTPException(
