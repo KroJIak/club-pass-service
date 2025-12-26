@@ -821,7 +821,18 @@ async def update_ticket(
         )
     
     # Get update data as dict to safely access fields
-    update_dict = ticket_data.model_dump(exclude_unset=True)
+    # Use model_dump() without exclude_unset to see all fields, then filter None values manually
+    update_dict = ticket_data.model_dump()
+    
+    # Debug logging
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Updating ticket {ticket_id} with raw data: {update_dict}")
+    logger.info(f"Current ticket state: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
+    
+    # Filter out None values (but keep 0, False, empty string if they are valid values)
+    update_dict = {k: v for k, v in update_dict.items() if v is not None}
+    logger.info(f"Filtered update_dict (excluding None): {update_dict}")
     
     # Update user_id if provided
     if 'user_id' in update_dict and update_dict['user_id'] is not None:
@@ -831,7 +842,9 @@ async def update_ticket(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"User with id {update_dict['user_id']} not found"
             )
+        old_user_id = ticket.user_id
         ticket.user_id = update_dict['user_id']
+        logger.info(f"Updated user_id from {old_user_id} to {ticket.user_id}")
     
     # Update event_id if provided
     if 'event_id' in update_dict and update_dict['event_id'] is not None:
@@ -841,7 +854,9 @@ async def update_ticket(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Event with id {update_dict['event_id']} not found"
             )
+        old_event_id = ticket.event_id
         ticket.event_id = update_dict['event_id']
+        logger.info(f"Updated event_id from {old_event_id} to {ticket.event_id}")
     
     # Update ticket_type_id if provided
     if 'ticket_type_id' in update_dict and update_dict['ticket_type_id'] is not None:
@@ -864,7 +879,9 @@ async def update_ticket(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Ticket type {update_dict['ticket_type_id']} does not belong to event {ticket.event_id}"
             )
+        old_ticket_type_id = ticket.ticket_type_id
         ticket.ticket_type_id = update_dict['ticket_type_id']
+        logger.info(f"Updated ticket_type_id from {old_ticket_type_id} to {ticket.ticket_type_id}")
     
     # Update token if provided
     if 'token' in update_dict and update_dict['token'] is not None:
@@ -875,7 +892,9 @@ async def update_ticket(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Token {update_dict['token']} already exists"
             )
+        old_token = ticket.token
         ticket.token = update_dict['token']
+        logger.info(f"Updated token from {old_token} to {ticket.token}")
     
     # Update status if provided
     if 'status' in update_dict and update_dict['status'] is not None:
@@ -883,13 +902,17 @@ async def update_ticket(
         status_value = update_dict['status']
         if isinstance(status_value, TicketStatus):
             status_value = status_value.value
+        old_status = ticket.status
         ticket.status = TicketStatus(status_value)
+        logger.info(f"Updated status from {old_status} to {ticket.status}")
         # Set used_at when status changes to USED
         if ticket.status == TicketStatus.USED and not ticket.used_at:
             ticket.used_at = datetime.utcnow()
     
+    logger.info(f"Ticket state before commit: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
     db.commit()
     db.refresh(ticket)
+    logger.info(f"Ticket state after commit and refresh: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
     
     # Load related data for response
     ticket = TicketRepository.get_by_id(db, ticket.id)
