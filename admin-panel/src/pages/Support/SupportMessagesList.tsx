@@ -140,7 +140,6 @@ const SupportMessagesList: React.FC = () => {
             <MenuItem value="all">All</MenuItem>
             <MenuItem value="new">New</MenuItem>
             <MenuItem value="responded">Responded</MenuItem>
-            <MenuItem value="closed">Closed</MenuItem>
           </Select>
         </FormControl>
       </Box>

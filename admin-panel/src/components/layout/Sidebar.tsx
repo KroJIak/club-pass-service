@@ -21,10 +21,10 @@ import { useNavigate, useLocation } from 'react-router-dom'
 
 const menuItems = [
   { text: 'QR Scanner', icon: <QrCodeIcon />, path: '/qr-scanner' },
-  { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Events', icon: <EventIcon />, path: '/events' },
   { text: 'Users', icon: <UsersIcon />, path: '/users' },
   { text: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
+  { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },

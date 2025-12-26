@@ -31,9 +31,11 @@ async def send_support_response(request: SendMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with quote
+        # Format message with headers and quote
         formatted_message = (
+            f"<b>Ваше обращение</b>\n\n"
             f"<blockquote>{request.original_message}</blockquote>\n\n"
+            f"<b>Ответ администратора</b>\n\n"
             f"{request.admin_response}"
         )
         
