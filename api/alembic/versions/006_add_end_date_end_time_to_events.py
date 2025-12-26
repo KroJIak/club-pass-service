@@ -29,6 +29,7 @@ def upgrade():
     )
     
     # Fill existing events with default values (copy from date and time)
+    # Note: This will be updated in migration 007 when columns are renamed
     op.execute("""
         UPDATE events 
         SET end_date = date, end_time = time 

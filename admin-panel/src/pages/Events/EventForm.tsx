@@ -51,8 +51,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     defaultValues: {
       name: '',
       description: '',
-      date: '',
-      time: '',
+      start_date: '',
+      start_time: '',
       end_date: '',
       end_time: '',
       djs: [],
@@ -69,8 +69,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       reset({
         name: event.name,
         description: event.description || '',
-        date: event.date,
-        time: event.time,
+        start_date: event.start_date,
+        start_time: event.start_time,
         end_date: event.end_date,
         end_time: event.end_time,
         djs: event.djs || [],
@@ -84,8 +84,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       reset({
         name: '',
         description: '',
-        date: '',
-        time: '',
+        start_date: '',
+        start_time: '',
         end_date: '',
         end_time: '',
         djs: [],

@@ -10,7 +10,7 @@ class EventRepository:
     @staticmethod
     def get_all_active(db: Session) -> List[Event]:
         """Get all active events."""
-        return db.query(Event).filter(Event.is_active == True).order_by(Event.date, Event.time).all()
+        return db.query(Event).filter(Event.is_active == True).order_by(Event.start_date, Event.start_time).all()
     
     @staticmethod
     def get_by_id(db: Session, event_id: int) -> Optional[Event]:

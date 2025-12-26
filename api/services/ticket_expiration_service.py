@@ -77,8 +77,8 @@ class TicketExpirationService:
             return False
         
         expiration_dt = TicketExpirationService._calculate_expiration_datetime(
-            ticket.event.date,
-            ticket.event.time
+            ticket.event.start_date,
+            ticket.event.start_time
         )
         
         return current_time >= expiration_dt

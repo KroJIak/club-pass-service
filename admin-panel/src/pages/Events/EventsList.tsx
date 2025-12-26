@@ -91,7 +91,7 @@ const EventsList = () => {
       const searchLower = filterState.search.toLowerCase()
       filtered = filtered.filter((event) => {
         const nameMatch = event.name?.toLowerCase().includes(searchLower)
-        const dateMatch = event.date?.toLowerCase().includes(searchLower)
+        const dateMatch = event.start_date?.toLowerCase().includes(searchLower)
         const djsMatch = event.djs?.some((dj) => dj.toLowerCase().includes(searchLower))
         const descMatch = event.description?.toLowerCase().includes(searchLower)
         

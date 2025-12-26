@@ -12,8 +12,8 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
-    date = Column(String, nullable=False)  # Format: "DD.MM.YYYY"
-    time = Column(String, nullable=False)  # Format: "HH:MM"
+    start_date = Column(String, nullable=False)  # Format: "DD.MM.YYYY"
+    start_time = Column(String, nullable=False)  # Format: "HH:MM"
     end_date = Column(String, nullable=True)  # Format: "DD.MM.YYYY"
     end_time = Column(String, nullable=True)  # Format: "HH:MM"
     djs = Column(JSON, nullable=True)  # List of DJ names

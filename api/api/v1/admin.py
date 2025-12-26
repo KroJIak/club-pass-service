@@ -42,8 +42,8 @@ class EventCreate(BaseModel):
     """Schema for creating an event."""
     name: str
     description: Optional[str] = None
-    date: str
-    time: str
+    start_date: str
+    start_time: str
     end_date: str
     end_time: str
     djs: Optional[List[str]] = None
@@ -54,8 +54,8 @@ class EventUpdate(BaseModel):
     """Schema for updating an event."""
     name: Optional[str] = None
     description: Optional[str] = None
-    date: Optional[str] = None
-    time: Optional[str] = None
+    start_date: Optional[str] = None
+    start_time: Optional[str] = None
     end_date: Optional[str] = None
     end_time: Optional[str] = None
     djs: Optional[List[str]] = None
@@ -238,8 +238,8 @@ async def create_event(
     event = Event(
         name=event_data.name,
         description=event_data.description,
-        date=event_data.date,
-        time=event_data.time,
+        start_date=event_data.start_date,
+        start_time=event_data.start_time,
         end_date=event_data.end_date,
         end_time=event_data.end_time,
         djs=event_data.djs,
@@ -275,10 +275,10 @@ async def update_event(
         event.name = event_data.name
     if event_data.description is not None:
         event.description = event_data.description
-    if event_data.date is not None:
-        event.date = event_data.date
-    if event_data.time is not None:
-        event.time = event_data.time
+    if event_data.start_date is not None:
+        event.start_date = event_data.start_date
+    if event_data.start_time is not None:
+        event.start_time = event_data.start_time
     if event_data.end_date is not None:
         event.end_date = event_data.end_date
     if event_data.end_time is not None:

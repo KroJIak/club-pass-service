@@ -44,8 +44,8 @@ class EventResponse(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
-    date: str
-    time: str
+    start_date: str
+    start_time: str
     end_date: str
     end_time: str
     djs: Optional[List[str]] = None

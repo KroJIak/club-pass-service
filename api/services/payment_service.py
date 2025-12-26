@@ -93,7 +93,7 @@ class PaymentService:
         
         # Format event info for invoice
         djs_text = ", ".join(event.djs) if event.djs else event.name
-        event_info = f"{djs_text}\n{event.date} {event.time}"
+        event_info = f"{djs_text}\n{event.start_date} {event.start_time}"
         
         # Prepare invoice data
         invoice_title = f"Билеты: {ticket_type.name}"

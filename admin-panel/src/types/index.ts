@@ -12,8 +12,8 @@ export interface Event {
   id: number
   name: string
   description: string | null
-  date: string // DD.MM.YYYY
-  time: string // HH:MM
+  start_date: string // DD.MM.YYYY
+  start_time: string // HH:MM
   end_date: string // DD.MM.YYYY
   end_time: string // HH:MM
   djs: string[] | null
@@ -96,8 +96,8 @@ export interface Promocode {
 export interface EventCreate {
   name: string
   description?: string | null
-  date: string
-  time: string
+  start_date: string
+  start_time: string
   end_date: string
   end_time: string
   djs?: string[] | null
@@ -107,8 +107,8 @@ export interface EventCreate {
 export interface EventUpdate {
   name?: string | null
   description?: string | null
-  date?: string | null
-  time?: string | null
+  start_date?: string | null
+  start_time?: string | null
   end_date?: string | null
   end_time?: string | null
   djs?: string[] | null
