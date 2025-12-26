@@ -151,7 +151,16 @@ async def get_club_settings_public(
     """Get club settings (public endpoint for bot)."""
     try:
         settings = ClubSettingsRepository.get_settings(db)
-        return ClubSettingsResponse.model_validate(settings)
+        # Handle case where auto_deactivate_events might not exist in DB
+        settings_dict = {
+            "id": settings.id,
+            "address": settings.address,
+            "phone": settings.phone,
+            "email": settings.email,
+            "auto_deactivate_events": getattr(settings, 'auto_deactivate_events', True),
+            "updated_at": settings.updated_at
+        }
+        return ClubSettingsResponse.model_validate(settings_dict)
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
         raise HTTPException(

@@ -232,7 +232,7 @@ class ClubSettingsResponse(BaseModel):
     address: str | None
     phone: str | None
     email: str | None
-    auto_deactivate_events: bool
+    auto_deactivate_events: bool = True  # Default to True for backward compatibility
     updated_at: datetime
 
     class Config:
