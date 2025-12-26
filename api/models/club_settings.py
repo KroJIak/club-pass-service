@@ -1,6 +1,6 @@
 """Club settings model."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from api.core.db import Base
 
 
