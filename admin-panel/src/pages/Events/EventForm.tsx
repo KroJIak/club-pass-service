@@ -371,6 +371,28 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                 </Button>
               </Box>
             </Box>
+            {/* Display templates as buttons */}
+            {templates && templates.length > 0 && (
+              <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+                  Templates:
+                </Typography>
+                {templates.map((template) => (
+                  <Box key={template.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setSelectedTemplate(template)
+                        setTicketTypeFormOpen(true)
+                      }}
+                    >
+                      {template.name}
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            )}
             {loadingTicketTypes ? (
               <Typography>Loading ticket types...</Typography>
             ) : ticketTypes.length === 0 ? (
