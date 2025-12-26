@@ -82,6 +82,34 @@ class TicketTypeListResponse(BaseModel):
     ticket_types: List[TicketTypeResponse]
 
 
+# TicketTypeTemplate schemas
+class TicketTypeTemplateResponse(BaseModel):
+    """Schema for ticket type template response."""
+    id: int
+    name: str
+    price: Decimal
+    available_quantity: int
+    total_quantity: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class TicketTypeTemplateCreate(BaseModel):
+    """Schema for creating a ticket type template."""
+    name: str
+    price: Decimal
+    available_quantity: int
+    total_quantity: int
+    is_active: bool = True
+
+
+class TicketTypeTemplateListResponse(BaseModel):
+    """Schema for list of ticket type templates."""
+    templates: List[TicketTypeTemplateResponse]
+
+
 # Ticket schemas
 class TicketResponse(BaseModel):
     """Schema for ticket response."""
