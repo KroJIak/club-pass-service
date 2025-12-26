@@ -116,7 +116,47 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     }
   }
 
+  const validateDateTime = (startDate: string, startTime: string, endDate: string, endTime: string): string | null => {
+    if (!startDate || !startTime || !endDate || !endTime) {
+      return null // Let required validation handle empty fields
+    }
+    
+    try {
+      const parseDate = (dateStr: string, timeStr: string): Date => {
+        const [day, month, year] = dateStr.split('.')
+        const [hours, minutes] = timeStr.split(':')
+        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes))
+      }
+      
+      const startDt = parseDate(startDate, startTime)
+      const endDt = parseDate(endDate, endTime)
+      
+      if (endDt <= startDt) {
+        return 'End date and time must be later than start date and time'
+      }
+    } catch (e) {
+      // Invalid format will be caught by other validators
+      return null
+    }
+    
+    return null
+  }
+
   const onSubmit = async (data: EventCreate | EventUpdate) => {
+    // Validate datetime
+    const startDate = data.start_date || (event?.start_date ?? '')
+    const startTime = data.start_time || (event?.start_time ?? '')
+    const endDate = data.end_date || (event?.end_date ?? '')
+    const endTime = data.end_time || (event?.end_time ?? '')
+    
+    const dateTimeError = validateDateTime(startDate, startTime, endDate, endTime)
+    if (dateTimeError) {
+      setValue('end_date', endDate, { shouldValidate: true })
+      setValue('end_time', endTime, { shouldValidate: true })
+      // Show error on end_time field
+      return
+    }
+    
     setLoading(true)
     try {
       const payload = { ...data, djs: djs.length > 0 ? djs : null }
@@ -130,8 +170,12 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         }
       }
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save event:', error)
+      if (error.response?.data?.detail) {
+        // Show error message
+        alert(error.response.data.detail)
+      }
     } finally {
       setLoading(false)
     }
@@ -189,6 +233,18 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           value={watch('start_date') || null}
           onChange={(value) => {
             setValue('start_date', value || '', { shouldValidate: true })
+            // Trigger validation on end fields if they exist
+            const endDate = watch('end_date')
+            const endTime = watch('end_time')
+            if (endDate && endTime) {
+              const startTime = watch('start_time')
+              if (startTime) {
+                const error = validateDateTime(value || '', startTime, endDate, endTime)
+                if (error) {
+                  setValue('end_time', endTime, { shouldValidate: true })
+                }
+              }
+            }
           }}
           error={!!errors.start_date}
           helperText={errors.start_date?.message}
@@ -198,6 +254,18 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           value={watch('start_time') || null}
           onChange={(value) => {
             setValue('start_time', value || '', { shouldValidate: true })
+            // Trigger validation on end fields if they exist
+            const endDate = watch('end_date')
+            const endTime = watch('end_time')
+            if (endDate && endTime) {
+              const startDate = watch('start_date')
+              if (startDate) {
+                const error = validateDateTime(startDate, value || '', endDate, endTime)
+                if (error) {
+                  setValue('end_time', endTime, { shouldValidate: true })
+                }
+              }
+            }
           }}
           error={!!errors.start_time}
           helperText={errors.start_time?.message}

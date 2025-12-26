@@ -48,6 +48,23 @@ class EventCreate(BaseModel):
     end_time: str
     djs: Optional[List[str]] = None
     is_active: bool = True
+    
+    @field_validator('end_date', 'end_time')
+    @classmethod
+    def validate_end_datetime(cls, v, info):
+        """Validate that end datetime is not earlier than start datetime."""
+        if info.data.get('start_date') and info.data.get('start_time') and info.data.get('end_date') and info.data.get('end_time'):
+            from datetime import datetime
+            try:
+                start_dt = datetime.strptime(f"{info.data['start_date']} {info.data['start_time']}", "%d.%m.%Y %H:%M")
+                end_dt = datetime.strptime(f"{info.data['end_date']} {info.data['end_time']}", "%d.%m.%Y %H:%M")
+                if end_dt <= start_dt:
+                    raise ValueError("End date and time must be later than start date and time")
+            except ValueError as e:
+                if "End date and time" in str(e):
+                    raise
+                # Ignore parsing errors, they will be caught by other validators
+        return v
 
 
 class EventUpdate(BaseModel):
@@ -287,6 +304,27 @@ async def update_event(
         event.djs = event_data.djs
     if event_data.is_active is not None:
         event.is_active = event_data.is_active
+    
+    # Validate datetime if any date/time fields are being updated
+    if (event_data.start_date is not None or event_data.start_time is not None or 
+        event_data.end_date is not None or event_data.end_time is not None):
+        from datetime import datetime
+        start_date = event_data.start_date if event_data.start_date is not None else event.start_date
+        start_time = event_data.start_time if event_data.start_time is not None else event.start_time
+        end_date = event_data.end_date if event_data.end_date is not None else event.end_date
+        end_time = event_data.end_time if event_data.end_time is not None else event.end_time
+        
+        try:
+            start_dt = datetime.strptime(f"{start_date} {start_time}", "%d.%m.%Y %H:%M")
+            end_dt = datetime.strptime(f"{end_date} {end_time}", "%d.%m.%Y %H:%M")
+            if end_dt <= start_dt:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="End date and time must be later than start date and time"
+                )
+        except ValueError:
+            # Date format errors will be caught by Pydantic
+            pass
     
     # Handle end_date and end_time changes
     end_date_changed = event_data.end_date is not None
