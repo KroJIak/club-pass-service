@@ -100,6 +100,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   useEffect(() => {
     register('date', { required: 'Date is required' })
     register('time', { required: 'Time is required' })
+    register('end_date')
+    register('end_time')
   }, [register])
 
   const fetchTicketTypes = async (eventId: number) => {

@@ -98,6 +98,8 @@ export interface EventCreate {
   description?: string | null
   date: string
   time: string
+  end_date?: string | null
+  end_time?: string | null
   djs?: string[] | null
   is_active?: boolean
 }
@@ -107,6 +109,8 @@ export interface EventUpdate {
   description?: string | null
   date?: string | null
   time?: string | null
+  end_date?: string | null
+  end_time?: string | null
   djs?: string[] | null
   is_active?: boolean | null
 }
@@ -188,6 +192,7 @@ export interface ClubSettings {
   address: string | null
   phone: string | null
   email: string | null
+  auto_deactivate_events: boolean
   updated_at: string
 }
 
@@ -195,6 +200,7 @@ export interface ClubSettingsUpdate {
   address?: string | null
   phone?: string | null
   email?: string | null
+  auto_deactivate_events?: boolean | null
 }
 
 export interface TicketDetailResponse {
