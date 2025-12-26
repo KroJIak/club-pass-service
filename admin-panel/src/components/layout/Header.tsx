@@ -39,9 +39,9 @@ const Header = () => {
           justifyContent: 'space-between',
           alignItems: 'center',
           px: {
-            xs: 'calc(0.084375 * 100vw)', // <= 600px
-            sm: 'calc(0.084375 * 100vw + (0.18 - 0.084375) * (100vw - 600px) / (1280 - 600))', // 600-1280px
-            md: 'calc(0.18 * 100vw)', // >= 1280px
+            xs: 'calc(0.064375 * 100vw)', // <= 600px (reduced from 0.084375 by 0.02)
+            sm: 'calc(0.064375 * 100vw + (0.16 - 0.064375) * (100vw - 600px) / (1280 - 600))', // 600-1280px (reduced from 0.18 by 0.02)
+            md: 'calc(0.16 * 100vw)', // >= 1280px (reduced from 0.18 by 0.02)
           },
         }}
       >
