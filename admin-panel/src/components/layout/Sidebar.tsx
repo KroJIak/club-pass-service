@@ -19,13 +19,13 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const menuItems = [
+  { text: 'Скан QR', icon: <QrCodeIcon />, path: '/qr-scanner' },
   { text: 'Events', icon: <EventIcon />, path: '/events' },
   { text: 'Users', icon: <UsersIcon />, path: '/users' },
   { text: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
-  { text: 'Скан QR', icon: <QrCodeIcon />, path: '/qr-scanner' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
 ]
 
