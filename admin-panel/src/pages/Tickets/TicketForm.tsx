@@ -43,6 +43,8 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
     handleSubmit,
     reset,
     setValue,
+    getValues,
+    watch,
     formState: { errors },
   } = useForm<TicketCreate | TicketUpdate>({
     defaultValues: {
@@ -176,21 +178,57 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
     try {
       if (ticket) {
         // Update mode - update all provided fields
-        const updateData: TicketUpdate = {
-          status: data.status,
+        const updateData: TicketUpdate = {}
+        
+        // Always include status
+        if (data.status) {
+          updateData.status = data.status
         }
+        
+        // Always include event_id - use selectedEvent or fallback to ticket.event_id
         if (selectedEvent) {
           updateData.event_id = selectedEvent.id
+        } else if (ticket.event_id) {
+          updateData.event_id = ticket.event_id
+        } else {
+          console.error('Cannot update ticket: event_id is missing')
+          alert('Cannot update ticket: Event is required')
+          setLoading(false)
+          return
         }
+        
+        // Always include ticket_type_id - use selectedTicketType or fallback to ticket.ticket_type_id
         if (selectedTicketType) {
           updateData.ticket_type_id = selectedTicketType.id
+        } else if (ticket.ticket_type_id) {
+          updateData.ticket_type_id = ticket.ticket_type_id
+        } else {
+          console.error('Cannot update ticket: ticket_type_id is missing')
+          alert('Cannot update ticket: Ticket Type is required')
+          setLoading(false)
+          return
         }
+        
+        // Always include user_id - use selectedUser or fallback to ticket.user_id
         if (selectedUser) {
           updateData.user_id = selectedUser.id
+        } else if (ticket.user_id) {
+          updateData.user_id = ticket.user_id
+        } else {
+          console.error('Cannot update ticket: user_id is missing')
+          alert('Cannot update ticket: User is required')
+          setLoading(false)
+          return
         }
-        if ((data as TicketCreate).token !== undefined) {
-          updateData.token = (data as TicketCreate).token || undefined
+        
+        // Get token from form data
+        const tokenValue = getValues('token' as any)
+        if (tokenValue) {
+          updateData.token = tokenValue
         }
+        
+        console.log('Sending update data:', updateData)
+        console.log('Current state:', { selectedEvent, selectedTicketType, selectedUser, tokenValue })
         await api.put(`/admin/tickets/${ticket.id}`, updateData)
       } else {
         // Create mode - validate required fields
