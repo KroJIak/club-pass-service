@@ -8,17 +8,18 @@ import {
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
-import { TicketTypeCreate } from '../../types'
+import { TicketTypeCreate, TicketTypeTemplate } from '../../types'
 import TextField from '../../components/forms/TextField'
 
 interface TicketTypeFormProps {
   open: boolean
   eventId: number
+  template?: TicketTypeTemplate | null
   onClose: () => void
   onSuccess: () => void
 }
 
-const TicketTypeForm = ({ open, eventId, onClose, onSuccess }: TicketTypeFormProps) => {
+const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketTypeFormProps) => {
   const [loading, setLoading] = useState(false)
 
   const {
@@ -39,16 +40,27 @@ const TicketTypeForm = ({ open, eventId, onClose, onSuccess }: TicketTypeFormPro
 
   useEffect(() => {
     if (open) {
-      reset({
-        event_id: eventId,
-        name: '',
-        price: 0,
-        available_quantity: 0,
-        total_quantity: 0,
-        is_active: true,
-      })
+      if (template) {
+        reset({
+          event_id: eventId,
+          name: template.name,
+          price: template.price,
+          available_quantity: template.available_quantity,
+          total_quantity: template.total_quantity,
+          is_active: true,
+        })
+      } else {
+        reset({
+          event_id: eventId,
+          name: '',
+          price: 0,
+          available_quantity: 0,
+          total_quantity: 0,
+          is_active: true,
+        })
+      }
     }
-  }, [open, eventId, reset])
+  }, [open, eventId, template, reset])
 
   const onSubmit = async (data: TicketTypeCreate) => {
     setLoading(true)

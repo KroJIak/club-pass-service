@@ -13,7 +13,7 @@ import {
 import { Close as CloseIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
-import { Event, EventCreate, EventUpdate, TicketType } from '../../types'
+import { Event, EventCreate, EventUpdate, TicketType, TicketTypeTemplate } from '../../types'
 import TextField from '../../components/forms/TextField'
 import DateField from '../../components/forms/DateField'
 import TimeField from '../../components/forms/TimeField'
@@ -34,9 +34,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   const [loading, setLoading] = useState(false)
   const [djs, setDjs] = useState<string[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
+  const [templates, setTemplates] = useState<TicketTypeTemplate[]>([])
   const [loadingTicketTypes, setLoadingTicketTypes] = useState(false)
   const [ticketTypeFormOpen, setTicketTypeFormOpen] = useState(false)
   const [templateFormOpen, setTemplateFormOpen] = useState(false)
+  const [selectedTemplate, setSelectedTemplate] = useState<TicketTypeTemplate | null>(null)
   const [deleteTicketTypeDialog, setDeleteTicketTypeDialog] = useState<{ open: boolean; ticketTypeId: number | null }>({
     open: false,
     ticketTypeId: null,
@@ -65,6 +67,23 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
 
   const isActive = watch('is_active') ?? true
   const eventId = event?.id
+
+  const fetchTemplates = async () => {
+    try {
+      const response = await api.get('/admin/ticket-type-templates')
+      setTemplates(response.data.templates || [])
+    } catch (error) {
+      console.error('Failed to fetch templates:', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
+
+  useEffect(() => {
+    fetchTemplates()
+  }, [])
 
   useEffect(() => {
     if (event) {
@@ -417,8 +436,15 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         <TicketTypeForm
           open={ticketTypeFormOpen}
           eventId={eventId}
-          onClose={() => setTicketTypeFormOpen(false)}
-          onSuccess={handleTicketTypeCreated}
+          template={selectedTemplate}
+          onClose={() => {
+            setTicketTypeFormOpen(false)
+            setSelectedTemplate(null)
+          }}
+          onSuccess={() => {
+            handleTicketTypeCreated()
+            setSelectedTemplate(null)
+          }}
         />
       )}
       <ConfirmDialog
