@@ -179,12 +179,12 @@ const SupportMessagesList: React.FC = () => {
                     </Box>
                   </Box>
 
-                  <Box sx={{ mb: 2, p: 2, bgcolor: 'grey.100', borderRadius: 1 }}>
+                  <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="body1">{msg.message}</Typography>
                   </Box>
 
                   {msg.admin_response ? (
-                    <Box sx={{ mt: 2, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
+                    <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                       <Typography variant="subtitle2" gutterBottom>
                         Admin Response {msg.responded_by && `by ${msg.responded_by}`}
                         {msg.responded_at && ` on ${formatDate(msg.responded_at)}`}
