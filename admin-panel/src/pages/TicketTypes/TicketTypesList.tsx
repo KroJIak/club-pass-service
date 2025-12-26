@@ -106,13 +106,10 @@ const TicketTypesList = () => {
                 variant="outlined"
                 size="small"
                 onClick={() => {
-                  // Fill form with template data
+                  // Open form with template data
+                  setSelectedTemplate(template)
                   setEditingTicketType(null)
                   setFormOpen(true)
-                  // We'll pass template data to form via a different mechanism
-                  setTimeout(() => {
-                    // This will be handled in TicketTypeForm
-                  }, 100)
                 }}
               >
                 {template.name}
