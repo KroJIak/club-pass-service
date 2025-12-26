@@ -42,7 +42,6 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<TicketCreate | TicketUpdate>({
     defaultValues: {
@@ -308,7 +307,7 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
               {/* Token field with generate button */}
               <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <Controller
-                  name="token" as any
+                  name={"token" as any}
                   control={control}
                   rules={{ required: !isEditMode ? 'Token is required' : false }}
                   render={({ field }) => (
