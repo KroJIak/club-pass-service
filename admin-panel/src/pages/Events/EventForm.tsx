@@ -36,6 +36,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
   const [loadingTicketTypes, setLoadingTicketTypes] = useState(false)
   const [ticketTypeFormOpen, setTicketTypeFormOpen] = useState(false)
+  const [templateFormOpen, setTemplateFormOpen] = useState(false)
   const [deleteTicketTypeDialog, setDeleteTicketTypeDialog] = useState<{ open: boolean; ticketTypeId: number | null }>({
     open: false,
     ticketTypeId: null,
