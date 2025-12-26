@@ -84,6 +84,20 @@ const TicketsList = () => {
       })
     }
 
+    // Event filter
+    if (filterState.event_id !== null) {
+      filtered = filtered.filter((ticket) => {
+        return ticket.event_id === filterState.event_id
+      })
+    }
+
+    // Ticket Type filter
+    if (filterState.ticket_type_id !== null) {
+      filtered = filtered.filter((ticket) => {
+        return ticket.ticket_type_id === filterState.ticket_type_id
+      })
+    }
+
     setTickets(filtered)
   }, [allTickets, filterState])
 
@@ -137,11 +151,11 @@ const TicketsList = () => {
       <Grid container spacing={3}>
         {tickets.map((ticket) => (
           <Grid item xs={12} sm={6} md={4} key={ticket.id}>
-            <Box sx={{ display: 'flex', gap: 2, position: 'relative' }}>
+            <Box sx={{ display: 'flex', gap: 2, position: 'relative', height: '100%' }}>
               <Card 
                 sx={{ 
                   flex: 1, 
-                  minHeight: 80, 
+                  height: '100%',
                   display: 'flex', 
                   flexDirection: 'column',
                   cursor: 'pointer',
