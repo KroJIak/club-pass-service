@@ -46,7 +46,7 @@ services:
       DB_NAME: ${DB_NAME:-club_pass}
       EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      BOT_API_URL: ${BOT_API_URL:-http://bot:8002}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -69,6 +69,8 @@ services:
       API_PREFIX: /api
       I18N_SUPPORTED_LOCALES: ${I18N_SUPPORTED_LOCALES:-ru_ru,en_us}
       I18N_DEFAULT_LOCALE: ${I18N_DEFAULT_LOCALE:-ru_ru}
+    ports:
+      - "${BOT_API_PORT:-8002}:8002"
     depends_on:
       - api
     volumes:

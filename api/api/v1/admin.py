@@ -1521,38 +1521,31 @@ async def respond_to_support_message(
             detail=f"Support message with id {message_id} not found"
         )
     
-    # Send response to user via bot using Telegram Bot API
+    # Send response to user via bot HTTP API
     try:
         # Get user's telegram_user_id
         telegram_user_id = message.user.telegram_user_id if message.user else None
         
         if telegram_user_id:
-            # Use Telegram Bot API directly
-            from api.core.config import settings
-            bot_token = settings.TELEGRAM_BOT_TOKEN
-            if bot_token:
-                bot_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                
-                # Format message with quote
-                formatted_message = (
-                    f"<blockquote>{message.message}</blockquote>\n\n"
-                    f"{admin_response}"
-                )
-                
+            # Send request to bot's HTTP API
+            bot_api_url = os.getenv('BOT_API_URL', 'http://bot:8002')
+            if not bot_api_url:
+                logger.warning("BOT_API_URL not configured, cannot send support response")
+            else:
                 async with httpx.AsyncClient() as client:
                     response = await client.post(
-                        bot_api_url,
+                        f"{bot_api_url}/send-support-response",
                         json={
-                            "chat_id": telegram_user_id,
-                            "text": formatted_message,
-                            "parse_mode": "HTML",
+                            "telegram_user_id": telegram_user_id,
+                            "original_message": message.message,
+                            "admin_response": admin_response,
                         },
                         timeout=10.0,
                     )
                     if response.status_code != 200:
                         logger.warning(f"Failed to send message to user {telegram_user_id}: {response.text}")
-            else:
-                logger.warning("TELEGRAM_BOT_TOKEN not configured, cannot send support response")
+                    else:
+                        logger.info(f"Successfully sent support response to user {telegram_user_id}")
         else:
             logger.warning(f"User {message.user_id} has no telegram_user_id, cannot send support response")
     except Exception as e:
