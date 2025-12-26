@@ -48,23 +48,6 @@ class EventCreate(BaseModel):
     end_time: str
     djs: Optional[List[str]] = None
     is_active: bool = True
-    
-    @field_validator('end_date', 'end_time')
-    @classmethod
-    def validate_end_datetime(cls, v, info):
-        """Validate that end datetime is not earlier than start datetime."""
-        if info.data.get('start_date') and info.data.get('start_time') and info.data.get('end_date') and info.data.get('end_time'):
-            from datetime import datetime
-            try:
-                start_dt = datetime.strptime(f"{info.data['start_date']} {info.data['start_time']}", "%d.%m.%Y %H:%M")
-                end_dt = datetime.strptime(f"{info.data['end_date']} {info.data['end_time']}", "%d.%m.%Y %H:%M")
-                if end_dt <= start_dt:
-                    raise ValueError("End date and time must be later than start date and time")
-            except ValueError as e:
-                if "End date and time" in str(e):
-                    raise
-                # Ignore parsing errors, they will be caught by other validators
-        return v
 
 
 class EventUpdate(BaseModel):
@@ -252,6 +235,21 @@ async def create_event(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Create a new event."""
+    # Validate datetime
+    from datetime import datetime
+    try:
+        start_dt = datetime.strptime(f"{event_data.start_date} {event_data.start_time}", "%d.%m.%Y %H:%M")
+        end_dt = datetime.strptime(f"{event_data.end_date} {event_data.end_time}", "%d.%m.%Y %H:%M")
+        if end_dt <= start_dt:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="End date and time must be later than start date and time"
+            )
+    except ValueError as e:
+        if "must be later" not in str(e):
+            # Date format errors will be caught by Pydantic
+            pass
+    
     event = Event(
         name=event_data.name,
         description=event_data.description,
