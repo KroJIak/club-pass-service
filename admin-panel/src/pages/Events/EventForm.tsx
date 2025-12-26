@@ -427,6 +427,13 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         onConfirm={() => deleteTicketTypeDialog.ticketTypeId && handleDeleteTicketType(deleteTicketTypeDialog.ticketTypeId)}
         onCancel={() => setDeleteTicketTypeDialog({ open: false, ticketTypeId: null })}
       />
+      <TicketTypeTemplateForm
+        open={templateFormOpen}
+        onClose={() => setTemplateFormOpen(false)}
+        onSuccess={() => {
+          setTemplateFormOpen(false)
+        }}
+      />
     </>
   )
 }
