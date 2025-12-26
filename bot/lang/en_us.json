@@ -59,6 +59,7 @@
     "support_prompt": "Write your message to support and we’ll get back to you.\n\nJust send the text of your message:",
     "support_cancelled_toast": "Cancelled",
     "support_received": "✅ <b>Message received</b>\n\nYour message has been sent to support. We'll contact you soon.",
+    "club_info_not_configured": "Club information is not configured",
     "purchase": {
       "select_event": "🎉 <b>Select Event</b>",
       "no_events": "😔 <b>No Available Events</b>\n\nUnfortunately, there are no active events at the moment. Please try again later!",

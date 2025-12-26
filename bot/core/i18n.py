@@ -71,15 +71,21 @@ def _load_locale(locale: str) -> dict[str, Any]:
         return json.load(f)
 
 
-def t(locale: str, key: str, **kwargs: Any) -> str:
+def t(locale: str, key: str, default: str = None, **kwargs: Any) -> str:
     """
-    Translate by key (dot-path). Falls back to DEFAULT_LOCALE.
+    Translate by key (dot-path). Falls back to DEFAULT_LOCALE, then to default value.
     Supports `.format(**kwargs)` placeholders.
     """
     try:
         template = _deep_get(_load_locale(locale), key)
     except KeyError:
-        template = _deep_get(_load_locale(DEFAULT_LOCALE), key)
+        try:
+            template = _deep_get(_load_locale(DEFAULT_LOCALE), key)
+        except KeyError:
+            if default is not None:
+                template = default
+            else:
+                raise KeyError(key)
 
     if not isinstance(template, str):
         raise TypeError(f"i18n key {key} must be a string")
