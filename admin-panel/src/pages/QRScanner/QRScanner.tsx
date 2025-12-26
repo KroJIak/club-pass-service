@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Chip,
 } from '@mui/material'
-import { Html5Qrcode, Html5QrcodeCameraScanConfig } from 'html5-qrcode'
+import { Html5Qrcode } from 'html5-qrcode'
 import api from '../../services/api'
 import { TicketDetailResponse } from '../../types'
 
@@ -111,18 +111,6 @@ const QRScanner = () => {
     }
   }
 
-  const stopScanning = async () => {
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop()
-        scannerRef.current.clear()
-      } catch (err) {
-        // Ignore stop errors
-      }
-      scannerRef.current = null
-    }
-    setScanning(false)
-  }
 
   const handleScan = async (token: string) => {
     if (loading) return
