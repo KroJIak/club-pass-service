@@ -95,13 +95,25 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     qr_bytes = generate_qr_code(token)
     qr_file = BufferedInputFile(qr_bytes, filename="ticket_qr.png")
     
+    # Format event date/time range
+    start_date = event.get("start_date", "")
+    start_time = event.get("start_time", "")
+    end_date = event.get("end_date", "")
+    end_time = event.get("end_time", "")
+    
+    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    if end_date and end_time:
+        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+    else:
+        event_datetime = f"{start_date} {start_time}"
+    
     # Format ticket info text
     text = t(
         locale,
         "messages.tickets.ticket_info",
         event_name=event_name,
-        event_date=event.get("date", ""),
-        event_time=event.get("time", ""),
+        event_date=event_datetime,
+        event_time="",  # Keep for backward compatibility but not used
         ticket_type=ticket_type.get("name", ""),
         ticket_token=token,
     )
