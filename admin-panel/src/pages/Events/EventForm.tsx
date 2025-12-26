@@ -98,10 +98,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
 
   // Register date and time for validation
   useEffect(() => {
-    register('date', { required: 'Date is required' })
-    register('time', { required: 'Time is required' })
-    register('end_date')
-    register('end_time')
+    register('start_date', { required: 'Start date is required' })
+    register('start_time', { required: 'Start time is required' })
+    register('end_date', { required: 'End date is required' })
+    register('end_time', { required: 'End time is required' })
   }, [register])
 
   const fetchTicketTypes = async (eventId: number) => {
@@ -185,22 +185,22 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           {...register('description')}
         />
         <DateField
-          label="Date"
-          value={watch('date') || null}
+          label="Start Date"
+          value={watch('start_date') || null}
           onChange={(value) => {
-            setValue('date', value || '', { shouldValidate: true })
+            setValue('start_date', value || '', { shouldValidate: true })
           }}
-          error={!!errors.date}
-          helperText={errors.date?.message}
+          error={!!errors.start_date}
+          helperText={errors.start_date?.message}
         />
         <TimeField
-          label="Time"
-          value={watch('time') || null}
+          label="Start Time"
+          value={watch('start_time') || null}
           onChange={(value) => {
-            setValue('time', value || '', { shouldValidate: true })
+            setValue('start_time', value || '', { shouldValidate: true })
           }}
-          error={!!errors.time}
-          helperText={errors.time?.message}
+          error={!!errors.start_time}
+          helperText={errors.start_time?.message}
         />
         <DateField
           label="End Date"

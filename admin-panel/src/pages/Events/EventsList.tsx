@@ -124,7 +124,7 @@ const EventsList = () => {
     if (filterState.dateFrom) {
       const fromDate = new Date(filterState.dateFrom)
       filtered = filtered.filter((event) => {
-        const eventDate = parseDate(event.date)
+        const eventDate = parseDate(event.start_date)
         return eventDate >= fromDate
       })
     }
@@ -132,7 +132,7 @@ const EventsList = () => {
       const toDate = new Date(filterState.dateTo)
       toDate.setHours(23, 59, 59, 999) // End of day
       filtered = filtered.filter((event) => {
-        const eventDate = parseDate(event.date)
+        const eventDate = parseDate(event.start_date)
         return eventDate <= toDate
       })
     }
@@ -240,7 +240,7 @@ const EventsList = () => {
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ display: 'inline', mr: 1, fontWeight: 500 }}>{event.name}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
-                      {event.date} {event.time}
+                      {event.start_date} {event.start_time}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
