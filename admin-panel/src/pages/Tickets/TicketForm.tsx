@@ -44,7 +44,6 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
     reset,
     setValue,
     getValues,
-    watch,
     formState: { errors },
   } = useForm<TicketCreate | TicketUpdate>({
     defaultValues: {
