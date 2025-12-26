@@ -119,7 +119,7 @@ services:
     restart: "no"
 
   cloudpub-admin-panel:
-    image: cloudpub/cloudpub:latest
+    image: cloudpub/cloudpub:latest-arm64
     restart: unless-stopped
     network_mode: host
     env_file:
