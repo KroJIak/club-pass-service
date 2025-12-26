@@ -180,14 +180,39 @@ const EventsList = () => {
 
   const handleToggleActive = async (event: Event, e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
+    
+    // If trying to activate event, check if end date/time is in the past
+    if (e.target.checked && event.end_date && event.end_time) {
+      try {
+        const parseDate = (dateStr: string, timeStr: string): Date => {
+          const [day, month, year] = dateStr.split('.')
+          const [hours, minutes] = timeStr.split(':')
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes))
+        }
+        
+        const endDt = parseDate(event.end_date, event.end_time)
+        const now = new Date()
+        
+        if (endDt <= now) {
+          alert('Cannot activate event with end date and time in the past')
+          return
+        }
+      } catch (err) {
+        // Invalid format - let API handle validation
+      }
+    }
+    
     try {
       await api.put(`/admin/events/${event.id}`, {
         ...event,
         is_active: e.target.checked,
       })
       fetchEvents()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle event active status:', error)
+      if (error.response?.data?.detail) {
+        alert(error.response.data.detail)
+      }
     }
   }
 
