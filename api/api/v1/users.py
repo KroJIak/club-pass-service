@@ -149,16 +149,23 @@ async def get_club_settings_public(
     db: Session = Depends(get_db),
 ):
     """Get club settings (public endpoint for bot)."""
+    import json
+    from fastapi.responses import JSONResponse
+    
     try:
+        logger.info("Starting get_club_settings_public...")
         settings = ClubSettingsRepository.get_settings(db)
+        logger.info(f"Settings retrieved: id={settings.id}")
         
         # Handle case where auto_deactivate_events might not exist in DB
         try:
             auto_deactivate = getattr(settings, 'auto_deactivate_events', None)
             if auto_deactivate is None:
                 auto_deactivate = True
+            logger.info(f"auto_deactivate_events: {auto_deactivate} (type: {type(auto_deactivate)})")
         except AttributeError:
             auto_deactivate = True
+            logger.warning("auto_deactivate_events attribute not found, using default True")
         
         # Ensure updated_at is a datetime object
         updated_at = settings.updated_at
@@ -167,21 +174,28 @@ async def get_club_settings_public(
             updated_at = datetime.utcnow()
             logger.warning("updated_at was None, using current time")
         
+        # Serialize datetime to ISO format string
+        updated_at_str = updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
+        logger.info(f"updated_at_str: {updated_at_str}")
+        
         # Build response dict - return directly without Pydantic validation
-        # Serialize datetime to ISO format string to avoid serialization issues
         response_data = {
             "id": int(settings.id),
             "address": settings.address if settings.address else None,
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
-            "auto_deactivate_events": bool(auto_deactivate),  # Ensure it's a bool
-            "updated_at": updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
+            "auto_deactivate_events": bool(auto_deactivate),
+            "updated_at": updated_at_str
         }
         
-        logger.info(f"Returning club settings: {response_data}")
-        return response_data
+        logger.info(f"Response data prepared: {response_data}")
+        
+        # Return JSONResponse directly to bypass any FastAPI validation
+        return JSONResponse(content=response_data)
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting club settings: {str(e)}"
