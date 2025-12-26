@@ -1,9 +1,12 @@
 """Admin authentication endpoints."""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from api.core.auth import create_access_token, get_current_admin
 from api.core.config import settings
 from datetime import timedelta
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -28,13 +31,18 @@ class AdminInfo(BaseModel):
 @router.post("/admin/login", response_model=LoginResponse)
 async def login(login_data: LoginRequest):
     """Admin login endpoint."""
+    logger.info(f"Login attempt for username: {login_data.username}")
+    logger.debug(f"Expected username: {settings.ADMIN_USERNAME}, password match: {login_data.password == settings.ADMIN_PASSWORD}")
+    
     if login_data.username != settings.ADMIN_USERNAME or login_data.password != settings.ADMIN_PASSWORD:
+        logger.warning(f"Login failed for username: {login_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    logger.info(f"Login successful for username: {login_data.username}")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": login_data.username},
