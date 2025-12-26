@@ -39,6 +39,7 @@ const TicketTypesList = () => {
   const fetchTemplates = async () => {
     try {
       const response = await api.get('/admin/ticket-type-templates')
+      console.log('Templates response:', response.data)
       setTemplates(response.data.templates || [])
     } catch (error) {
       console.error('Failed to fetch templates:', error)
