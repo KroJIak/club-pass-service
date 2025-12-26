@@ -8,9 +8,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Grid,
-  Card,
-  CardContent,
   Autocomplete,
   TextField as MuiTextField,
 } from '@mui/material'
@@ -57,7 +54,6 @@ const TicketTypeForm = ({
       available_quantity: 0,
       total_quantity: 0,
       is_active: true,
-      is_template: false,
     },
   })
 
@@ -73,10 +69,21 @@ const TicketTypeForm = ({
         available_quantity: ticketType.available_quantity,
         total_quantity: ticketType.total_quantity,
         is_active: ticketType.is_active,
-        is_template: ticketType.is_template,
       })
       if (ticketType.event_id) {
         setValue('event_id', ticketType.event_id)
+      }
+    } else if (template) {
+      // Fill form with template data
+      reset({
+        name: template.name,
+        price: template.price,
+        available_quantity: template.available_quantity,
+        total_quantity: template.total_quantity,
+        is_active: template.is_active,
+      })
+      if (eventId) {
+        setValue('event_id', eventId)
       }
     } else {
       reset({
@@ -85,13 +92,12 @@ const TicketTypeForm = ({
         available_quantity: 0,
         total_quantity: 0,
         is_active: true,
-        is_template: false,
       })
       if (eventId) {
         setValue('event_id', eventId)
       }
     }
-  }, [ticketType, eventId, reset, setValue])
+  }, [ticketType, template, eventId, reset, setValue])
 
   const fetchEvents = async () => {
     try {
@@ -115,7 +121,7 @@ const TicketTypeForm = ({
           available_quantity: data.available_quantity || 0,
           total_quantity: data.total_quantity || 0,
           is_active: data.is_active ?? true,
-          event_id: eventIdValue,
+          event_id: eventId || (data as TicketTypeCreate).event_id!,
         }
         await api.post('/admin/ticket-types', createData)
       }

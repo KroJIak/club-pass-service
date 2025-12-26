@@ -190,6 +190,17 @@ const TicketTypesList = () => {
           setSelectedTemplate(null)
         }}
       />
+
+      <TicketTypeTemplateForm
+        open={templateFormOpen}
+        onClose={() => {
+          setTemplateFormOpen(false)
+        }}
+        onSuccess={() => {
+          fetchTemplates()
+          setTemplateFormOpen(false)
+        }}
+      />
     </Box>
   )
 }
