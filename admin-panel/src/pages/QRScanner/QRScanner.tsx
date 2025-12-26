@@ -97,7 +97,7 @@ const QRScanner = () => {
       
       setScanning(true)
     } catch (err: any) {
-      setError(err.message || 'Не удалось запустить камеру')
+      setError(err.message || 'Failed to start camera')
       setScanning(false)
     }
   }
@@ -134,9 +134,9 @@ const QRScanner = () => {
       setScanning(false)
     } catch (err: any) {
       if (err.response?.status === 404) {
-        setError('Билет не найден')
+        setError('Ticket not found')
       } else {
-        setError(err.response?.data?.detail || 'Ошибка при получении билета')
+        setError(err.response?.data?.detail || 'Error fetching ticket')
       }
       setTicket(null)
       // Restart scanning on error
@@ -160,7 +160,7 @@ const QRScanner = () => {
       const response = await api.get(`/admin/tickets/token/${ticket.token}`)
       setTicket(response.data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Ошибка при принятии билета')
+      setError(err.response?.data?.detail || 'Error accepting ticket')
     } finally {
       setAccepting(false)
     }
@@ -205,15 +205,15 @@ const QRScanner = () => {
   const getStatusLabel = (status: string) => {
     switch (status) {
       case 'active':
-        return 'Активен'
+        return 'Active'
       case 'used':
-        return 'Использован'
+        return 'Used'
       case 'refunded':
-        return 'Возвращен'
+        return 'Refunded'
       case 'expired':
-        return 'Истек'
+        return 'Expired'
       case 'cancelled':
-        return 'Отменен'
+        return 'Cancelled'
       default:
         return status
     }
@@ -222,7 +222,7 @@ const QRScanner = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Скан QR
+        QR Scanner
       </Typography>
 
       {!ticket && (
@@ -289,19 +289,19 @@ const QRScanner = () => {
         <Card sx={{ mt: 3, maxWidth: '600px', margin: '0 auto' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Информация о билете
+              Ticket Information
             </Typography>
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                ID билета
+                Ticket ID
               </Typography>
               <Typography variant="body1">{ticket.id}</Typography>
             </Box>
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Токен
+                Token
               </Typography>
               <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
                 {ticket.token}
@@ -310,7 +310,7 @@ const QRScanner = () => {
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Статус
+                Status
               </Typography>
               <Chip
                 label={getStatusLabel(ticket.status)}
@@ -322,7 +322,7 @@ const QRScanner = () => {
             {ticket.event && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Мероприятие
+                  Event
                 </Typography>
                 <Typography variant="body1">{ticket.event.name}</Typography>
               </Box>
@@ -331,7 +331,7 @@ const QRScanner = () => {
             {ticket.ticket_type && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Тип билета
+                  Ticket Type
                 </Typography>
                 <Typography variant="body1">{ticket.ticket_type.name}</Typography>
               </Box>
@@ -340,7 +340,7 @@ const QRScanner = () => {
             {ticket.user && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Пользователь
+                  User
                 </Typography>
                 <Typography variant="body1">
                   {ticket.user.username ||
@@ -353,10 +353,10 @@ const QRScanner = () => {
             {ticket.used_at && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Использован
+                  Used At
                 </Typography>
                 <Typography variant="body1">
-                  {new Date(ticket.used_at).toLocaleString('ru-RU')}
+                  {new Date(ticket.used_at).toLocaleString()}
                 </Typography>
               </Box>
             )}
@@ -369,16 +369,16 @@ const QRScanner = () => {
                 disabled={ticket.status !== 'active' || accepting}
                 fullWidth
               >
-                {accepting ? <CircularProgress size={24} /> : 'Принять'}
+                {accepting ? <CircularProgress size={24} /> : 'Accept'}
               </Button>
               <Button variant="outlined" onClick={handleReset} fullWidth>
-                Сканировать еще
+                Scan Again
               </Button>
             </Box>
 
             {ticket.status !== 'active' && (
               <Alert severity="info" sx={{ mt: 2 }}>
-                Билет не может быть принят, так как его статус: {getStatusLabel(ticket.status)}
+                Ticket cannot be accepted because its status is: {getStatusLabel(ticket.status)}
               </Alert>
             )}
           </CardContent>

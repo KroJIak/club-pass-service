@@ -265,18 +265,40 @@ async def create_event(
                 end_dt_tz = tz.localize(end_dt)
                 current_time = datetime.now(tz)
                 
+                logger.info(f"Validating event creation: end_dt_tz={end_dt_tz}, current_time={current_time}, timezone={timezone_str}")
+                
                 if end_dt_tz <= current_time:
+                    logger.warning(f"Rejecting creation: end time {end_dt_tz} is in the past (current: {current_time})")
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Cannot create active event with end date and time in the past"
                     )
+            except HTTPException:
+                # Re-raise HTTPException
+                raise
             except Exception as tz_error:
-                # If timezone parsing fails, use naive datetime comparison
-                if end_dt <= datetime.now():
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Cannot create active event with end date and time in the past"
-                    )
+                # If timezone parsing fails, try to use UTC as fallback
+                logger.warning(f"Timezone parsing failed: {tz_error}, using UTC for comparison")
+                try:
+                    tz_utc = pytz.UTC
+                    end_dt_utc = tz_utc.localize(end_dt)
+                    current_time_utc = datetime.now(tz_utc)
+                    
+                    if end_dt_utc <= current_time_utc:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Cannot create active event with end date and time in the past"
+                        )
+                except HTTPException:
+                    raise
+                except Exception:
+                    # Last resort: use naive datetime (should not happen)
+                    logger.error(f"All timezone parsing methods failed, using naive datetime")
+                    if end_dt <= datetime.now():
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Cannot create active event with end date and time in the past"
+                        )
     except ValueError as e:
         if "must be later" not in str(e) and "Cannot create" not in str(e):
             # Date format errors will be caught by Pydantic
@@ -387,18 +409,40 @@ async def update_event(
                     end_dt_tz = tz.localize(end_dt)
                     current_time = datetime.now(tz)
                     
+                    logger.info(f"Validating event activation: end_dt_tz={end_dt_tz}, current_time={current_time}, timezone={timezone_str}")
+                    
                     if end_dt_tz <= current_time:
+                        logger.warning(f"Rejecting activation: end time {end_dt_tz} is in the past (current: {current_time})")
                         raise HTTPException(
                             status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Cannot activate event with end date and time in the past"
                         )
+                except HTTPException:
+                    # Re-raise HTTPException
+                    raise
                 except Exception as tz_error:
-                    # If timezone parsing fails, use naive datetime comparison
-                    if end_dt <= datetime.now():
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Cannot activate event with end date and time in the past"
-                        )
+                    # If timezone parsing fails, try to use UTC as fallback
+                    logger.warning(f"Timezone parsing failed: {tz_error}, using UTC for comparison")
+                    try:
+                        tz_utc = pytz.UTC
+                        end_dt_utc = tz_utc.localize(end_dt)
+                        current_time_utc = datetime.now(tz_utc)
+                        
+                        if end_dt_utc <= current_time_utc:
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Cannot activate event with end date and time in the past"
+                            )
+                    except HTTPException:
+                        raise
+                    except Exception:
+                        # Last resort: use naive datetime (should not happen)
+                        logger.error(f"All timezone parsing methods failed, using naive datetime")
+                        if end_dt <= datetime.now():
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Cannot activate event with end date and time in the past"
+                            )
             except ValueError:
                 # Date format errors will be caught by Pydantic
                 pass
