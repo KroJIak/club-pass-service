@@ -820,6 +820,61 @@ async def update_ticket(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
+    # Update user_id if provided
+    if ticket_data.user_id is not None:
+        user = UserRepository.get_by_id(db, ticket_data.user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {ticket_data.user_id} not found"
+            )
+        ticket.user_id = ticket_data.user_id
+    
+    # Update event_id if provided
+    if ticket_data.event_id is not None:
+        event = EventRepository.get_by_id(db, ticket_data.event_id)
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Event with id {ticket_data.event_id} not found"
+            )
+        ticket.event_id = ticket_data.event_id
+    
+    # Update ticket_type_id if provided
+    if ticket_data.ticket_type_id is not None:
+        ticket_type = TicketTypeRepository.get_by_id(db, ticket_data.ticket_type_id)
+        if not ticket_type:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket type with id {ticket_data.ticket_type_id} not found"
+            )
+        # Validate that ticket_type belongs to event if event_id is also being updated
+        if ticket_data.event_id is not None:
+            if ticket_type.event_id != ticket_data.event_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ticket type {ticket_data.ticket_type_id} does not belong to event {ticket_data.event_id}"
+                )
+        # Validate that ticket_type belongs to current event if event_id is not being updated
+        elif ticket_type.event_id != ticket.event_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ticket type {ticket_data.ticket_type_id} does not belong to event {ticket.event_id}"
+            )
+        ticket.ticket_type_id = ticket_data.ticket_type_id
+    
+    # Update token if provided
+    if ticket_data.token is not None:
+        # Check if token is unique (excluding current ticket)
+        existing_ticket = TicketRepository.get_by_token(db, ticket_data.token)
+        if existing_ticket and existing_ticket.id != ticket_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Token {ticket_data.token} already exists"
+            )
+        ticket.token = ticket_data.token
+    
+    # Update status if provided
     if ticket_data.status is not None:
         # Explicitly convert to enum using the value to ensure SQLAlchemy uses the correct string
         status_value = ticket_data.status.value if isinstance(ticket_data.status, TicketStatus) else ticket_data.status
@@ -830,7 +885,20 @@ async def update_ticket(
     
     db.commit()
     db.refresh(ticket)
-    return TicketResponse.model_validate(ticket)
+    
+    # Load related data for response
+    ticket = TicketRepository.get_by_id(db, ticket.id)
+    ticket_response = TicketResponse.model_validate(ticket)
+    if ticket.user:
+        ticket_response.username = ticket.user.username
+        ticket_response.first_name = ticket.user.first_name
+        ticket_response.last_name = ticket.user.last_name
+    if ticket.event:
+        ticket_response.event = EventResponse.model_validate(ticket.event)
+    if ticket.ticket_type:
+        ticket_response.ticket_type = TicketTypeResponse.model_validate(ticket.ticket_type)
+    
+    return ticket_response
 
 
 @router.get("/admin/tickets/token/{token}", response_model=TicketDetailResponse)

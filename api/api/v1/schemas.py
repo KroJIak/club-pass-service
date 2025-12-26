@@ -117,6 +117,10 @@ class TicketCreate(BaseModel):
 
 class TicketUpdate(BaseModel):
     """Schema for updating a ticket."""
+    user_id: Optional[int] = None
+    event_id: Optional[int] = None
+    ticket_type_id: Optional[int] = None
+    token: Optional[str] = None
     status: Optional[TicketStatus] = None
 
 

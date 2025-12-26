@@ -175,8 +175,23 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
     setLoading(true)
     try {
       if (ticket) {
-        // Update mode - only status can be updated (other fields are disabled)
-        await api.put(`/admin/tickets/${ticket.id}`, { status: data.status } as TicketUpdate)
+        // Update mode - update all provided fields
+        const updateData: TicketUpdate = {
+          status: data.status,
+        }
+        if (selectedEvent) {
+          updateData.event_id = selectedEvent.id
+        }
+        if (selectedTicketType) {
+          updateData.ticket_type_id = selectedTicketType.id
+        }
+        if (selectedUser) {
+          updateData.user_id = selectedUser.id
+        }
+        if ((data as TicketCreate).token !== undefined) {
+          updateData.token = (data as TicketCreate).token || undefined
+        }
+        await api.put(`/admin/tickets/${ticket.id}`, updateData)
       } else {
         // Create mode - validate required fields
         if (!selectedEvent || !selectedTicketType || !selectedUser) {
@@ -222,19 +237,19 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
       <DialogContent sx={{ px: embedded ? 0 : 2.98 }}>
           {/* Event selection - show in both create and edit modes */}
           <Autocomplete
-            disabled={isEditMode}
             options={events}
             getOptionLabel={getEventLabel}
             loading={loadingEvents}
             value={selectedEvent}
             onChange={(_, newValue) => {
-              if (!isEditMode) {
-                setSelectedEvent(newValue)
-                if (newValue) {
-                  setValue('event_id' as any, newValue.id, { shouldValidate: true })
-                } else {
-                  setValue('event_id' as any, undefined as any)
-                }
+              setSelectedEvent(newValue)
+              if (newValue) {
+                setValue('event_id' as any, newValue.id, { shouldValidate: true })
+              } else {
+                setValue('event_id' as any, undefined as any)
+              }
+              // Reset ticket type when event changes
+              if (!newValue || (selectedEvent && newValue.id !== selectedEvent.id)) {
                 setSelectedTicketType(null)
                 setValue('ticket_type_id' as any, undefined as any)
               }
@@ -244,7 +259,7 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
                 {...params}
                 label="Event"
                 error={!!(errors as any).event_id}
-                helperText={isEditMode ? 'Cannot be changed' : (errors as any).event_id?.message}
+                helperText={(errors as any).event_id?.message}
                 required={!isEditMode}
                 sx={{ mt: 2 }}
               />
@@ -254,19 +269,16 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
           {/* Ticket Type selection - show in both create and edit modes */}
           {selectedEvent && (
             <Autocomplete
-              disabled={isEditMode}
               options={ticketTypes}
               getOptionLabel={(tt) => tt.name}
               loading={loadingTicketTypes}
               value={selectedTicketType}
               onChange={(_, newValue) => {
-                if (!isEditMode) {
-                  setSelectedTicketType(newValue)
-                  if (newValue) {
-                    setValue('ticket_type_id' as any, newValue.id, { shouldValidate: true })
-                  } else {
-                    setValue('ticket_type_id' as any, undefined as any)
-                  }
+                setSelectedTicketType(newValue)
+                if (newValue) {
+                  setValue('ticket_type_id' as any, newValue.id, { shouldValidate: true })
+                } else {
+                  setValue('ticket_type_id' as any, undefined as any)
                 }
               }}
               renderInput={(params) => (
@@ -274,7 +286,7 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
                   {...params}
                   label="Ticket Type"
                   error={!!(errors as any).ticket_type_id}
-                  helperText={isEditMode ? 'Cannot be changed' : (errors as any).ticket_type_id?.message}
+                  helperText={(errors as any).ticket_type_id?.message}
                   required={!isEditMode}
                   sx={{ mt: 2 }}
                 />
@@ -284,19 +296,16 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
 
           {/* User selection - show in both create and edit modes */}
           <Autocomplete
-            disabled={isEditMode}
             options={users}
             getOptionLabel={getUserLabel}
             loading={loadingUsers}
             value={selectedUser}
             onChange={(_, newValue) => {
-              if (!isEditMode) {
-                setSelectedUser(newValue)
-                if (newValue) {
-                  setValue('user_id' as any, newValue.id, { shouldValidate: true })
-                } else {
-                  setValue('user_id' as any, undefined as any)
-                }
+              setSelectedUser(newValue)
+              if (newValue) {
+                setValue('user_id' as any, newValue.id, { shouldValidate: true })
+              } else {
+                setValue('user_id' as any, undefined as any)
               }
             }}
             renderInput={(params) => (
@@ -304,7 +313,7 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
                 {...params}
                 label="User"
                 error={!!(errors as any).user_id}
-                helperText={isEditMode ? 'Cannot be changed' : (errors as any).user_id?.message}
+                helperText={(errors as any).user_id?.message}
                 required={!isEditMode}
                 sx={{ mt: 2 }}
               />
@@ -325,19 +334,16 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
                   helperText={(errors as any).token?.message}
                   required={!isEditMode}
                   fullWidth
-                  disabled={isEditMode}
                 />
               )}
             />
-            {!isEditMode && (
-              <IconButton
-                onClick={generateToken}
-                title="Generate Token"
-                sx={{ alignSelf: 'center' }}
-              >
-                <RefreshIcon />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={generateToken}
+              title="Generate Token"
+              sx={{ alignSelf: 'center' }}
+            >
+              <RefreshIcon />
+            </IconButton>
           </Box>
 
 

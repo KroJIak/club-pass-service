@@ -156,6 +156,10 @@ export interface TicketCreate {
 }
 
 export interface TicketUpdate {
+  user_id?: number | null
+  event_id?: number | null
+  ticket_type_id?: number | null
+  token?: string | null
   status?: 'active' | 'refunded' | 'cancelled' | 'expired' | 'used' | null
 }
 
