@@ -99,16 +99,17 @@ def apply_migrations():
         from alembic import command
         from alembic.config import Config
         
-        # Get the path to alembic.ini (it's in the api directory)
+        # Get the path to alembic.ini (it's in the root directory)
         script_dir = os.path.dirname(__file__)  # api/scripts/
         api_dir = os.path.dirname(script_dir)  # api/
-        alembic_ini_path = os.path.join(api_dir, "alembic.ini")
+        root_dir = os.path.dirname(api_dir)  # project root
+        alembic_ini_path = os.path.join(root_dir, "alembic.ini")
         
         if not os.path.exists(alembic_ini_path):
             logger.warning(f"Alembic config not found at {alembic_ini_path}. Skipping migrations.")
             return False
         
-        logger.info("Applying Alembic migrations...")
+        logger.info(f"Applying Alembic migrations from {alembic_ini_path}...")
         alembic_cfg = Config(alembic_ini_path)
         
         # Set database URL
@@ -116,6 +117,12 @@ def apply_migrations():
             f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}"
             f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
         ))
+        
+        # Set script location to api/alembic (where migrations are stored)
+        script_location = os.path.join(api_dir, "alembic")
+        if os.path.exists(script_location):
+            alembic_cfg.set_main_option("script_location", script_location)
+            logger.info(f"Using script_location: {script_location}")
         
         # Apply migrations
         command.upgrade(alembic_cfg, "head")
