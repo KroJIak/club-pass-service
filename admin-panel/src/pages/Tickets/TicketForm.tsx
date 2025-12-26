@@ -50,8 +50,6 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
     },
   })
 
-  const tokenValue = watch('token')
-
   // Fetch events
   useEffect(() => {
     if (open) {
@@ -190,7 +188,7 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
           user_id: selectedUser.id,
           event_id: selectedEvent.id,
           ticket_type_id: selectedTicketType.id,
-          token: data.token || undefined,
+          token: (data as TicketCreate).token || undefined,
           status: data.status || 'active',
         }
         await api.post('/admin/tickets', createData)
@@ -234,19 +232,19 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
                 onChange={(_, newValue) => {
                   setSelectedEvent(newValue)
                   if (newValue) {
-                    setValue('event_id', newValue.id, { shouldValidate: true })
+                    setValue('event_id' as any, newValue.id, { shouldValidate: true })
                   } else {
-                    setValue('event_id', undefined)
+                    setValue('event_id' as any, undefined as any)
                   }
                   setSelectedTicketType(null)
-                  setValue('ticket_type_id', undefined)
+                  setValue('ticket_type_id' as any, undefined as any)
                 }}
                 renderInput={(params) => (
                   <MuiTextField
                     {...params}
                     label="Event"
-                    error={!!errors.event_id}
-                    helperText={errors.event_id?.message}
+                    error={!!(errors as any).event_id}
+                    helperText={(errors as any).event_id?.message}
                     required
                     sx={{ mt: 2 }}
                   />
@@ -263,17 +261,17 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
                   onChange={(_, newValue) => {
                     setSelectedTicketType(newValue)
                     if (newValue) {
-                      setValue('ticket_type_id', newValue.id, { shouldValidate: true })
+                      setValue('ticket_type_id' as any, newValue.id, { shouldValidate: true })
                     } else {
-                      setValue('ticket_type_id', undefined)
+                      setValue('ticket_type_id' as any, undefined as any)
                     }
                   }}
                   renderInput={(params) => (
                     <MuiTextField
                       {...params}
                       label="Ticket Type"
-                      error={!!errors.ticket_type_id}
-                      helperText={errors.ticket_type_id?.message}
+                      error={!!(errors as any).ticket_type_id}
+                      helperText={(errors as any).ticket_type_id?.message}
                       required
                       sx={{ mt: 2 }}
                     />
@@ -290,17 +288,17 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
                 onChange={(_, newValue) => {
                   setSelectedUser(newValue)
                   if (newValue) {
-                    setValue('user_id', newValue.id, { shouldValidate: true })
+                    setValue('user_id' as any, newValue.id, { shouldValidate: true })
                   } else {
-                    setValue('user_id', undefined)
+                    setValue('user_id' as any, undefined as any)
                   }
                 }}
                 renderInput={(params) => (
                   <MuiTextField
                     {...params}
                     label="User"
-                    error={!!errors.user_id}
-                    helperText={errors.user_id?.message}
+                    error={!!(errors as any).user_id}
+                    helperText={(errors as any).user_id?.message}
                     required
                     sx={{ mt: 2 }}
                   />
@@ -310,15 +308,15 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
               {/* Token field with generate button */}
               <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
                 <Controller
-                  name="token"
+                  name="token" as any
                   control={control}
                   rules={{ required: !isEditMode ? 'Token is required' : false }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       label="Token"
-                      error={!!errors.token}
-                      helperText={errors.token?.message}
+                      error={!!(errors as any).token}
+                      helperText={(errors as any).token?.message}
                       required={!isEditMode}
                       fullWidth
                     />
