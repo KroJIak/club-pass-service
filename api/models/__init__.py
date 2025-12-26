@@ -2,6 +2,7 @@
 from api.models.user import User
 from api.models.event import Event
 from api.models.ticket_type import TicketType
+from api.models.ticket_type_template import TicketTypeTemplate
 from api.models.ticket import Ticket, TicketStatus
 from api.models.payment import Payment, PaymentStatus
 from api.models.promocode import Promocode
@@ -13,6 +14,7 @@ __all__ = [
     "User",
     "Event",
     "TicketType",
+    "TicketTypeTemplate",
     "Ticket",
     "TicketStatus",
     "Payment",

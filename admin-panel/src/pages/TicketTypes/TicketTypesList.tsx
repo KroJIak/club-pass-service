@@ -10,16 +10,20 @@ import {
   Chip,
   IconButton,
 } from '@mui/material'
-import { Add as AddIcon, StarBorder as StarBorderIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Add as AddIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material'
 import api from '../../services/api'
-import { TicketType } from '../../types'
+import { TicketType, TicketTypeTemplate } from '../../types'
 import TicketTypeForm from './TicketTypeForm'
+import TicketTypeTemplateForm from './TicketTypeTemplateForm'
 
 const TicketTypesList = () => {
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
+  const [templates, setTemplates] = useState<TicketTypeTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [formOpen, setFormOpen] = useState(false)
+  const [templateFormOpen, setTemplateFormOpen] = useState(false)
   const [editingTicketType, setEditingTicketType] = useState<TicketType | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useState<TicketTypeTemplate | null>(null)
 
   const fetchTicketTypes = async () => {
     try {
@@ -32,19 +36,19 @@ const TicketTypesList = () => {
     }
   }
 
-  useEffect(() => {
-    fetchTicketTypes()
-  }, [])
-
-  const handleSaveAsTemplate = async (ticketTypeId: number) => {
+  const fetchTemplates = async () => {
     try {
-      await api.post(`/admin/ticket-types/${ticketTypeId}/save-as-template`)
-      alert('Ticket type saved as template successfully!')
-    } catch (error: any) {
-      console.error('Failed to save as template:', error)
-      alert(error.response?.data?.detail || 'Failed to save as template')
+      const response = await api.get('/admin/ticket-type-templates')
+      setTemplates(response.data.templates || [])
+    } catch (error) {
+      console.error('Failed to fetch templates:', error)
     }
   }
+
+  useEffect(() => {
+    fetchTicketTypes()
+    fetchTemplates()
+  }, [])
 
   const handleDelete = async (ticketTypeId: number) => {
     if (!confirm('Are you sure you want to delete this ticket type?')) {
@@ -67,17 +71,74 @@ const TicketTypesList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Ticket Types</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={() => {
-            setEditingTicketType(null)
-            setFormOpen(true)
-          }}
-        >
-          Create New
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button 
+            variant="outlined" 
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setTemplateFormOpen(true)
+            }}
+          >
+            Create Template
+          </Button>
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />}
+            onClick={() => {
+              setEditingTicketType(null)
+              setFormOpen(true)
+            }}
+          >
+            Create New
+          </Button>
+        </Box>
       </Box>
+
+      {/* Display templates as buttons */}
+      {templates.length > 0 && (
+        <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+            Templates:
+          </Typography>
+          {templates.map((template) => (
+            <Box key={template.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => {
+                  // Fill form with template data
+                  setEditingTicketType(null)
+                  setFormOpen(true)
+                  // We'll pass template data to form via a different mechanism
+                  setTimeout(() => {
+                    // This will be handled in TicketTypeForm
+                  }, 100)
+                }}
+              >
+                {template.name}
+              </Button>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={async () => {
+                  if (confirm(`Delete template "${template.name}"?`)) {
+                    try {
+                      await api.delete(`/admin/ticket-type-templates/${template.id}`)
+                      fetchTemplates()
+                    } catch (error: any) {
+                      console.error('Failed to delete template:', error)
+                      alert(error.response?.data?.detail || 'Failed to delete template')
+                    }
+                  }
+                }}
+                title="Delete template"
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
 
       <Grid container spacing={3}>
         {ticketTypes.map((tt) => (
@@ -101,14 +162,6 @@ const TicketTypesList = () => {
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
                 <IconButton
                   size="small"
-                  color="primary"
-                  onClick={() => handleSaveAsTemplate(tt.id)}
-                  title="Save as template"
-                >
-                  <StarBorderIcon />
-                </IconButton>
-                <IconButton
-                  size="small"
                   color="error"
                   onClick={() => handleDelete(tt.id)}
                   title="Delete"
@@ -124,14 +177,17 @@ const TicketTypesList = () => {
       <TicketTypeForm
         open={formOpen}
         ticketType={editingTicketType}
+        template={selectedTemplate}
         onClose={() => {
           setFormOpen(false)
           setEditingTicketType(null)
+          setSelectedTemplate(null)
         }}
         onSuccess={() => {
           fetchTicketTypes()
           setFormOpen(false)
           setEditingTicketType(null)
+          setSelectedTemplate(null)
         }}
       />
     </Box>

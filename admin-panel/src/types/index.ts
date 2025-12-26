@@ -24,13 +24,21 @@ export interface Event {
 
 export interface TicketType {
   id: number
-  event_id: number | null
+  event_id: number
   name: string
   price: number
   available_quantity: number
   total_quantity: number
   is_active: boolean
-  is_template: boolean
+}
+
+export interface TicketTypeTemplate {
+  id: number
+  name: string
+  price: number
+  available_quantity: number
+  total_quantity: number
+  is_active: boolean
 }
 
 export interface Ticket {
@@ -119,13 +127,20 @@ export interface EventUpdate {
 }
 
 export interface TicketTypeCreate {
-  event_id?: number | null
+  event_id: number
   name: string
   price: number
   available_quantity: number
   total_quantity: number
   is_active?: boolean
-  is_template?: boolean
+}
+
+export interface TicketTypeTemplateCreate {
+  name: string
+  price: number
+  available_quantity: number
+  total_quantity: number
+  is_active?: boolean
 }
 
 export interface TicketTypeUpdate {
@@ -134,7 +149,6 @@ export interface TicketTypeUpdate {
   available_quantity?: number | null
   total_quantity?: number | null
   is_active?: boolean | null
-  is_template?: boolean | null
 }
 
 export interface UserCreate {
