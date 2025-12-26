@@ -185,10 +185,9 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
         }
         
         // Always include event_id - use selectedEvent or fallback to ticket.event_id
-        if (selectedEvent) {
-          updateData.event_id = selectedEvent.id
-        } else if (ticket.event_id) {
-          updateData.event_id = ticket.event_id
+        const eventId = selectedEvent?.id ?? ticket.event_id ?? ticket.event?.id
+        if (eventId) {
+          updateData.event_id = eventId
         } else {
           console.error('Cannot update ticket: event_id is missing')
           alert('Cannot update ticket: Event is required')
@@ -197,10 +196,9 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
         }
         
         // Always include ticket_type_id - use selectedTicketType or fallback to ticket.ticket_type_id
-        if (selectedTicketType) {
-          updateData.ticket_type_id = selectedTicketType.id
-        } else if (ticket.ticket_type_id) {
-          updateData.ticket_type_id = ticket.ticket_type_id
+        const ticketTypeId = selectedTicketType?.id ?? ticket.ticket_type_id ?? ticket.ticket_type?.id
+        if (ticketTypeId) {
+          updateData.ticket_type_id = ticketTypeId
         } else {
           console.error('Cannot update ticket: ticket_type_id is missing')
           alert('Cannot update ticket: Ticket Type is required')
@@ -209,10 +207,9 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
         }
         
         // Always include user_id - use selectedUser or fallback to ticket.user_id
-        if (selectedUser) {
-          updateData.user_id = selectedUser.id
-        } else if (ticket.user_id) {
-          updateData.user_id = ticket.user_id
+        const userId = selectedUser?.id ?? ticket.user_id
+        if (userId) {
+          updateData.user_id = userId
         } else {
           console.error('Cannot update ticket: user_id is missing')
           alert('Cannot update ticket: User is required')

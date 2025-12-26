@@ -820,19 +820,24 @@ async def update_ticket(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
-    # Get update data as dict to safely access fields
-    # Use model_dump() without exclude_unset to see all fields, then filter None values manually
-    update_dict = ticket_data.model_dump()
-    
     # Debug logging
     import logging
     logger = logging.getLogger(__name__)
-    logger.info(f"Updating ticket {ticket_id} with raw data: {update_dict}")
+    
+    # Get update data as dict - use model_dump with exclude_unset=False to see all fields
+    # But we need to check what was actually provided in the request
+    update_dict = ticket_data.model_dump(exclude_unset=False)
+    logger.info(f"Updating ticket {ticket_id} with model_dump(exclude_unset=False): {update_dict}")
+    
+    # Also try to get the raw request data
+    # The issue is that Pydantic only includes fields that were explicitly set
+    # So we need to use model_dump(exclude_unset=True) to get only provided fields
+    provided_dict = ticket_data.model_dump(exclude_unset=True)
+    logger.info(f"Provided fields (exclude_unset=True): {provided_dict}")
     logger.info(f"Current ticket state: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
     
-    # Filter out None values (but keep 0, False, empty string if they are valid values)
-    update_dict = {k: v for k, v in update_dict.items() if v is not None}
-    logger.info(f"Filtered update_dict (excluding None): {update_dict}")
+    # Use provided_dict (only fields that were actually sent)
+    update_dict = provided_dict
     
     # Update user_id if provided
     if 'user_id' in update_dict and update_dict['user_id'] is not None:
