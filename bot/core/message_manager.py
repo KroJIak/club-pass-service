@@ -311,19 +311,34 @@ async def edit_last_system_message_or_send(
     await temporary_messages_middleware.delete_system_message(bot, chat_id, message_id)
 
 
+def format_date_without_year(date_str: str) -> str:
+    """Format date from DD.MM.YYYY to DD.MM."""
+    if not date_str:
+        return date_str
+    # Split by dot and take first two parts (DD and MM)
+    parts = date_str.split('.')
+    if len(parts) >= 2:
+        return f"{parts[0]}.{parts[1]}"
+    return date_str
+
+
 def format_event_message(locale: str, event: Dict[str, Any]) -> str:
     """Format event information message."""
-    # Format event date/time range
+    # Format event date/time range - keep full format with end date/time in messages
     start_date = event.get('start_date', '')
     start_time = event.get('start_time', '')
     end_date = event.get('end_date', '')
     end_time = event.get('end_time', '')
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format dates without year for display
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     return (
         f"🎉 <b>{event.get('name', t(locale, 'buttons.events'))}</b>\n\n"

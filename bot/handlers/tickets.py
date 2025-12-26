@@ -41,17 +41,22 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
         ticket_type = ticket.get("ticket_type", {})
         event_name = event.get("name", "")
         
-        # Format event date/time range
+        # Format event date/time - only start date/time for inline buttons, without year
         start_date = event.get("start_date", "")
         start_time = event.get("start_time", "")
-        end_date = event.get("end_date", "")
-        end_time = event.get("end_time", "")
         
-        # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
-        if end_date and end_time:
-            event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
-        else:
-            event_datetime = f"{start_date} {start_time}"
+        # Format as "DD.MM HH:MM" (without year and without end date/time)
+        def format_date_without_year(date_str: str) -> str:
+            """Format date from DD.MM.YYYY to DD.MM."""
+            if not date_str:
+                return date_str
+            parts = date_str.split('.')
+            if len(parts) >= 2:
+                return f"{parts[0]}.{parts[1]}"
+            return date_str
+        
+        start_date_short = format_date_without_year(start_date)
+        event_datetime = f"{start_date_short} {start_time}" if start_date_short and start_time else f"{start_date} {start_time}"
         
         formatted_tickets.append({
             "id": ticket.get("id"),
@@ -95,17 +100,30 @@ async def handle_ticket_selected(callback: CallbackQuery, state: FSMContext):
     qr_bytes = generate_qr_code(token)
     qr_file = BufferedInputFile(qr_bytes, filename="ticket_qr.png")
     
-    # Format event date/time range
+    # Format event date/time range - remove year but keep end date/time in messages
     start_date = event.get("start_date", "")
     start_time = event.get("start_time", "")
     end_date = event.get("end_date", "")
     end_time = event.get("end_time", "")
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format date without year
+    def format_date_without_year(date_str: str) -> str:
+        """Format date from DD.MM.YYYY to DD.MM."""
+        if not date_str:
+            return date_str
+        parts = date_str.split('.')
+        if len(parts) >= 2:
+            return f"{parts[0]}.{parts[1]}"
+        return date_str
+    
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     # Format ticket info text
     text = t(
@@ -344,17 +362,30 @@ async def handle_refund_confirm_no(callback: CallbackQuery, state: FSMContext):
     qr_bytes = generate_qr_code(token)
     qr_file = BufferedInputFile(qr_bytes, filename="ticket_qr.png")
     
-    # Format event date/time range
+    # Format event date/time range - remove year but keep end date/time in messages
     start_date = event.get("start_date", "")
     start_time = event.get("start_time", "")
     end_date = event.get("end_date", "")
     end_time = event.get("end_time", "")
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format date without year
+    def format_date_without_year(date_str: str) -> str:
+        """Format date from DD.MM.YYYY to DD.MM."""
+        if not date_str:
+            return date_str
+        parts = date_str.split('.')
+        if len(parts) >= 2:
+            return f"{parts[0]}.{parts[1]}"
+        return date_str
+    
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     # Format ticket info text
     text = t(

@@ -82,17 +82,30 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
     djs = event.get("djs", [])
     djs_text = ", ".join(djs) if djs else event.get("name", "")
     
-    # Format event date/time range
+    # Format event date/time range - remove year but keep end date/time in messages
     start_date = event.get("start_date", "")
     start_time = event.get("start_time", "")
     end_date = event.get("end_date", "")
     end_time = event.get("end_time", "")
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format date without year
+    def format_date_without_year(date_str: str) -> str:
+        """Format date from DD.MM.YYYY to DD.MM."""
+        if not date_str:
+            return date_str
+        parts = date_str.split('.')
+        if len(parts) >= 2:
+            return f"{parts[0]}.{parts[1]}"
+        return date_str
+    
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     text = t(
         locale,
@@ -189,17 +202,30 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     
     event_name = event.get("name", "")
     
-    # Format event date/time range
+    # Format event date/time range - remove year but keep end date/time in messages
     start_date = event.get("start_date", "")
     start_time = event.get("start_time", "")
     end_date = event.get("end_date", "")
     end_time = event.get("end_time", "")
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format date without year
+    def format_date_without_year(date_str: str) -> str:
+        """Format date from DD.MM.YYYY to DD.MM."""
+        if not date_str:
+            return date_str
+        parts = date_str.split('.')
+        if len(parts) >= 2:
+            return f"{parts[0]}.{parts[1]}"
+        return date_str
+    
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     text = t(
         locale,
@@ -461,17 +487,30 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     
     event_name = event.get("name", "")
     
-    # Format event date/time range
+    # Format event date/time range - remove year but keep end date/time in messages
     start_date = event.get("start_date", "")
     start_time = event.get("start_time", "")
     end_date = event.get("end_date", "")
     end_time = event.get("end_time", "")
     
-    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    # Format date without year
+    def format_date_without_year(date_str: str) -> str:
+        """Format date from DD.MM.YYYY to DD.MM."""
+        if not date_str:
+            return date_str
+        parts = date_str.split('.')
+        if len(parts) >= 2:
+            return f"{parts[0]}.{parts[1]}"
+        return date_str
+    
+    start_date_short = format_date_without_year(start_date)
+    end_date_short = format_date_without_year(end_date) if end_date else ''
+    
+    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
     if end_date and end_time:
-        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
     else:
-        event_datetime = f"{start_date} {start_time}"
+        event_datetime = f"{start_date_short} {start_time}"
     
     text = t(
         locale,

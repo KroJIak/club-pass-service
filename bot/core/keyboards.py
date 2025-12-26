@@ -29,23 +29,30 @@ def get_back_keyboard(locale: str) -> InlineKeyboardMarkup:
     return get_back_to_menu_keyboard(locale)
 
 
+def format_date_without_year(date_str: str) -> str:
+    """Format date from DD.MM.YYYY to DD.MM."""
+    if not date_str:
+        return date_str
+    # Split by dot and take first two parts (DD and MM)
+    parts = date_str.split('.')
+    if len(parts) >= 2:
+        return f"{parts[0]}.{parts[1]}"
+    return date_str
+
+
 def get_events_keyboard(locale: str, events: list) -> InlineKeyboardMarkup:
     """Get events list keyboard."""
     builder = InlineKeyboardBuilder()
     for event in events:
         event_name = event.get('name', 'Event')
         
-        # Format event date/time range
+        # Format event date/time - only start date/time for inline buttons, without year
         start_date = event.get('start_date', '')
         start_time = event.get('start_time', '')
-        end_date = event.get('end_date', '')
-        end_time = event.get('end_time', '')
         
-        # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
-        if end_date and end_time:
-            event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
-        else:
-            event_datetime = f"{start_date} {start_time}"
+        # Format as "DD.MM HH:MM" (without year and without end date/time)
+        start_date_short = format_date_without_year(start_date)
+        event_datetime = f"{start_date_short} {start_time}" if start_date_short and start_time else f"{start_date} {start_time}"
         
         event_text = f"{event_name}\n{event_datetime}"
         builder.add(InlineKeyboardButton(
