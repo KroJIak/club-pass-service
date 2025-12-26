@@ -68,12 +68,13 @@ class EventUpdate(BaseModel):
 # TicketType schemas
 class TicketTypeCreate(BaseModel):
     """Schema for creating a ticket type."""
-    event_id: int
+    event_id: Optional[int] = None  # None for templates
     name: str
     price: Decimal
     available_quantity: int
     total_quantity: int
     is_active: bool = True
+    is_template: bool = False
 
 
 class TicketTypeUpdate(BaseModel):
@@ -83,6 +84,7 @@ class TicketTypeUpdate(BaseModel):
     available_quantity: Optional[int] = None
     total_quantity: Optional[int] = None
     is_active: Optional[bool] = None
+    is_template: Optional[bool] = None
 
 
 # User schemas
@@ -508,12 +510,57 @@ async def delete_event(
 # TicketTypes CRUD
 @router.get("/admin/ticket-types", response_model=TicketTypeListResponse)
 async def get_all_ticket_types(
+    include_templates: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
     """Get all ticket types (admin only)."""
     ticket_types = TicketTypeRepository.get_all(db)
+    # Filter out templates by default, unless include_templates=True
+    if not include_templates:
+        ticket_types = [tt for tt in ticket_types if not tt.is_template]
     return TicketTypeListResponse(ticket_types=[TicketTypeResponse.model_validate(tt) for tt in ticket_types])
+
+
+@router.get("/admin/ticket-types/templates", response_model=TicketTypeListResponse)
+async def get_ticket_type_templates(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all ticket type templates."""
+    ticket_types = TicketTypeRepository.get_all(db)
+    templates = [tt for tt in ticket_types if tt.is_template]
+    return TicketTypeListResponse(ticket_types=[TicketTypeResponse.model_validate(tt) for tt in templates])
+
+
+@router.post("/admin/ticket-types/{ticket_type_id}/save-as-template", response_model=TicketTypeResponse)
+async def save_ticket_type_as_template(
+    ticket_type_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Save a ticket type as a template (creates a copy without event_id)."""
+    ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
+    if not ticket_type:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket type with id {ticket_type_id} not found"
+        )
+    
+    # Create a new ticket type as template (copy without event_id)
+    template = TicketType(
+        event_id=None,
+        name=ticket_type.name,
+        price=ticket_type.price,
+        available_quantity=ticket_type.available_quantity,
+        total_quantity=ticket_type.total_quantity,
+        is_active=True,
+        is_template=True,
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
+    return TicketTypeResponse.model_validate(template)
 
 
 @router.get("/admin/ticket-types/{ticket_type_id}", response_model=TicketTypeResponse)
@@ -539,13 +586,17 @@ async def create_ticket_type(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Create a new ticket type."""
-    # Check if event exists
-    event = EventRepository.get_by_id(db, ticket_type_data.event_id)
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Event with id {ticket_type_data.event_id} not found"
-        )
+    # If not a template, check if event exists
+    if not ticket_type_data.is_template and ticket_type_data.event_id:
+        event = EventRepository.get_by_id(db, ticket_type_data.event_id)
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Event with id {ticket_type_data.event_id} not found"
+            )
+    elif ticket_type_data.is_template:
+        # Templates don't need event_id
+        ticket_type_data.event_id = None
     
     ticket_type = TicketType(
         event_id=ticket_type_data.event_id,
@@ -554,6 +605,7 @@ async def create_ticket_type(
         available_quantity=ticket_type_data.available_quantity,
         total_quantity=ticket_type_data.total_quantity,
         is_active=ticket_type_data.is_active,
+        is_template=ticket_type_data.is_template,
     )
     db.add(ticket_type)
     db.commit()
@@ -586,6 +638,11 @@ async def update_ticket_type(
         ticket_type.total_quantity = ticket_type_data.total_quantity
     if ticket_type_data.is_active is not None:
         ticket_type.is_active = ticket_type_data.is_active
+    if ticket_type_data.is_template is not None:
+        ticket_type.is_template = ticket_type_data.is_template
+        # If setting as template, remove event_id
+        if ticket_type_data.is_template:
+            ticket_type.event_id = None
     
     db.commit()
     db.refresh(ticket_type)

@@ -66,12 +66,13 @@ class EventListResponse(BaseModel):
 class TicketTypeResponse(BaseModel):
     """Schema for ticket type response."""
     id: int
-    event_id: int
+    event_id: Optional[int] = None
     name: str
     price: Decimal
     available_quantity: int
     total_quantity: int
     is_active: bool
+    is_template: bool = False
 
     class Config:
         from_attributes = True
