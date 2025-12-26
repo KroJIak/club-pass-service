@@ -1047,7 +1047,7 @@ async def update_club_settings(
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
             "auto_deactivate_events": bool(settings.auto_deactivate_events),
-            "updated_at": updated_at
+            "updated_at": updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
         }
         
         return response_data

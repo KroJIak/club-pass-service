@@ -168,17 +168,17 @@ async def get_club_settings_public(
             logger.warning("updated_at was None, using current time")
         
         # Build response dict - return directly without Pydantic validation
-        # FastAPI will serialize datetime automatically
+        # Serialize datetime to ISO format string to avoid serialization issues
         response_data = {
             "id": int(settings.id),
             "address": settings.address if settings.address else None,
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
             "auto_deactivate_events": bool(auto_deactivate),  # Ensure it's a bool
-            "updated_at": updated_at  # FastAPI will serialize datetime automatically
+            "updated_at": updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
         }
         
-        logger.debug(f"Returning club settings: {response_data}")
+        logger.info(f"Returning club settings: {response_data}")
         return response_data
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
