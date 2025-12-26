@@ -1008,12 +1008,21 @@ async def get_club_settings(
     if updated_at is None:
         updated_at = datetime.utcnow()
     
+    # Handle case where timezone might not exist in DB
+    try:
+        timezone = getattr(settings, 'timezone', None)
+        if timezone is None:
+            timezone = "Europe/Moscow"
+    except AttributeError:
+        timezone = "Europe/Moscow"
+    
     response_data = {
         "id": int(settings.id),
         "address": settings.address if settings.address else None,
         "phone": settings.phone if settings.phone else None,
         "email": settings.email if settings.email else None,
         "auto_deactivate_events": bool(auto_deactivate),
+        "timezone": timezone if timezone else "Europe/Moscow",
         "updated_at": updated_at
     }
     
@@ -1048,6 +1057,7 @@ async def update_club_settings(
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
             "auto_deactivate_events": bool(settings.auto_deactivate_events),
+            "timezone": settings.timezone if settings.timezone else "Europe/Moscow",
             "updated_at": updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)
         }
         
