@@ -81,8 +81,8 @@ class TicketExpirationService:
             return True
         
         expiration_dt = TicketExpirationService._calculate_expiration_datetime(
-            ticket.event.date,
-            ticket.event.time
+            ticket.event.start_date,
+            ticket.event.start_time
         )
         
         return current_time >= expiration_dt
@@ -190,8 +190,8 @@ class TicketExpirationService:
         deactivated_count = 0
         for event in events:
             expiration_dt = TicketExpirationService._calculate_expiration_datetime(
-                event.date,
-                event.time
+                event.start_date,
+                event.start_time
             )
             
             if current_time >= expiration_dt:
