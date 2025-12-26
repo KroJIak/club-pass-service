@@ -129,8 +129,13 @@ const TicketTypeForm = ({
       if (ticketType) {
         await api.put(`/admin/ticket-types/${ticketType.id}`, data)
       } else {
+        // Ensure all required fields are present for creation
         const createData: TicketTypeCreate = {
-          ...data,
+          name: data.name || '',
+          price: data.price || 0,
+          available_quantity: data.available_quantity || 0,
+          total_quantity: data.total_quantity || 0,
+          is_active: data.is_active ?? true,
           event_id: eventId || (data as TicketTypeCreate).event_id || null,
           is_template: false, // New ticket types are never templates
         }
@@ -271,6 +276,7 @@ const TicketTypeForm = ({
             <BooleanField
               label="Active"
               {...field}
+              value={field.value ?? true}
             />
           )}
         />
