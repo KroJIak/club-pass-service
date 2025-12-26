@@ -46,8 +46,8 @@ class EventResponse(BaseModel):
     description: Optional[str] = None
     date: str
     time: str
-    end_date: Optional[str] = None
-    end_time: Optional[str] = None
+    end_date: str
+    end_time: str
     djs: Optional[List[str]] = None
     is_active: bool
     created_at: datetime

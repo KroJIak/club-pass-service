@@ -14,8 +14,8 @@ export interface Event {
   description: string | null
   date: string // DD.MM.YYYY
   time: string // HH:MM
-  end_date: string | null // DD.MM.YYYY
-  end_time: string | null // HH:MM
+  end_date: string // DD.MM.YYYY
+  end_time: string // HH:MM
   djs: string[] | null
   is_active: boolean
   created_at: string
@@ -98,8 +98,8 @@ export interface EventCreate {
   description?: string | null
   date: string
   time: string
-  end_date?: string | null
-  end_time?: string | null
+  end_date: string
+  end_time: string
   djs?: string[] | null
   is_active?: boolean
 }
