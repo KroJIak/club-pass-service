@@ -820,64 +820,69 @@ async def update_ticket(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
+    # Get update data as dict to safely access fields
+    update_dict = ticket_data.model_dump(exclude_unset=True)
+    
     # Update user_id if provided
-    if ticket_data.user_id is not None:
-        user = UserRepository.get_by_id(db, ticket_data.user_id)
+    if 'user_id' in update_dict and update_dict['user_id'] is not None:
+        user = UserRepository.get_by_id(db, update_dict['user_id'])
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with id {ticket_data.user_id} not found"
+                detail=f"User with id {update_dict['user_id']} not found"
             )
-        ticket.user_id = ticket_data.user_id
+        ticket.user_id = update_dict['user_id']
     
     # Update event_id if provided
-    if ticket_data.event_id is not None:
-        event = EventRepository.get_by_id(db, ticket_data.event_id)
+    if 'event_id' in update_dict and update_dict['event_id'] is not None:
+        event = EventRepository.get_by_id(db, update_dict['event_id'])
         if not event:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Event with id {ticket_data.event_id} not found"
+                detail=f"Event with id {update_dict['event_id']} not found"
             )
-        ticket.event_id = ticket_data.event_id
+        ticket.event_id = update_dict['event_id']
     
     # Update ticket_type_id if provided
-    if ticket_data.ticket_type_id is not None:
-        ticket_type = TicketTypeRepository.get_by_id(db, ticket_data.ticket_type_id)
+    if 'ticket_type_id' in update_dict and update_dict['ticket_type_id'] is not None:
+        ticket_type = TicketTypeRepository.get_by_id(db, update_dict['ticket_type_id'])
         if not ticket_type:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Ticket type with id {ticket_data.ticket_type_id} not found"
+                detail=f"Ticket type with id {update_dict['ticket_type_id']} not found"
             )
         # Validate that ticket_type belongs to event if event_id is also being updated
-        if ticket_data.event_id is not None:
-            if ticket_type.event_id != ticket_data.event_id:
+        if 'event_id' in update_dict and update_dict['event_id'] is not None:
+            if ticket_type.event_id != update_dict['event_id']:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Ticket type {ticket_data.ticket_type_id} does not belong to event {ticket_data.event_id}"
+                    detail=f"Ticket type {update_dict['ticket_type_id']} does not belong to event {update_dict['event_id']}"
                 )
         # Validate that ticket_type belongs to current event if event_id is not being updated
         elif ticket_type.event_id != ticket.event_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Ticket type {ticket_data.ticket_type_id} does not belong to event {ticket.event_id}"
+                detail=f"Ticket type {update_dict['ticket_type_id']} does not belong to event {ticket.event_id}"
             )
-        ticket.ticket_type_id = ticket_data.ticket_type_id
+        ticket.ticket_type_id = update_dict['ticket_type_id']
     
     # Update token if provided
-    if ticket_data.token is not None:
+    if 'token' in update_dict and update_dict['token'] is not None:
         # Check if token is unique (excluding current ticket)
-        existing_ticket = TicketRepository.get_by_token(db, ticket_data.token)
+        existing_ticket = TicketRepository.get_by_token(db, update_dict['token'])
         if existing_ticket and existing_ticket.id != ticket_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Token {ticket_data.token} already exists"
+                detail=f"Token {update_dict['token']} already exists"
             )
-        ticket.token = ticket_data.token
+        ticket.token = update_dict['token']
     
     # Update status if provided
-    if ticket_data.status is not None:
+    if 'status' in update_dict and update_dict['status'] is not None:
         # Explicitly convert to enum using the value to ensure SQLAlchemy uses the correct string
-        status_value = ticket_data.status.value if isinstance(ticket_data.status, TicketStatus) else ticket_data.status
+        status_value = update_dict['status']
+        if isinstance(status_value, TicketStatus):
+            status_value = status_value.value
         ticket.status = TicketStatus(status_value)
         # Set used_at when status changes to USED
         if ticket.status == TicketStatus.USED and not ticket.used_at:
