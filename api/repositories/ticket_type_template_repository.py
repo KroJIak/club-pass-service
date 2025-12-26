@@ -17,14 +17,13 @@ class TicketTypeTemplateRepository:
         return db.query(TicketTypeTemplate).filter(TicketTypeTemplate.id == template_id).first()
     
     @staticmethod
-    def create(db: Session, name: str, price: float, available_quantity: int, total_quantity: int, is_active: bool = True) -> TicketTypeTemplate:
+    def create(db: Session, name: str, price: float, available_quantity: int, total_quantity: int) -> TicketTypeTemplate:
         """Create a new ticket type template."""
         template = TicketTypeTemplate(
             name=name,
             price=price,
             available_quantity=available_quantity,
             total_quantity=total_quantity,
-            is_active=is_active,
         )
         db.add(template)
         db.commit()

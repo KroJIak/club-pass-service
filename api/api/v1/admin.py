@@ -637,7 +637,6 @@ async def create_ticket_type_template(
         price=template_data.price,
         available_quantity=template_data.available_quantity,
         total_quantity=template_data.total_quantity,
-        is_active=template_data.is_active,
     )
     return TicketTypeTemplateResponse.model_validate(template)
 

@@ -90,7 +90,6 @@ class TicketTypeTemplateResponse(BaseModel):
     price: Decimal
     available_quantity: int
     total_quantity: int
-    is_active: bool
 
     class Config:
         from_attributes = True
@@ -102,7 +101,6 @@ class TicketTypeTemplateCreate(BaseModel):
     price: Decimal
     available_quantity: int
     total_quantity: int
-    is_active: bool = True
 
 
 class TicketTypeTemplateListResponse(BaseModel):

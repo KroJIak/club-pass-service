@@ -1,5 +1,5 @@
 """TicketTypeTemplate ORM model."""
-from sqlalchemy import Column, Integer, String, Boolean, Numeric
+from sqlalchemy import Column, Integer, String, Numeric
 from api.core.db import Base
 
 
@@ -12,5 +12,4 @@ class TicketTypeTemplate(Base):
     price = Column(Numeric(10, 2), nullable=False)
     available_quantity = Column(Integer, default=0, nullable=False)
     total_quantity = Column(Integer, default=0, nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
 

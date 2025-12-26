@@ -14,7 +14,6 @@ import { useForm, Controller } from 'react-hook-form'
 import api from '../../services/api'
 import { TicketTypeTemplateCreate } from '../../types'
 import TextField from '../../components/forms/TextField'
-import BooleanField from '../../components/forms/BooleanField'
 
 interface TicketTypeTemplateFormProps {
   open?: boolean
@@ -41,7 +40,6 @@ const TicketTypeTemplateForm = ({
       price: 0,
       available_quantity: 0,
       total_quantity: 0,
-      is_active: true,
     },
   })
 
@@ -52,7 +50,6 @@ const TicketTypeTemplateForm = ({
         price: 0,
         available_quantity: 0,
         total_quantity: 0,
-        is_active: true,
       })
     }
   }, [open, reset])
@@ -131,17 +128,6 @@ const TicketTypeTemplateForm = ({
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                 error={!!errors.total_quantity}
                 helperText={errors.total_quantity?.message}
-              />
-            )}
-          />
-          <Controller
-            name="is_active"
-            control={control}
-            render={({ field }) => (
-              <BooleanField
-                label="Active"
-                {...field}
-                value={field.value ?? true}
               />
             )}
           />
