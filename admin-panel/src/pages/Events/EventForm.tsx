@@ -389,6 +389,25 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                     >
                       {template.name}
                     </Button>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        if (confirm(`Delete template "${template.name}"?`)) {
+                          try {
+                            await api.delete(`/admin/ticket-type-templates/${template.id}`)
+                            fetchTemplates()
+                          } catch (error: any) {
+                            console.error('Failed to delete template:', error)
+                            alert(error.response?.data?.detail || 'Failed to delete template')
+                          }
+                        }
+                      }}
+                      title="Delete template"
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
                   </Box>
                 ))}
               </Box>
