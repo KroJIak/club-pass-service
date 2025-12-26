@@ -89,7 +89,14 @@ async def schedule_event_deactivation(
         expiration_service_url = settings.EXPIRATION_SERVICE_URL
         url = f"{expiration_service_url}/schedule-event-deactivation"
         
-        logger.info(f"Scheduling deactivation for event {event_id} at {deactivation_dt}")
+        logger.info("=" * 60)
+        logger.info(f"📤 SENDING REQUEST to expiration-service:")
+        logger.info(f"   Event ID: {event_id}")
+        logger.info(f"   End date: {end_date}")
+        logger.info(f"   End time: {end_time}")
+        logger.info(f"   Timezone: {timezone_str}")
+        logger.info(f"   Deactivation datetime: {deactivation_dt}")
+        logger.info(f"   URL: {url}")
         
         async with httpx.AsyncClient(timeout=5.0) as client:
             response = await client.post(
@@ -101,10 +108,15 @@ async def schedule_event_deactivation(
             )
             
             if response.status_code == 200:
-                logger.info(f"Successfully scheduled deactivation for event {event_id}")
+                logger.info(f"✅ Successfully scheduled deactivation for event {event_id}")
+                logger.info(f"   Response: {response.json()}")
+                logger.info("=" * 60)
                 return True
             else:
-                logger.warning(f"Failed to schedule deactivation for event {event_id}: {response.status_code} - {response.text}")
+                logger.warning(f"⚠️  Failed to schedule deactivation for event {event_id}")
+                logger.warning(f"   Status code: {response.status_code}")
+                logger.warning(f"   Response: {response.text}")
+                logger.info("=" * 60)
                 return False
     except Exception as e:
         logger.error(f"Error scheduling deactivation for event {event_id}: {e}", exc_info=True)

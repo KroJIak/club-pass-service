@@ -1,10 +1,13 @@
 """Admin CRUD endpoints for all models."""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 from api.core.db import get_db
 from api.core.auth import get_current_admin
@@ -235,8 +238,17 @@ async def create_event(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Create a new event."""
-    # Validate datetime
     from datetime import datetime
+    import pytz
+    from api.repositories.club_settings_repository import ClubSettingsRepository
+    
+    # Get timezone from club settings
+    club_settings = ClubSettingsRepository.get_settings(db)
+    timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
+    if not timezone_str:
+        timezone_str = 'Europe/Moscow'
+    
+    # Validate datetime
     try:
         start_dt = datetime.strptime(f"{event_data.start_date} {event_data.start_time}", "%d.%m.%Y %H:%M")
         end_dt = datetime.strptime(f"{event_data.end_date} {event_data.end_time}", "%d.%m.%Y %H:%M")
@@ -245,8 +257,28 @@ async def create_event(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="End date and time must be later than start date and time"
             )
+        
+        # Check if trying to create active event with past end date/time
+        if event_data.is_active and event_data.end_date and event_data.end_time:
+            try:
+                tz = pytz.timezone(timezone_str)
+                end_dt_tz = tz.localize(end_dt)
+                current_time = datetime.now(tz)
+                
+                if end_dt_tz <= current_time:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cannot create active event with end date and time in the past"
+                    )
+            except Exception as tz_error:
+                # If timezone parsing fails, use naive datetime comparison
+                if end_dt <= datetime.now():
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Cannot create active event with end date and time in the past"
+                    )
     except ValueError as e:
-        if "must be later" not in str(e):
+        if "must be later" not in str(e) and "Cannot create" not in str(e):
             # Date format errors will be caught by Pydantic
             pass
     
@@ -264,8 +296,11 @@ async def create_event(
     db.commit()
     db.refresh(event)
     
+    logger.info(f"✅ Created event: ID={event.id}, Name='{event.name}', is_active={event.is_active}")
+    
     # Schedule event deactivation if end_date and end_time are provided
     if event_data.end_date and event_data.end_time and event.is_active:
+        logger.info(f"📅 Event is active with end date/time, scheduling deactivation...")
         await schedule_event_deactivation(db, event.id, event_data.end_date, event_data.end_time)
     
     return EventResponse.model_validate(event)
@@ -307,6 +342,9 @@ async def update_event(
     if (event_data.start_date is not None or event_data.start_time is not None or 
         event_data.end_date is not None or event_data.end_time is not None):
         from datetime import datetime
+        import pytz
+        from api.repositories.club_settings_repository import ClubSettingsRepository
+        
         start_date = event_data.start_date if event_data.start_date is not None else event.start_date
         start_time = event_data.start_time if event_data.start_time is not None else event.start_time
         end_date = event_data.end_date if event_data.end_date is not None else event.end_date
@@ -323,6 +361,47 @@ async def update_event(
         except ValueError:
             # Date format errors will be caught by Pydantic
             pass
+    
+    # Check if trying to activate event with past end date/time
+    will_be_active = event_data.is_active if event_data.is_active is not None else event.is_active
+    if will_be_active:
+        end_date_to_check = event_data.end_date if event_data.end_date is not None else event.end_date
+        end_time_to_check = event_data.end_time if event_data.end_time is not None else event.end_time
+        
+        if end_date_to_check and end_time_to_check:
+            from datetime import datetime
+            import pytz
+            from api.repositories.club_settings_repository import ClubSettingsRepository
+            
+            try:
+                # Get timezone from club settings
+                club_settings = ClubSettingsRepository.get_settings(db)
+                timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
+                if not timezone_str:
+                    timezone_str = 'Europe/Moscow'
+                
+                end_dt = datetime.strptime(f"{end_date_to_check} {end_time_to_check}", "%d.%m.%Y %H:%M")
+                
+                try:
+                    tz = pytz.timezone(timezone_str)
+                    end_dt_tz = tz.localize(end_dt)
+                    current_time = datetime.now(tz)
+                    
+                    if end_dt_tz <= current_time:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Cannot activate event with end date and time in the past"
+                        )
+                except Exception as tz_error:
+                    # If timezone parsing fails, use naive datetime comparison
+                    if end_dt <= datetime.now():
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Cannot activate event with end date and time in the past"
+                        )
+            except ValueError:
+                # Date format errors will be caught by Pydantic
+                pass
     
     # Handle end_date and end_time changes
     end_date_changed = event_data.end_date is not None

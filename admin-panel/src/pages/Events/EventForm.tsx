@@ -157,6 +157,29 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       return
     }
     
+    // Check if trying to activate event with past end date/time
+    const willBeActive = data.is_active !== undefined ? data.is_active : (event?.is_active ?? true)
+    if (willBeActive && endDate && endTime) {
+      try {
+        const parseDate = (dateStr: string, timeStr: string): Date => {
+          const [day, month, year] = dateStr.split('.')
+          const [hours, minutes] = timeStr.split(':')
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes))
+        }
+        
+        const endDt = parseDate(endDate, endTime)
+        const now = new Date()
+        
+        if (endDt <= now) {
+          alert('Cannot activate event with end date and time in the past')
+          setValue('is_active', false, { shouldValidate: true })
+          return
+        }
+      } catch (e) {
+        // Invalid format will be caught by other validators
+      }
+    }
+    
     setLoading(true)
     try {
       const payload = { ...data, djs: djs.length > 0 ? djs : null }

@@ -40,18 +40,27 @@ def set_scheduler(scheduler):
 
 def deactivate_event_and_tickets(event_id: int):
     """Deactivate an event and mark all its tickets as expired."""
+    logger.info("=" * 60)
+    logger.info(f"⏰ EXECUTING: Deactivating event {event_id} and expiring tickets")
+    logger.info(f"   Current time: {datetime.now()}")
+    
     db: Session = SessionLocal()
     try:
         # Get event
         event = db.query(Event).filter(Event.id == event_id).first()
         if not event:
-            logger.warning(f"Event {event_id} not found, skipping deactivation")
+            logger.warning(f"❌ Event {event_id} not found, skipping deactivation")
             return
+        
+        logger.info(f"✅ Event found: ID={event.id}, Name='{event.name}'")
+        logger.info(f"   Event current status: is_active={event.is_active}")
         
         # Deactivate event
         if event.is_active:
             event.is_active = False
-            logger.info(f"Deactivated event {event_id} ({event.name})")
+            logger.info(f"🔄 Deactivated event {event_id} ({event.name})")
+        else:
+            logger.info(f"ℹ️  Event {event_id} is already inactive, skipping deactivation")
         
         # Mark all active tickets for this event as expired
         tickets = db.query(Ticket).filter(
@@ -59,18 +68,26 @@ def deactivate_event_and_tickets(event_id: int):
             Ticket.status == TicketStatus.ACTIVE
         ).all()
         
+        logger.info(f"📋 Found {len(tickets)} active ticket(s) for event {event_id}")
+        
         expired_count = 0
         for ticket in tickets:
             ticket.status = TicketStatus.EXPIRED
             expired_count += 1
+            logger.debug(f"   Expired ticket {ticket.id} (token: {ticket.token})")
         
         if expired_count > 0:
-            logger.info(f"Marked {expired_count} ticket(s) as expired for event {event_id}")
+            logger.info(f"✅ Marked {expired_count} ticket(s) as expired for event {event_id}")
+        else:
+            logger.info(f"ℹ️  No active tickets to expire for event {event_id}")
         
         db.commit()
-        logger.info(f"Successfully deactivated event {event_id} and expired {expired_count} ticket(s)")
+        logger.info(f"✅ Successfully completed deactivation:")
+        logger.info(f"   Event {event_id} deactivated: {not event.is_active}")
+        logger.info(f"   Tickets expired: {expired_count}")
+        logger.info("=" * 60)
     except Exception as e:
-        logger.error(f"Error deactivating event {event_id}: {e}", exc_info=True)
+        logger.error(f"❌ Error deactivating event {event_id}: {e}", exc_info=True)
         db.rollback()
         raise
     finally:
@@ -88,7 +105,12 @@ async def schedule_event_deactivation(request: ScheduleEventDeactivationRequest)
     """Schedule deactivation of a specific event at a specific time."""
     global _scheduler
     
+    logger.info("=" * 60)
+    logger.info(f"📅 RECEIVED REQUEST: Schedule deactivation for event {request.event_id}")
+    logger.info(f"   Deactivation datetime: {request.deactivation_datetime}")
+    
     if _scheduler is None:
+        logger.error("❌ Scheduler not initialized!")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Scheduler not initialized"
@@ -97,9 +119,15 @@ async def schedule_event_deactivation(request: ScheduleEventDeactivationRequest)
     try:
         # Parse datetime
         deactivation_dt = datetime.fromisoformat(request.deactivation_datetime.replace('Z', '+00:00'))
+        current_time = datetime.now(deactivation_dt.tzinfo) if deactivation_dt.tzinfo else datetime.now()
+        
+        logger.info(f"   Parsed datetime: {deactivation_dt}")
+        logger.info(f"   Current time: {current_time}")
+        logger.info(f"   Time until deactivation: {deactivation_dt - current_time}")
         
         # Check if datetime is in the future
-        if deactivation_dt <= datetime.now(deactivation_dt.tzinfo):
+        if deactivation_dt <= current_time:
+            logger.warning(f"⚠️  Deactivation datetime is in the past! Rejecting request.")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Deactivation datetime must be in the future"
@@ -110,18 +138,27 @@ async def schedule_event_deactivation(request: ScheduleEventDeactivationRequest)
         try:
             event = db.query(Event).filter(Event.id == request.event_id).first()
             if not event:
+                logger.error(f"❌ Event {request.event_id} not found in database!")
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Event {request.event_id} not found"
                 )
+            
+            logger.info(f"✅ Event found: ID={event.id}, Name='{event.name}'")
+            logger.info(f"   Event is_active: {event.is_active}")
+            logger.info(f"   Event start: {event.start_date} {event.start_time}")
+            logger.info(f"   Event end: {event.end_date} {event.end_time}")
         finally:
             db.close()
         
         # Remove existing job for this event if it exists
         job_id = f"deactivate_event_{request.event_id}"
-        if _scheduler.get_job(job_id):
+        existing_job = _scheduler.get_job(job_id)
+        if existing_job:
+            logger.info(f"🔄 Removing existing deactivation job for event {request.event_id}")
+            logger.info(f"   Previous scheduled time: {existing_job.next_run_time}")
             _scheduler.remove_job(job_id)
-            logger.info(f"Removed existing deactivation job for event {request.event_id}")
+            logger.info(f"✅ Existing job removed")
         
         # Schedule new job
         from apscheduler.triggers.date import DateTrigger
@@ -135,7 +172,11 @@ async def schedule_event_deactivation(request: ScheduleEventDeactivationRequest)
             args=[request.event_id]
         )
         
-        logger.info(f"Scheduled deactivation of event {request.event_id} for {deactivation_dt}")
+        logger.info(f"✅ Successfully scheduled deactivation job")
+        logger.info(f"   Job ID: {job_id}")
+        logger.info(f"   Scheduled time: {deactivation_dt}")
+        logger.info(f"   Event will be deactivated and all tickets expired at this time")
+        logger.info("=" * 60)
         
         return ScheduleEventDeactivationResponse(
             success=True,
