@@ -6,6 +6,7 @@ from decimal import Decimal
 
 from api.models.ticket import TicketStatus
 from api.models.payment import PaymentStatus
+from api.models.support_message import SupportMessageStatus
 
 
 # User schemas
@@ -286,4 +287,42 @@ class ClubSettingsUpdate(BaseModel):
     email: str | None = None
     auto_deactivate_events: bool | None = None
     timezone: str | None = None
+
+
+# SupportMessage schemas
+class SupportMessageResponse(BaseModel):
+    """Schema for support message response."""
+    id: int
+    user_id: int
+    message: str
+    status: SupportMessageStatus
+    admin_response: Optional[str] = None
+    responded_at: Optional[datetime] = None
+    responded_by: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+    # Related data
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class SupportMessageCreate(BaseModel):
+    """Schema for creating a support message."""
+    user_id: int
+    message: str
+
+
+class SupportMessageUpdate(BaseModel):
+    """Schema for updating a support message."""
+    status: Optional[SupportMessageStatus] = None
+    admin_response: Optional[str] = None
+
+
+class SupportMessageListResponse(BaseModel):
+    """Schema for list of support messages."""
+    messages: List[SupportMessageResponse]
 

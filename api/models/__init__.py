@@ -9,6 +9,7 @@ from api.models.promocode import Promocode
 from api.models.order import Order
 from api.models.expiration_settings import ExpirationSettings
 from api.models.club_settings import ClubSettings
+from api.models.support_message import SupportMessage, SupportMessageStatus
 
 __all__ = [
     "User",
@@ -23,5 +24,7 @@ __all__ = [
     "Order",
     "ExpirationSettings",
     "ClubSettings",
+    "SupportMessage",
+    "SupportMessageStatus",
 ]
 

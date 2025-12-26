@@ -27,6 +27,7 @@ from api.models import (
     Order,
     ExpirationSettings,
     ClubSettings,
+    SupportMessage,
 )
 
 # Import all models to ensure they are registered with Base
@@ -155,7 +156,7 @@ def init_database():
         # Check for critical tables that should exist
         required_tables = [
             "users", "events", "tickets", "payments", "orders", 
-            "promocodes", "ticket_types", "ticket_type_templates", "expiration_settings", "club_settings"
+            "promocodes", "ticket_types", "ticket_type_templates", "expiration_settings", "club_settings", "support_messages"
         ]
         
         missing_tables = []

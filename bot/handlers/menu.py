@@ -182,14 +182,38 @@ async def handle_support_message(message: Message, state: FSMContext):
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to set reaction on support message: {e}")
     
-    # TODO: Send message to support/admin
-    # For now, just confirm receipt
-    
-    # This message is NOT temporary - it's feedback, should remain
-    # Don't delete it - it's not a temporary message
-    
+    # Send message to support/admin via API
     locale = get_user_locale(message.from_user.language_code)
-    confirmation_text = t(locale, "messages.support_received")
+    
+    # Get or create user first
+    from bot.services.api_service import api_service
+    user_data = await api_service.create_or_update_user(
+        telegram_user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
+    )
+    
+    if not user_data:
+        # If user creation fails, still show confirmation but log error
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create/update user for support message: telegram_user_id={message.from_user.id}")
+        confirmation_text = t(locale, "messages.support_received")
+    else:
+        # Create support message
+        user_id = user_data.get("id")
+        if user_id:
+            support_result = await api_service.create_support_message(
+                user_id=user_id,
+                message=support_message
+            )
+            if not support_result:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to create support message for user_id={user_id}")
+        
+        confirmation_text = t(locale, "messages.support_received")
 
     user_id = message.from_user.id
 

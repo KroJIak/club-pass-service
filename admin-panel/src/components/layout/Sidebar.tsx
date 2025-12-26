@@ -15,11 +15,13 @@ import {
   LocalOffer as PromocodeIcon,
   QrCodeScanner as QrCodeIcon,
   Business as BusinessIcon,
+  Support as SupportIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const menuItems = [
   { text: 'QR Scanner', icon: <QrCodeIcon />, path: '/qr-scanner' },
+  { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Events', icon: <EventIcon />, path: '/events' },
   { text: 'Users', icon: <UsersIcon />, path: '/users' },
   { text: 'Tickets', icon: <TicketIcon />, path: '/tickets' },

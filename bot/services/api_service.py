@@ -201,6 +201,27 @@ class APIService:
         except httpx.HTTPError as e:
             print(f"Error fetching club settings: {e}")
             return None
+    
+    async def create_support_message(self, user_id: int, message: str) -> Optional[Dict[str, Any]]:
+        """Create a support message."""
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/v1/users/support-messages",
+                json={"user_id": user_id, "message": message}
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error creating support message: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json().get("detail", str(e))
+                    logger.error(f"Error detail: {error_detail}")
+                except:
+                    pass
+            return None
 
 
 # Global instance

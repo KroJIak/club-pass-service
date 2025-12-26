@@ -6,7 +6,8 @@ import logging
 from api.core.db import get_db
 from api.repositories.user_repository import UserRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
-from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse
+from api.repositories.support_message_repository import SupportMessageRepository
+from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -76,8 +77,31 @@ async def create_user(
         )
 
 
-# IMPORTANT: Specific routes (like /club-settings) must be defined BEFORE generic routes (like /{user_id})
-# Otherwise FastAPI will try to match /club-settings as /{user_id} and fail with 422
+# IMPORTANT: Specific routes (like /club-settings, /support-messages) must be defined BEFORE generic routes (like /{user_id})
+# Otherwise FastAPI will try to match them as /{user_id} and fail with 422
+@router.post("/support-messages", response_model=SupportMessageResponse, status_code=status.HTTP_201_CREATED)
+async def create_support_message(
+    message_data: SupportMessageCreate,
+    db: Session = Depends(get_db),
+):
+    """Create a support message from bot."""
+    try:
+        logger.info(f"Creating support message: user_id={message_data.user_id}, message_length={len(message_data.message)}")
+        support_message = SupportMessageRepository.create(
+            db=db,
+            user_id=message_data.user_id,
+            message=message_data.message,
+        )
+        logger.info(f"Support message created: id={support_message.id}")
+        return SupportMessageResponse.model_validate(support_message)
+    except Exception as e:
+        logger.error(f"Error creating support message: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating support message: {str(e)}"
+        )
+
+
 @router.get("/club-settings")
 async def get_club_settings_public(
     db: Session = Depends(get_db),

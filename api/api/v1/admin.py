@@ -21,6 +21,7 @@ from api.repositories.order_repository import OrderRepository
 from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
+from api.repositories.support_message_repository import SupportMessageRepository
 from api.services.ticket_service import TicketService
 from api.services.event_scheduling_service import schedule_event_deactivation, cancel_event_deactivation
 from api.api.v1.schemas import (
@@ -34,8 +35,12 @@ from api.api.v1.schemas import (
     ExpirationSettingsUpdate,
     ClubSettingsResponse,
     ClubSettingsUpdate,
+    SupportMessageResponse,
+    SupportMessageCreate,
+    SupportMessageUpdate,
+    SupportMessageListResponse,
 )
-from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, Promocode
+from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, Promocode, SupportMessage
 from api.models.ticket import TicketStatus
 from api.models.payment import PaymentStatus
 
@@ -1414,3 +1419,201 @@ async def update_club_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update club settings: {str(e)}"
         )
+
+
+# Support Messages CRUD
+@router.get("/admin/support-messages", response_model=SupportMessageListResponse)
+async def get_all_support_messages(
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all support messages (admin only)."""
+    from api.models.support_message import SupportMessageStatus
+    
+    status_filter = None
+    if status:
+        try:
+            status_filter = SupportMessageStatus(status)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status: {status}. Must be one of: new, responded, closed"
+            )
+    
+    messages = SupportMessageRepository.get_all(db, status=status_filter)
+    
+    # Populate user info
+    result = []
+    for msg in messages:
+        msg_dict = SupportMessageResponse.model_validate(msg).model_dump()
+        if msg.user:
+            msg_dict['username'] = msg.user.username
+            msg_dict['first_name'] = msg.user.first_name
+            msg_dict['last_name'] = msg.user.last_name
+        result.append(SupportMessageResponse(**msg_dict))
+    
+    return SupportMessageListResponse(messages=result)
+
+
+@router.get("/admin/support-messages/{message_id}", response_model=SupportMessageResponse)
+async def get_support_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get a support message by ID (admin only)."""
+    message = SupportMessageRepository.get_by_id(db, message_id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    msg_dict = SupportMessageResponse.model_validate(message).model_dump()
+    if message.user:
+        msg_dict['username'] = message.user.username
+        msg_dict['first_name'] = message.user.first_name
+        msg_dict['last_name'] = message.user.last_name
+    
+    return SupportMessageResponse(**msg_dict)
+
+
+@router.put("/admin/support-messages/{message_id}/respond", response_model=SupportMessageResponse)
+async def respond_to_support_message(
+    message_id: int,
+    response_data: dict,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Respond to a support message (admin only)."""
+    from api.models.support_message import SupportMessageStatus
+    import os
+    import httpx
+    
+    message = SupportMessageRepository.get_by_id(db, message_id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    admin_response = response_data.get('admin_response')
+    if not admin_response:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="admin_response is required"
+        )
+    
+    admin_username = current_admin.get("sub", "admin")
+    
+    updated_message = SupportMessageRepository.update(
+        db=db,
+        message_id=message_id,
+        status=SupportMessageStatus.RESPONDED,
+        admin_response=admin_response,
+        responded_by=admin_username,
+    )
+    
+    if not updated_message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    # Send response to user via bot using Telegram Bot API
+    try:
+        # Get user's telegram_user_id
+        telegram_user_id = message.user.telegram_user_id if message.user else None
+        
+        if telegram_user_id:
+            # Use Telegram Bot API directly
+            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+            if bot_token:
+                bot_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+                
+                # Format message with quote
+                formatted_message = (
+                    f"<blockquote>{message.message}</blockquote>\n\n"
+                    f"{admin_response}"
+                )
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        bot_api_url,
+                        json={
+                            "chat_id": telegram_user_id,
+                            "text": formatted_message,
+                            "parse_mode": "HTML",
+                        },
+                        timeout=10.0,
+                    )
+                    if response.status_code != 200:
+                        logger.warning(f"Failed to send message to user {telegram_user_id}: {response.text}")
+            else:
+                logger.warning("TELEGRAM_BOT_TOKEN not configured, cannot send support response")
+        else:
+            logger.warning(f"User {message.user_id} has no telegram_user_id, cannot send support response")
+    except Exception as e:
+        logger.error(f"Error sending support response to user: {e}", exc_info=True)
+        # Don't fail the request if sending fails - message is already saved
+    
+    msg_dict = SupportMessageResponse.model_validate(updated_message).model_dump()
+    if updated_message.user:
+        msg_dict['username'] = updated_message.user.username
+        msg_dict['first_name'] = updated_message.user.first_name
+        msg_dict['last_name'] = updated_message.user.last_name
+    
+    return SupportMessageResponse(**msg_dict)
+
+
+@router.put("/admin/support-messages/{message_id}", response_model=SupportMessageResponse)
+async def update_support_message(
+    message_id: int,
+    message_data: SupportMessageUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update a support message (admin only)."""
+    message = SupportMessageRepository.get_by_id(db, message_id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    updated_message = SupportMessageRepository.update(
+        db=db,
+        message_id=message_id,
+        status=message_data.status,
+        admin_response=message_data.admin_response,
+    )
+    
+    if not updated_message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    msg_dict = SupportMessageResponse.model_validate(updated_message).model_dump()
+    if updated_message.user:
+        msg_dict['username'] = updated_message.user.username
+        msg_dict['first_name'] = updated_message.user.first_name
+        msg_dict['last_name'] = updated_message.user.last_name
+    
+    return SupportMessageResponse(**msg_dict)
+
+
+@router.delete("/admin/support-messages/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_support_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete a support message (admin only)."""
+    if not SupportMessageRepository.delete(db, message_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    return None

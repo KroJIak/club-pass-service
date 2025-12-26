@@ -505,7 +505,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       <TicketTypeTemplateForm
         open={templateFormOpen}
         onClose={() => setTemplateFormOpen(false)}
-        onSuccess={() => {
+        onSuccess={async () => {
+          await fetchTemplates()
           setTemplateFormOpen(false)
         }}
       />
