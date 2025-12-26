@@ -481,12 +481,27 @@ async def delete_event(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Delete an event (hard delete)."""
+    from api.models.order import Order
+    from api.models.ticket import Ticket
+    
     event = EventRepository.get_by_id(db, event_id)
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Event with id {event_id} not found"
         )
+    
+    # Explicitly delete related orders first to avoid constraint violations
+    # Orders have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
+    orders = db.query(Order).filter(Order.event_id == event_id).all()
+    for order in orders:
+        db.delete(order)
+    
+    # Explicitly delete related tickets first to avoid constraint violations
+    # Tickets have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
+    tickets = db.query(Ticket).filter(Ticket.event_id == event_id).all()
+    for ticket in tickets:
+        db.delete(ticket)
     
     db.delete(event)
     db.commit()
