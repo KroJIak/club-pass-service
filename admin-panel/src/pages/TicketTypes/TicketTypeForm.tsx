@@ -219,39 +219,60 @@ const TicketTypeForm = ({
           error={!!errors.name}
           helperText={errors.name?.message}
         />
-        <TextField
-          label="Price"
-          type="number"
-          {...control.register('price', { 
-            required: 'Price is required',
-            min: { value: 0, message: 'Price must be positive' }
-          })}
-          error={!!errors.price}
-          helperText={errors.price?.message}
+        <Controller
+          name="price"
+          control={control}
+          rules={{ required: 'Price is required', min: { value: 0, message: 'Price must be positive' } }}
+          render={({ field }) => (
+            <TextField
+              label="Price"
+              type="number"
+              {...field}
+              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+              error={!!errors.price}
+              helperText={errors.price?.message}
+            />
+          )}
         />
-        <TextField
-          label="Available Quantity"
-          type="number"
-          {...control.register('available_quantity', { 
-            required: 'Available quantity is required',
-            min: { value: 0, message: 'Quantity must be non-negative' }
-          })}
-          error={!!errors.available_quantity}
-          helperText={errors.available_quantity?.message}
+        <Controller
+          name="available_quantity"
+          control={control}
+          rules={{ required: 'Available quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+          render={({ field }) => (
+            <TextField
+              label="Available Quantity"
+              type="number"
+              {...field}
+              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              error={!!errors.available_quantity}
+              helperText={errors.available_quantity?.message}
+            />
+          )}
         />
-        <TextField
-          label="Total Quantity"
-          type="number"
-          {...control.register('total_quantity', { 
-            required: 'Total quantity is required',
-            min: { value: 0, message: 'Quantity must be non-negative' }
-          })}
-          error={!!errors.total_quantity}
-          helperText={errors.total_quantity?.message}
+        <Controller
+          name="total_quantity"
+          control={control}
+          rules={{ required: 'Total quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+          render={({ field }) => (
+            <TextField
+              label="Total Quantity"
+              type="number"
+              {...field}
+              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              error={!!errors.total_quantity}
+              helperText={errors.total_quantity?.message}
+            />
+          )}
         />
-        <BooleanField
-          label="Active"
-          {...control.register('is_active')}
+        <Controller
+          name="is_active"
+          control={control}
+          render={({ field }) => (
+            <BooleanField
+              label="Active"
+              {...field}
+            />
+          )}
         />
       </DialogContent>
       <DialogActions>
