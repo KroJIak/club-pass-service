@@ -808,33 +808,11 @@ async def get_ticket(
 @router.put("/admin/tickets/{ticket_id}", response_model=TicketResponse)
 async def update_ticket(
     ticket_id: int,
-    request: Request,
+    ticket_data: TicketUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
     """Update a ticket."""
-    import json
-    
-    # Log raw request body BEFORE Pydantic parsing
-    try:
-        body = await request.body()
-        raw_json = json.loads(body.decode()) if body else {}
-        logger.info(f"=== RAW REQUEST BODY for ticket {ticket_id} ===")
-        logger.info(f"Raw JSON: {raw_json}")
-        logger.info(f"Raw JSON keys: {list(raw_json.keys()) if isinstance(raw_json, dict) else 'Not a dict'}")
-    except Exception as e:
-        logger.warning(f"Could not parse raw request body: {e}")
-        raw_json = {}
-    
-    # Parse with Pydantic
-    try:
-        ticket_data = TicketUpdate.model_validate(raw_json)
-    except Exception as e:
-        logger.error(f"Failed to parse TicketUpdate: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid ticket data: {str(e)}"
-        )
     
     ticket = TicketRepository.get_by_id(db, ticket_id)
     if not ticket:

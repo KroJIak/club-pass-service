@@ -18,6 +18,14 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  // Log request data for debugging
+  if (config.method === 'put' && config.url?.includes('/tickets/')) {
+    console.log('=== AXIOS REQUEST INTERCEPTOR ===')
+    console.log('URL:', config.url)
+    console.log('Method:', config.method)
+    console.log('Data:', config.data)
+    console.log('Data (stringified):', JSON.stringify(config.data))
+  }
   return config
 })
 
