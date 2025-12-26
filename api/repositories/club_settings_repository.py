@@ -16,7 +16,21 @@ class ClubSettingsRepository:
         Get club settings.
         Creates default settings if they don't exist.
         """
-        settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+        try:
+            settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+        except Exception as e:
+            # If timezone column doesn't exist, try to add it
+            logger.warning(f"Error querying club_settings, attempting to add timezone column: {e}")
+            try:
+                from sqlalchemy import text
+                db.execute(text("ALTER TABLE club_settings ADD COLUMN IF NOT EXISTS timezone VARCHAR DEFAULT 'Europe/Moscow' NOT NULL"))
+                db.commit()
+                logger.info("Added timezone column to club_settings table")
+                settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+            except Exception as add_col_error:
+                logger.error(f"Error adding timezone column: {add_col_error}", exc_info=True)
+                db.rollback()
+                raise
         
         if not settings:
             # Create default settings
