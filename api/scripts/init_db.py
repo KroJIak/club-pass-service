@@ -99,8 +99,9 @@ def apply_migrations():
         from alembic import command
         from alembic.config import Config
         
-        # Get the path to alembic.ini
-        api_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        # Get the path to alembic.ini (it's in the api directory)
+        script_dir = os.path.dirname(__file__)  # api/scripts/
+        api_dir = os.path.dirname(script_dir)  # api/
         alembic_ini_path = os.path.join(api_dir, "alembic.ini")
         
         if not os.path.exists(alembic_ini_path):
