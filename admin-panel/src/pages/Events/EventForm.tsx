@@ -378,17 +378,17 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                   Templates:
                 </Typography>
                 {templates.map((template) => (
-                  <Box key={template.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={() => {
-                        setSelectedTemplate(template)
-                        setTicketTypeFormOpen(true)
-                      }}
-                    >
-                      {template.name}
-                    </Button>
+                  <Button
+                    key={template.id}
+                    variant="outlined"
+                    size="small"
+                    onClick={() => {
+                      setSelectedTemplate(template)
+                      setTicketTypeFormOpen(true)
+                    }}
+                    sx={{ position: 'relative', pr: 4 }}
+                  >
+                    {template.name}
                     <IconButton
                       size="small"
                       color="error"
@@ -405,10 +405,17 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                         }
                       }}
                       title="Delete template"
+                      sx={{
+                        position: 'absolute',
+                        right: 4,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        padding: 0.5,
+                      }}
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>
-                  </Box>
+                  </Button>
                 ))}
               </Box>
             )}

@@ -102,23 +102,24 @@ const TicketTypesList = () => {
             Templates:
           </Typography>
           {templates.map((template) => (
-            <Box key={template.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  // Open form with template data
-                  setSelectedTemplate(template)
-                  setEditingTicketType(null)
-                  setFormOpen(true)
-                }}
-              >
-                {template.name}
-              </Button>
+            <Button
+              key={template.id}
+              variant="outlined"
+              size="small"
+              onClick={() => {
+                // Open form with template data
+                setSelectedTemplate(template)
+                setEditingTicketType(null)
+                setFormOpen(true)
+              }}
+              sx={{ position: 'relative', pr: 4 }}
+            >
+              {template.name}
               <IconButton
                 size="small"
                 color="error"
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.stopPropagation()
                   if (confirm(`Delete template "${template.name}"?`)) {
                     try {
                       await api.delete(`/admin/ticket-type-templates/${template.id}`)
@@ -130,10 +131,17 @@ const TicketTypesList = () => {
                   }
                 }}
                 title="Delete template"
+                sx={{
+                  position: 'absolute',
+                  right: 4,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  padding: 0.5,
+                }}
               >
                 <CloseIcon fontSize="small" />
               </IconButton>
-            </Box>
+            </Button>
           ))}
         </Box>
       )}
