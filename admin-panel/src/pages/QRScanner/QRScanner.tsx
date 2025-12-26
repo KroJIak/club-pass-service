@@ -244,7 +244,8 @@ const QRScanner = () => {
               sx={{
                 display: 'flex',
                 justifyContent: 'center',
-                gap: 1.5,
+                alignItems: 'center',
+                gap: 2,
                 mt: 2,
                 mb: 2,
               }}
@@ -254,15 +255,19 @@ const QRScanner = () => {
                   key={camera.id}
                   onClick={() => switchCamera(camera.id)}
                   sx={{
-                    width: 12,
-                    height: 12,
+                    width: selectedCameraId === camera.id ? 16 : 10,
+                    height: selectedCameraId === camera.id ? 16 : 10,
                     borderRadius: '50%',
                     backgroundColor: selectedCameraId === camera.id ? 'primary.main' : 'grey.400',
+                    border: selectedCameraId === camera.id ? '2px solid' : 'none',
+                    borderColor: selectedCameraId === camera.id ? 'primary.dark' : 'transparent',
                     cursor: 'pointer',
-                    transition: 'all 0.2s',
+                    transition: 'all 0.2s ease-in-out',
+                    boxShadow: selectedCameraId === camera.id ? '0 0 8px rgba(25, 118, 210, 0.5)' : 'none',
                     '&:hover': {
                       backgroundColor: selectedCameraId === camera.id ? 'primary.dark' : 'grey.500',
-                      transform: 'scale(1.2)',
+                      transform: 'scale(1.3)',
+                      boxShadow: selectedCameraId === camera.id ? '0 0 12px rgba(25, 118, 210, 0.7)' : '0 0 4px rgba(0, 0, 0, 0.2)',
                     },
                   }}
                   title={camera.label || `Camera ${index + 1}`}
