@@ -87,11 +87,6 @@ const TicketsList = () => {
     setTickets(filtered)
   }, [allTickets, filterState])
 
-  const handleEdit = (ticket: Ticket) => {
-    setEditingTicket(ticket)
-    setFormOpen(true)
-  }
-
   const toggleExpand = (ticketId: number) => {
     if (expandedTicket === ticketId) {
       setExpandedTicket(null)
