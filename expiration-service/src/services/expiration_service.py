@@ -25,12 +25,16 @@ class TicketExpirationService:
         Returns:
             datetime object in the configured timezone
         """
-        timezone_str = SettingsService.get_timezone(db)
         try:
-            tz = pytz.timezone(timezone_str)
-            return datetime.now(tz)
+            timezone_str = SettingsService.get_timezone(db)
+            try:
+                tz = pytz.timezone(timezone_str)
+                return datetime.now(tz)
+            except Exception as e:
+                logger.warning(f"Invalid timezone {timezone_str}, using UTC: {e}")
+                return datetime.utcnow()
         except Exception as e:
-            logger.warning(f"Invalid timezone {timezone_str}, using UTC: {e}")
+            logger.error(f"Error getting current time with timezone: {e}, using UTC")
             return datetime.utcnow()
     
     @staticmethod
@@ -51,12 +55,16 @@ class TicketExpirationService:
         naive_dt = datetime.combine(date_obj.date(), time_obj)
         
         # Convert to configured timezone
-        timezone_str = SettingsService.get_timezone(db)
         try:
-            tz = pytz.timezone(timezone_str)
-            return tz.localize(naive_dt)
+            timezone_str = SettingsService.get_timezone(db)
+            try:
+                tz = pytz.timezone(timezone_str)
+                return tz.localize(naive_dt)
+            except Exception as e:
+                logger.warning(f"Invalid timezone {timezone_str}, using naive datetime: {e}")
+                return naive_dt
         except Exception as e:
-            logger.warning(f"Invalid timezone {timezone_str}, using naive datetime: {e}")
+            logger.error(f"Error getting timezone for datetime parsing: {e}, using naive datetime")
             return naive_dt
     
     @staticmethod

@@ -103,18 +103,43 @@ class SettingsService:
             db: Database session
         
         Returns:
-            Timezone string (defaults to "Europe/Moscow" if settings don't exist)
+            Timezone string (defaults to "Europe/Moscow" if settings don't exist or column missing)
         """
         try:
-            result = db.execute(
-                text("SELECT timezone FROM club_settings WHERE id = 1")
-            ).first()
-            
-            if result and result[0]:
-                return str(result[0])
+            # First check if timezone column exists
+            try:
+                result = db.execute(
+                    text("SELECT timezone FROM club_settings WHERE id = 1")
+                ).first()
+                
+                if result and result[0]:
+                    return str(result[0])
+            except Exception as column_error:
+                # Column might not exist yet, try to add it
+                error_str = str(column_error).lower()
+                if "does not exist" in error_str or "undefined column" in error_str:
+                    logger.warning("Timezone column doesn't exist, attempting to add it...")
+                    try:
+                        db.execute(
+                            text("ALTER TABLE club_settings ADD COLUMN IF NOT EXISTS timezone VARCHAR DEFAULT 'Europe/Moscow' NOT NULL")
+                        )
+                        db.commit()
+                        logger.info("Added timezone column to club_settings table")
+                        # Try again after adding column
+                        result = db.execute(
+                            text("SELECT timezone FROM club_settings WHERE id = 1")
+                        ).first()
+                        if result and result[0]:
+                            return str(result[0])
+                    except Exception as add_error:
+                        logger.warning(f"Could not add timezone column: {add_error}, using default")
+                        db.rollback()
+                else:
+                    # Some other error, re-raise
+                    raise
             
             # Default to Europe/Moscow if settings don't exist
-            logger.warning("Club settings not found, defaulting to Europe/Moscow timezone")
+            logger.warning("Club settings not found or timezone is null, defaulting to Europe/Moscow timezone")
             return "Europe/Moscow"
         except Exception as e:
             logger.error(f"Error getting timezone setting: {e}")
