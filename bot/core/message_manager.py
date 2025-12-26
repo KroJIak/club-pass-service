@@ -313,10 +313,21 @@ async def edit_last_system_message_or_send(
 
 def format_event_message(locale: str, event: Dict[str, Any]) -> str:
     """Format event information message."""
+    # Format event date/time range
+    start_date = event.get('start_date', '')
+    start_time = event.get('start_time', '')
+    end_date = event.get('end_date', '')
+    end_time = event.get('end_time', '')
+    
+    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    if end_date and end_time:
+        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+    else:
+        event_datetime = f"{start_date} {start_time}"
+    
     return (
         f"🎉 <b>{event.get('name', t(locale, 'buttons.events'))}</b>\n\n"
-        f"📅 {event.get('date', '')}\n"
-        f"🕐 {event.get('time', '')}\n"
+        f"📅 {event_datetime}\n"
         f"📍 {event.get('location', '')}\n\n"
         f"{event.get('description', '')}"
     )

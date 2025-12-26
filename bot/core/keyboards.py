@@ -34,8 +34,20 @@ def get_events_keyboard(locale: str, events: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for event in events:
         event_name = event.get('name', 'Event')
-        event_date = event.get('date', '')
-        event_text = f"{event_name}\n{event_date}"
+        
+        # Format event date/time range
+        start_date = event.get('start_date', '')
+        start_time = event.get('start_time', '')
+        end_date = event.get('end_date', '')
+        end_time = event.get('end_time', '')
+        
+        # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+        if end_date and end_time:
+            event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        else:
+            event_datetime = f"{start_date} {start_time}"
+        
+        event_text = f"{event_name}\n{event_datetime}"
         builder.add(InlineKeyboardButton(
             text=event_text,
             callback_data=f"event_{event.get('id')}"
@@ -97,7 +109,9 @@ def get_tickets_keyboard(locale: str, tickets: list) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     for ticket in tickets:
         status_emoji = "✅" if ticket.get("status") == "active" else "❌"
-        ticket_text = f"{status_emoji} {ticket.get('event_name', 'Event')}\n{ticket.get('event_date', '')} {ticket.get('event_time', '')}"
+        # event_date already contains formatted datetime range from tickets handler
+        event_datetime = ticket.get('event_date', '')
+        ticket_text = f"{status_emoji} {ticket.get('event_name', 'Event')}\n{event_datetime}"
         builder.add(InlineKeyboardButton(
             text=ticket_text,
             callback_data=f"ticket_{ticket.get('id')}"

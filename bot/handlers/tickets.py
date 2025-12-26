@@ -41,11 +41,23 @@ async def handle_my_tickets(callback: CallbackQuery, state: FSMContext):
         ticket_type = ticket.get("ticket_type", {})
         event_name = event.get("name", "")
         
+        # Format event date/time range
+        start_date = event.get("start_date", "")
+        start_time = event.get("start_time", "")
+        end_date = event.get("end_date", "")
+        end_time = event.get("end_time", "")
+        
+        # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+        if end_date and end_time:
+            event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+        else:
+            event_datetime = f"{start_date} {start_time}"
+        
         formatted_tickets.append({
             "id": ticket.get("id"),
             "event_name": event_name,
-            "event_date": event.get("date", ""),
-            "event_time": event.get("time", ""),
+            "event_date": event_datetime,
+            "event_time": "",  # Keep for backward compatibility but not used
             "ticket_type": ticket_type.get("name", ""),
             "status": ticket.get("status", "active"),
         })

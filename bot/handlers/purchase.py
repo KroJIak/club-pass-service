@@ -81,12 +81,25 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
     
     djs = event.get("djs", [])
     djs_text = ", ".join(djs) if djs else event.get("name", "")
+    
+    # Format event date/time range
+    start_date = event.get("start_date", "")
+    start_time = event.get("start_time", "")
+    end_date = event.get("end_date", "")
+    end_time = event.get("end_time", "")
+    
+    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    if end_date and end_time:
+        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+    else:
+        event_datetime = f"{start_date} {start_time}"
+    
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
         event_name=djs_text,
-        event_date=event.get("date", ""),
-        event_time=event.get("time", ""),
+        event_date=event_datetime,
+        event_time="",  # Keep for backward compatibility but not used
     )
     
     await safe_edit_message(
@@ -175,12 +188,25 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     total_price_formatted = int(total_price) if total_price.is_integer() else total_price
     
     event_name = event.get("name", "")
+    
+    # Format event date/time range
+    start_date = event.get("start_date", "")
+    start_time = event.get("start_time", "")
+    end_date = event.get("end_date", "")
+    end_time = event.get("end_time", "")
+    
+    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    if end_date and end_time:
+        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+    else:
+        event_datetime = f"{start_date} {start_time}"
+    
     text = t(
         locale,
         "messages.purchase.confirm_order",
         event_name=event_name,
-        event_date=event.get("date", ""),
-        event_time=event.get("time", ""),
+        event_date=event_datetime,
+        event_time="",  # Keep for backward compatibility but not used
         ticket_type_name=ticket_type.get("name", ""),
         quantity=quantity,
         price_per_ticket=price_per_ticket_formatted,
@@ -434,12 +460,25 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     ticket_types = await api_service.get_ticket_types(event_id)
     
     event_name = event.get("name", "")
+    
+    # Format event date/time range
+    start_date = event.get("start_date", "")
+    start_time = event.get("start_time", "")
+    end_date = event.get("end_date", "")
+    end_time = event.get("end_time", "")
+    
+    # Format as "DD.MM.YYYY HH:MM - DD.MM.YYYY HH:MM" or just start if end is missing
+    if end_date and end_time:
+        event_datetime = f"{start_date} {start_time} - {end_date} {end_time}"
+    else:
+        event_datetime = f"{start_date} {start_time}"
+    
     text = t(
         locale,
         "messages.purchase.select_ticket_type",
         event_name=event_name,
-        event_date=event.get("date", ""),
-        event_time=event.get("time", ""),
+        event_date=event_datetime,
+        event_time="",  # Keep for backward compatibility but not used
     )
     
     await safe_edit_message(
