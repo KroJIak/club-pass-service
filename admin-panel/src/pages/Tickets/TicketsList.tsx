@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Card, CardContent, Grid, Typography, Chip, IconButton } from '@mui/material'
+import { Box, Card, CardContent, Grid, Typography, Chip, IconButton, Button } from '@mui/material'
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Ticket } from '../../types'
@@ -113,7 +113,19 @@ const TicketsList = () => {
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Tickets</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6">Tickets</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            setEditingTicket(null)
+            setFormOpen(true)
+          }}
+        >
+          Create New
+        </Button>
+      </Box>
       <Grid container spacing={3}>
         {tickets.map((ticket) => (
           <Grid item xs={12} sm={6} md={4} key={ticket.id}>
@@ -122,15 +134,25 @@ const TicketsList = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>Ticket #{ticket.id}</Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    {ticket.event && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Event: {ticket.event.name}
+                      </Typography>
+                    )}
+                    {ticket.ticket_type && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Type: {ticket.ticket_type.name}
+                      </Typography>
+                    )}
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                       Token: {ticket.token}
                     </Typography>
                     {ticket.username ? (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         @{ticket.username}
                       </Typography>
                     ) : (ticket.first_name || ticket.last_name) ? (
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         {`${ticket.first_name || ''} ${ticket.last_name || ''}`.trim()}
                       </Typography>
                     ) : null}

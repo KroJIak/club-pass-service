@@ -26,7 +26,7 @@ from api.api.v1.schemas import (
     EventResponse, EventListResponse,
     TicketTypeResponse, TicketTypeListResponse,
     UserResponse, UserCreate, UserUpdate,
-    TicketResponse, TicketDetailResponse, TicketUpdate, TicketMarkUsedResponse,
+    TicketResponse, TicketDetailResponse, TicketCreate, TicketUpdate, TicketMarkUsedResponse,
     PaymentResponse,
     ExpirationSettingsResponse,
     ExpirationSettingsUpdate,
@@ -697,9 +697,81 @@ async def get_all_tickets(
             ticket_data.username = user.username
             ticket_data.first_name = user.first_name
             ticket_data.last_name = user.last_name
+        # Event and ticket_type should be loaded via joinedload, but ensure they're set
+        if ticket.event:
+            ticket_data.event = EventResponse.model_validate(ticket.event)
+        if ticket.ticket_type:
+            ticket_data.ticket_type = TicketTypeResponse.model_validate(ticket.ticket_type)
         ticket_responses.append(ticket_data)
     
     return TicketListResponse(tickets=ticket_responses)
+
+
+@router.post("/admin/tickets", response_model=TicketResponse, status_code=status.HTTP_201_CREATED)
+async def create_ticket(
+    ticket_data: TicketCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Create a new ticket."""
+    # Validate user exists
+    user = UserRepository.get_by_id(db, ticket_data.user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with id {ticket_data.user_id} not found"
+        )
+    
+    # Validate event exists
+    event = EventRepository.get_by_id(db, ticket_data.event_id)
+    if not event:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Event with id {ticket_data.event_id} not found"
+        )
+    
+    # Validate ticket type exists and belongs to the event
+    ticket_type = TicketTypeRepository.get_by_id(db, ticket_data.ticket_type_id)
+    if not ticket_type:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ticket type with id {ticket_data.ticket_type_id} not found"
+        )
+    if ticket_type.event_id != ticket_data.event_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ticket type {ticket_data.ticket_type_id} does not belong to event {ticket_data.event_id}"
+        )
+    
+    # Create ticket
+    try:
+        ticket = TicketRepository.create(
+            db,
+            user_id=ticket_data.user_id,
+            event_id=ticket_data.event_id,
+            ticket_type_id=ticket_data.ticket_type_id,
+            token=ticket_data.token,
+            status=ticket_data.status,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    
+    # Load related data for response
+    ticket = TicketRepository.get_by_id(db, ticket.id)
+    ticket_response = TicketResponse.model_validate(ticket)
+    if ticket.user:
+        ticket_response.username = ticket.user.username
+        ticket_response.first_name = ticket.user.first_name
+        ticket_response.last_name = ticket.user.last_name
+    if ticket.event:
+        ticket_response.event = EventResponse.model_validate(ticket.event)
+    if ticket.ticket_type:
+        ticket_response.ticket_type = TicketTypeResponse.model_validate(ticket.ticket_type)
+    
+    return ticket_response
 
 
 @router.get("/admin/tickets/{ticket_id}", response_model=TicketDetailResponse)

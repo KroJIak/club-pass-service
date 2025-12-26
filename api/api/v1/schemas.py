@@ -106,6 +106,15 @@ class TicketResponse(BaseModel):
         from_attributes = True
 
 
+class TicketCreate(BaseModel):
+    """Schema for creating a ticket."""
+    user_id: int
+    event_id: int
+    ticket_type_id: int
+    token: Optional[str] = None  # If not provided, will be auto-generated
+    status: Optional[TicketStatus] = TicketStatus.ACTIVE
+
+
 class TicketUpdate(BaseModel):
     """Schema for updating a ticket."""
     status: Optional[TicketStatus] = None

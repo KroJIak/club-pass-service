@@ -46,6 +46,8 @@ export interface Ticket {
   username: string | null
   first_name: string | null
   last_name: string | null
+  event: Event | null
+  ticket_type: TicketType | null
 }
 
 export interface Payment {
@@ -143,6 +145,14 @@ export interface UserUpdate {
   username?: string | null
   first_name?: string | null
   last_name?: string | null
+}
+
+export interface TicketCreate {
+  user_id: number
+  event_id: number
+  ticket_type_id: number
+  token?: string | null
+  status?: 'active' | 'refunded' | 'cancelled' | 'expired' | 'used' | null
 }
 
 export interface TicketUpdate {

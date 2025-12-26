@@ -64,20 +64,31 @@ class TicketRepository:
         user_id: int,
         event_id: int,
         ticket_type_id: int,
+        token: Optional[str] = None,
+        status: Optional[TicketStatus] = None,
     ) -> Ticket:
         """Create a new ticket."""
-        # Generate unique token
-        token = TicketRepository._generate_token()
-        # Ensure token is unique
-        while TicketRepository.get_by_token(db, token):
+        # Generate unique token if not provided
+        if token is None:
             token = TicketRepository._generate_token()
+            # Ensure token is unique
+            while TicketRepository.get_by_token(db, token):
+                token = TicketRepository._generate_token()
+        else:
+            # Check if provided token is unique
+            if TicketRepository.get_by_token(db, token):
+                raise ValueError(f"Token {token} already exists")
+        
+        # Use provided status or default to ACTIVE
+        if status is None:
+            status = TicketStatus.ACTIVE
         
         ticket = Ticket(
             user_id=user_id,
             event_id=event_id,
             ticket_type_id=ticket_type_id,
             token=token,
-            status=TicketStatus.ACTIVE,
+            status=status,
         )
         db.add(ticket)
         db.commit()
