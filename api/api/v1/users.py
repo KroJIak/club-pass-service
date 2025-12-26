@@ -144,18 +144,13 @@ async def delete_user(
         )
 
 
-@router.get("/club-settings", response_model=ClubSettingsResponse)
+@router.get("/club-settings")
 async def get_club_settings_public(
     db: Session = Depends(get_db),
 ):
     """Get club settings (public endpoint for bot)."""
     try:
         settings = ClubSettingsRepository.get_settings(db)
-        
-        # Log settings object for debugging
-        logger.debug(f"Settings object: {settings}")
-        logger.debug(f"Settings type: {type(settings)}")
-        logger.debug(f"Settings attributes: {dir(settings)}")
         
         # Handle case where auto_deactivate_events might not exist in DB
         try:
@@ -172,33 +167,19 @@ async def get_club_settings_public(
             updated_at = datetime.utcnow()
             logger.warning("updated_at was None, using current time")
         
-        # Build response dict
+        # Build response dict - return directly without Pydantic validation
+        # FastAPI will serialize datetime automatically
         response_data = {
-            "id": settings.id,
-            "address": settings.address,
-            "phone": settings.phone,
-            "email": settings.email,
-            "auto_deactivate_events": auto_deactivate,
-            "updated_at": updated_at
+            "id": int(settings.id),
+            "address": settings.address if settings.address else None,
+            "phone": settings.phone if settings.phone else None,
+            "email": settings.email if settings.email else None,
+            "auto_deactivate_events": bool(auto_deactivate),  # Ensure it's a bool
+            "updated_at": updated_at  # FastAPI will serialize datetime automatically
         }
         
-        logger.debug(f"Response data: {response_data}")
-        logger.debug(f"Response data types: {[(k, type(v)) for k, v in response_data.items()]}")
-        
-        # Try to create response and log any validation errors
-        try:
-            response = ClubSettingsResponse(**response_data)
-            logger.debug(f"Response created successfully: {response}")
-            return response
-        except Exception as validation_error:
-            logger.error(f"Pydantic validation error: {validation_error}", exc_info=True)
-            logger.error(f"Failed data: {response_data}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Validation error: {str(validation_error)}"
-            )
-    except HTTPException:
-        raise
+        logger.debug(f"Returning club settings: {response_data}")
+        return response_data
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
         raise HTTPException(
