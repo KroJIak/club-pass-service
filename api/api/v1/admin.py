@@ -988,7 +988,7 @@ async def update_expiration_settings(
 
 
 # Club Settings endpoints
-@router.get("/admin/club-settings", response_model=ClubSettingsResponse)
+@router.get("/admin/club-settings")
 async def get_club_settings(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
@@ -1003,19 +1003,24 @@ async def get_club_settings(
     except AttributeError:
         auto_deactivate = True
     
+    # Ensure updated_at is a datetime object
+    updated_at = settings.updated_at
+    if updated_at is None:
+        updated_at = datetime.utcnow()
+    
     response_data = {
-        "id": settings.id,
-        "address": settings.address,
-        "phone": settings.phone,
-        "email": settings.email,
-        "auto_deactivate_events": auto_deactivate,
-        "updated_at": settings.updated_at
+        "id": int(settings.id),
+        "address": settings.address if settings.address else None,
+        "phone": settings.phone if settings.phone else None,
+        "email": settings.email if settings.email else None,
+        "auto_deactivate_events": bool(auto_deactivate),
+        "updated_at": updated_at
     }
     
-    return ClubSettingsResponse(**response_data)
+    return response_data
 
 
-@router.put("/admin/club-settings", response_model=ClubSettingsResponse)
+@router.put("/admin/club-settings")
 async def update_club_settings(
     settings_update: ClubSettingsUpdate,
     db: Session = Depends(get_db),
@@ -1030,7 +1035,22 @@ async def update_club_settings(
             email=settings_update.email,
             auto_deactivate_events=settings_update.auto_deactivate_events
         )
-        return ClubSettingsResponse.model_validate(settings)
+        
+        # Ensure updated_at is a datetime object
+        updated_at = settings.updated_at
+        if updated_at is None:
+            updated_at = datetime.utcnow()
+        
+        response_data = {
+            "id": int(settings.id),
+            "address": settings.address if settings.address else None,
+            "phone": settings.phone if settings.phone else None,
+            "email": settings.email if settings.email else None,
+            "auto_deactivate_events": bool(settings.auto_deactivate_events),
+            "updated_at": updated_at
+        }
+        
+        return response_data
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
