@@ -18,12 +18,13 @@ import { Ticket, TicketCreate, TicketUpdate, Event, TicketType, User } from '../
 import TextField from '../../components/forms/TextField'
 
 interface TicketFormProps {
-  open: boolean
+  open?: boolean
   ticket: Ticket | null
   onClose: () => void
+  embedded?: boolean
 }
 
-const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
+const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFormProps) => {
   const [loading, setLoading] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -215,11 +216,10 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
     return `ID: ${user.telegram_user_id}`
   }
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>{isEditMode ? 'Edit Ticket' : 'Create Ticket'}</DialogTitle>
-        <DialogContent>
+  const content = (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {!embedded && <DialogTitle>{isEditMode ? 'Edit Ticket' : 'Create Ticket'}</DialogTitle>}
+      <DialogContent sx={{ px: embedded ? 0 : 2.98 }}>
           {!isEditMode && (
             <>
               {/* Event selection */}
@@ -305,7 +305,7 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
               />
 
               {/* Token field with generate button */}
-              <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+              <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Controller
                   name={"token" as any}
                   control={control}
@@ -323,8 +323,8 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
                 />
                 <IconButton
                   onClick={generateToken}
-                  sx={{ mt: 1 }}
                   title="Generate Token"
+                  sx={{ alignSelf: 'center' }}
                 >
                   <RefreshIcon />
                 </IconButton>
@@ -355,13 +355,32 @@ const TicketForm = ({ open, ticket, onClose }: TicketFormProps) => {
             )}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
-          </Button>
-        </DialogActions>
+        {!embedded && (
+          <DialogActions sx={{ px: 2.98 }}>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={loading}>
+              {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+            </Button>
+          </DialogActions>
+        )}
+        {embedded && (
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2, px: 0 }}>
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={loading}>
+              {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+            </Button>
+          </Box>
+        )}
       </form>
+    )
+
+  if (embedded) {
+    return content
+  }
+
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      {content}
     </Dialog>
   )
 }
