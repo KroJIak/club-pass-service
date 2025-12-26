@@ -233,6 +233,7 @@ class ClubSettingsResponse(BaseModel):
     phone: str | None
     email: str | None
     auto_deactivate_events: bool = True  # Default to True for backward compatibility
+    timezone: str = "Europe/Moscow"  # Default timezone for backward compatibility
     updated_at: datetime
 
     class Config:
@@ -245,4 +246,5 @@ class ClubSettingsUpdate(BaseModel):
     phone: str | None = None
     email: str | None = None
     auto_deactivate_events: bool | None = None
+    timezone: str | None = None
 

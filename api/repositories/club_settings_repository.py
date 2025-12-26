@@ -26,7 +26,8 @@ class ClubSettingsRepository:
                     address=None,
                     phone=None,
                     email=None,
-                    auto_deactivate_events=True
+                    auto_deactivate_events=True,
+                    timezone="Europe/Moscow"  # Default timezone
                 )
                 db.add(settings)
                 db.commit()
@@ -45,7 +46,8 @@ class ClubSettingsRepository:
         address: str = None,
         phone: str = None,
         email: str = None,
-        auto_deactivate_events: bool = None
+        auto_deactivate_events: bool = None,
+        timezone: str = None
     ) -> ClubSettings:
         """
         Update club settings.
@@ -74,6 +76,9 @@ class ClubSettingsRepository:
         if auto_deactivate_events is not None:
             settings.auto_deactivate_events = auto_deactivate_events
         
+        if timezone is not None:
+            settings.timezone = timezone.strip() if timezone and timezone.strip() else "Europe/Moscow"
+        
         settings.updated_at = datetime.utcnow()
         
         db.commit()
@@ -84,7 +89,8 @@ class ClubSettingsRepository:
             f"address={settings.address}, "
             f"phone={settings.phone}, "
             f"email={settings.email}, "
-            f"auto_deactivate_events={settings.auto_deactivate_events}"
+            f"auto_deactivate_events={settings.auto_deactivate_events}, "
+            f"timezone={settings.timezone}"
         )
         
         return settings

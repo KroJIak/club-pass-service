@@ -1033,7 +1033,8 @@ async def update_club_settings(
             address=settings_update.address,
             phone=settings_update.phone,
             email=settings_update.email,
-            auto_deactivate_events=settings_update.auto_deactivate_events
+            auto_deactivate_events=settings_update.auto_deactivate_events,
+            timezone=settings_update.timezone
         )
         
         # Ensure updated_at is a datetime object

@@ -150,14 +150,21 @@ async def get_club_settings_public(
         
         logger.info(f"Step 9: Final updated_at_str: {updated_at_str} (type: {type(updated_at_str)})")
         
+        # Get timezone
+        timezone = getattr(settings, 'timezone', None)
+        if timezone is None:
+            timezone = "Europe/Moscow"  # Default timezone
+        logger.info(f"Step 10: Timezone: {timezone}")
+        
         # Build response dict - return directly without Pydantic validation
-        logger.info("Step 10: Building response_data dictionary")
+        logger.info("Step 11: Building response_data dictionary")
         response_data = {
             "id": int(settings.id),
             "address": settings.address if settings.address else None,
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
             "auto_deactivate_events": bool(auto_deactivate),
+            "timezone": timezone,
             "updated_at": updated_at_str
         }
         

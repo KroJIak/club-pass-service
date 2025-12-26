@@ -93,4 +93,31 @@ class SettingsService:
             logger.error(f"Error checking check_interval_minutes setting: {e}")
             # Default to 30 minutes on error
             return 30
+    
+    @staticmethod
+    def get_timezone(db: Session) -> str:
+        """
+        Get timezone from club settings.
+        
+        Args:
+            db: Database session
+        
+        Returns:
+            Timezone string (defaults to "Europe/Moscow" if settings don't exist)
+        """
+        try:
+            result = db.execute(
+                text("SELECT timezone FROM club_settings WHERE id = 1")
+            ).first()
+            
+            if result and result[0]:
+                return str(result[0])
+            
+            # Default to Europe/Moscow if settings don't exist
+            logger.warning("Club settings not found, defaulting to Europe/Moscow timezone")
+            return "Europe/Moscow"
+        except Exception as e:
+            logger.error(f"Error getting timezone setting: {e}")
+            # Default to Europe/Moscow on error
+            return "Europe/Moscow"
 

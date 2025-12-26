@@ -10,6 +10,10 @@ import {
   TextField,
   FormControlLabel,
   Switch,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material'
 import api from '../../services/api'
 import type { ClubSettings, ClubSettingsUpdate } from '../../types'
@@ -25,7 +29,27 @@ const ClubSettings = () => {
     phone: '',
     email: '',
     auto_deactivate_events: true,
+    timezone: 'Europe/Moscow',
   })
+
+  // Common timezones for Russia and nearby regions
+  const timezones = [
+    { value: 'Europe/Kaliningrad', label: 'Калининград (UTC+2)' },
+    { value: 'Europe/Moscow', label: 'Москва (UTC+3)' },
+    { value: 'Europe/Samara', label: 'Самара (UTC+4)' },
+    { value: 'Europe/Yekaterinburg', label: 'Екатеринбург (UTC+5)' },
+    { value: 'Asia/Omsk', label: 'Омск (UTC+6)' },
+    { value: 'Asia/Krasnoyarsk', label: 'Красноярск (UTC+7)' },
+    { value: 'Asia/Irkutsk', label: 'Иркутск (UTC+8)' },
+    { value: 'Asia/Yakutsk', label: 'Якутск (UTC+9)' },
+    { value: 'Asia/Vladivostok', label: 'Владивосток (UTC+10)' },
+    { value: 'Asia/Magadan', label: 'Магадан (UTC+11)' },
+    { value: 'Asia/Kamchatka', label: 'Камчатка (UTC+12)' },
+    { value: 'Europe/Astrakhan', label: 'Астрахань (UTC+4)' },
+    { value: 'Europe/Volgograd', label: 'Волгоград (UTC+3)' },
+    { value: 'Europe/Saratov', label: 'Саратов (UTC+4)' },
+    { value: 'Europe/Ulyanovsk', label: 'Ульяновск (UTC+4)' },
+  ]
 
   useEffect(() => {
     fetchSettings()
@@ -42,6 +66,7 @@ const ClubSettings = () => {
         phone: response.data.phone || '',
         email: response.data.email || '',
         auto_deactivate_events: response.data.auto_deactivate_events ?? true,
+        timezone: response.data.timezone || 'Europe/Moscow',
       })
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load settings')
@@ -56,6 +81,13 @@ const ClubSettings = () => {
     setFormData({
       ...formData,
       [field]: e.target.value,
+    })
+  }
+
+  const handleTimezoneChange = (e: any) => {
+    setFormData({
+      ...formData,
+      timezone: e.target.value,
     })
   }
 
@@ -77,6 +109,7 @@ const ClubSettings = () => {
         phone: formData.phone.trim() || null,
         email: formData.email.trim() || null,
         auto_deactivate_events: formData.auto_deactivate_events,
+        timezone: formData.timezone || null,
       }
 
       const response = await api.put<ClubSettings>('/admin/club-settings', update)
@@ -157,6 +190,28 @@ const ClubSettings = () => {
             helperText="Club email address displayed in the bot"
             sx={{ mb: 2 }}
           />
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <FormControl fullWidth>
+            <InputLabel id="timezone-label">Часовой пояс</InputLabel>
+            <Select
+              labelId="timezone-label"
+              id="timezone-select"
+              value={formData.timezone}
+              label="Часовой пояс"
+              onChange={handleTimezoneChange}
+            >
+              {timezones.map((tz) => (
+                <MenuItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Часовой пояс для отображения времени в системе
+          </Typography>
         </Box>
 
         <Box sx={{ mb: 3 }}>

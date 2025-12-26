@@ -1,10 +1,12 @@
 """Service for checking and updating expired tickets and deactivating past events."""
 import logging
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
+import pytz
 from src.models.ticket import Ticket, TicketStatus
 from src.models.event import Event
+from src.services.settings_service import SettingsService
 
 logger = logging.getLogger(__name__)
 
@@ -13,23 +15,52 @@ class TicketExpirationService:
     """Service for handling ticket expiration."""
     
     @staticmethod
-    def _parse_event_datetime(event_date: str, event_time: str) -> datetime:
+    def _get_current_time(db: Session) -> datetime:
         """
-        Parse event date and time to datetime object.
+        Get current time in the configured timezone.
+        
+        Args:
+            db: Database session
+        
+        Returns:
+            datetime object in the configured timezone
+        """
+        timezone_str = SettingsService.get_timezone(db)
+        try:
+            tz = pytz.timezone(timezone_str)
+            return datetime.now(tz)
+        except Exception as e:
+            logger.warning(f"Invalid timezone {timezone_str}, using UTC: {e}")
+            return datetime.utcnow()
+    
+    @staticmethod
+    def _parse_event_datetime(event_date: str, event_time: str, db: Session) -> datetime:
+        """
+        Parse event date and time to datetime object in the configured timezone.
         
         Args:
             event_date: Date in format "DD.MM.YYYY"
             event_time: Time in format "HH:MM"
+            db: Database session for getting timezone
         
         Returns:
-            datetime object
+            datetime object in the configured timezone
         """
         date_obj = datetime.strptime(event_date, "%d.%m.%Y")
         time_obj = datetime.strptime(event_time, "%H:%M").time()
-        return datetime.combine(date_obj.date(), time_obj)
+        naive_dt = datetime.combine(date_obj.date(), time_obj)
+        
+        # Convert to configured timezone
+        timezone_str = SettingsService.get_timezone(db)
+        try:
+            tz = pytz.timezone(timezone_str)
+            return tz.localize(naive_dt)
+        except Exception as e:
+            logger.warning(f"Invalid timezone {timezone_str}, using naive datetime: {e}")
+            return naive_dt
     
     @staticmethod
-    def _calculate_expiration_datetime(event_date: str, event_time: str) -> datetime:
+    def _calculate_expiration_datetime(event_date: str, event_time: str, db: Session) -> datetime:
         """
         Calculate expiration datetime for a ticket.
         
@@ -40,11 +71,12 @@ class TicketExpirationService:
         Args:
             event_date: Date in format "DD.MM.YYYY"
             event_time: Time in format "HH:MM"
+            db: Database session for getting timezone
         
         Returns:
-            datetime when ticket expires
+            datetime when ticket expires (in configured timezone)
         """
-        event_dt = TicketExpirationService._parse_event_datetime(event_date, event_time)
+        event_dt = TicketExpirationService._parse_event_datetime(event_date, event_time, db)
         hour = event_dt.hour
         
         if hour < 12:
@@ -57,19 +89,20 @@ class TicketExpirationService:
         return expiration
     
     @staticmethod
-    def is_ticket_expired(ticket: Ticket, current_time: datetime = None) -> bool:
+    def is_ticket_expired(ticket: Ticket, db: Session, current_time: datetime = None) -> bool:
         """
         Check if a ticket is expired.
         
         Args:
             ticket: Ticket object with event relationship loaded
-            current_time: Current datetime (defaults to now)
+            db: Database session for getting timezone
+            current_time: Current datetime (defaults to now in configured timezone)
         
         Returns:
             True if ticket is expired, False otherwise
         """
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = TicketExpirationService._get_current_time(db)
         
         # Only process tickets with ACTIVE status
         if ticket.status != TicketStatus.ACTIVE:
@@ -82,7 +115,8 @@ class TicketExpirationService:
         
         expiration_dt = TicketExpirationService._calculate_expiration_datetime(
             ticket.event.start_date,
-            ticket.event.start_time
+            ticket.event.start_time,
+            db
         )
         
         return current_time >= expiration_dt
@@ -99,13 +133,13 @@ class TicketExpirationService:
         
         Args:
             db: Database session
-            current_time: Current datetime (defaults to now)
+            current_time: Current datetime (defaults to now in configured timezone)
         
         Returns:
             Number of tickets marked as expired
         """
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = TicketExpirationService._get_current_time(db)
         
         # Get all active tickets with event relationship
         tickets = db.query(Ticket).options(
@@ -123,7 +157,7 @@ class TicketExpirationService:
                 logger.debug(f"Skipping ticket {ticket.id} - status is {ticket.status}, not ACTIVE")
                 continue
             
-            if TicketExpirationService.is_ticket_expired(ticket, current_time):
+            if TicketExpirationService.is_ticket_expired(ticket, db, current_time):
                 logger.info(f"Marking ticket {ticket.id} (token: {ticket.token}) as expired")
                 ticket.status = TicketStatus.EXPIRED
                 expired_count += 1
@@ -143,13 +177,13 @@ class TicketExpirationService:
         
         Args:
             db: Database session
-            current_time: Current datetime (defaults to now)
+            current_time: Current datetime (defaults to now in configured timezone)
         
         Returns:
             List of expired tickets
         """
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = TicketExpirationService._get_current_time(db)
         
         tickets = db.query(Ticket).options(
             joinedload(Ticket.event)
@@ -159,7 +193,7 @@ class TicketExpirationService:
         
         expired = []
         for ticket in tickets:
-            if TicketExpirationService.is_ticket_expired(ticket, current_time):
+            if TicketExpirationService.is_ticket_expired(ticket, db, current_time):
                 expired.append(ticket)
         
         return expired
@@ -174,13 +208,13 @@ class TicketExpirationService:
         
         Args:
             db: Database session
-            current_time: Current datetime (defaults to now)
+            current_time: Current datetime (defaults to now in configured timezone)
         
         Returns:
             Number of events deactivated
         """
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = TicketExpirationService._get_current_time(db)
         
         # Get all active events
         events = db.query(Event).filter(Event.is_active == True).all()
@@ -191,7 +225,8 @@ class TicketExpirationService:
         for event in events:
             expiration_dt = TicketExpirationService._calculate_expiration_datetime(
                 event.start_date,
-                event.start_time
+                event.start_time,
+                db
             )
             
             if current_time >= expiration_dt:
