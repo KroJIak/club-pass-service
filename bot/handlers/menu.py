@@ -14,6 +14,7 @@ from bot.core.message_manager import safe_edit_message, remove_inline_keyboard
 from bot.core.i18n import get_user_locale, t
 from bot.core.middleware import temporary_messages_middleware
 from bot.core.assets import get_locale_image_path
+from bot.services.api_service import api_service
 
 router = Router()
 
