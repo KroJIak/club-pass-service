@@ -3,6 +3,7 @@ import httpx
 import logging
 from datetime import datetime
 from typing import Optional
+import pytz
 from api.core.config import settings
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from sqlalchemy.orm import Session
@@ -10,11 +11,29 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 
-def parse_datetime(date_str: str, time_str: str) -> datetime:
-    """Parse date and time strings to datetime object."""
+def parse_datetime(date_str: str, time_str: str, timezone_str: str = "Europe/Moscow") -> datetime:
+    """
+    Parse date and time strings to datetime object in specified timezone.
+    
+    Args:
+        date_str: Date in format "DD.MM.YYYY"
+        time_str: Time in format "HH:MM"
+        timezone_str: Timezone string (default: "Europe/Moscow")
+    
+    Returns:
+        datetime object in the specified timezone
+    """
     date_obj = datetime.strptime(date_str, "%d.%m.%Y")
     time_obj = datetime.strptime(time_str, "%H:%M").time()
-    return datetime.combine(date_obj.date(), time_obj)
+    naive_dt = datetime.combine(date_obj.date(), time_obj)
+    
+    # Convert to specified timezone
+    try:
+        tz = pytz.timezone(timezone_str)
+        return tz.localize(naive_dt)
+    except Exception as e:
+        logger.warning(f"Invalid timezone {timezone_str}, using naive datetime: {e}")
+        return naive_dt
 
 
 async def schedule_event_deactivation(
@@ -47,11 +66,22 @@ async def schedule_event_deactivation(
         return False
     
     try:
-        # Parse end datetime
-        deactivation_dt = parse_datetime(end_date, end_time)
+        # Get timezone from club settings
+        timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
+        if not timezone_str:
+            timezone_str = 'Europe/Moscow'
         
-        # Check if datetime is in the future
-        if deactivation_dt <= datetime.now():
+        # Parse end datetime with timezone
+        deactivation_dt = parse_datetime(end_date, end_time, timezone_str)
+        
+        # Check if datetime is in the future (compare with current time in same timezone)
+        try:
+            tz = pytz.timezone(timezone_str)
+            current_time = datetime.now(tz)
+        except Exception:
+            current_time = datetime.now()
+        
+        if deactivation_dt <= current_time:
             logger.warning(f"End datetime for event {event_id} is in the past, skipping scheduling")
             return False
         
