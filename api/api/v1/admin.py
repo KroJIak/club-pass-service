@@ -1528,7 +1528,8 @@ async def respond_to_support_message(
         
         if telegram_user_id:
             # Use Telegram Bot API directly
-            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+            from api.core.config import settings
+            bot_token = settings.TELEGRAM_BOT_TOKEN
             if bot_token:
                 bot_api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
                 
