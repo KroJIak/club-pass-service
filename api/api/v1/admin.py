@@ -1,6 +1,6 @@
 """Admin CRUD endpoints for all models."""
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -808,11 +808,34 @@ async def get_ticket(
 @router.put("/admin/tickets/{ticket_id}", response_model=TicketResponse)
 async def update_ticket(
     ticket_id: int,
-    ticket_data: TicketUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
     """Update a ticket."""
+    import json
+    
+    # Log raw request body BEFORE Pydantic parsing
+    try:
+        body = await request.body()
+        raw_json = json.loads(body.decode()) if body else {}
+        logger.info(f"=== RAW REQUEST BODY for ticket {ticket_id} ===")
+        logger.info(f"Raw JSON: {raw_json}")
+        logger.info(f"Raw JSON keys: {list(raw_json.keys()) if isinstance(raw_json, dict) else 'Not a dict'}")
+    except Exception as e:
+        logger.warning(f"Could not parse raw request body: {e}")
+        raw_json = {}
+    
+    # Parse with Pydantic
+    try:
+        ticket_data = TicketUpdate.model_validate(raw_json)
+    except Exception as e:
+        logger.error(f"Failed to parse TicketUpdate: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid ticket data: {str(e)}"
+        )
+    
     ticket = TicketRepository.get_by_id(db, ticket_id)
     if not ticket:
         raise HTTPException(
@@ -820,20 +843,16 @@ async def update_ticket(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
-    # Debug logging
-    import logging
-    logger = logging.getLogger(__name__)
-    
     # Get update data as dict - use model_dump with exclude_unset=False to see all fields
     # But we need to check what was actually provided in the request
     update_dict = ticket_data.model_dump(exclude_unset=False)
-    logger.info(f"Updating ticket {ticket_id} with model_dump(exclude_unset=False): {update_dict}")
+    logger.info(f"Pydantic model_dump(exclude_unset=False): {update_dict}")
     
     # Also try to get the raw request data
     # The issue is that Pydantic only includes fields that were explicitly set
     # So we need to use model_dump(exclude_unset=True) to get only provided fields
     provided_dict = ticket_data.model_dump(exclude_unset=True)
-    logger.info(f"Provided fields (exclude_unset=True): {provided_dict}")
+    logger.info(f"Pydantic provided fields (exclude_unset=True): {provided_dict}")
     logger.info(f"Current ticket state: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
     
     # Use provided_dict (only fields that were actually sent)
