@@ -240,7 +240,7 @@ const EventsList = () => {
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="body1" sx={{ display: 'inline', mr: 1, fontWeight: 500 }}>{event.name}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ display: 'inline' }}>
-                      {event.start_date} {event.start_time}
+                      {event.start_date} {event.start_time} - {event.end_date} {event.end_time}
                     </Typography>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>

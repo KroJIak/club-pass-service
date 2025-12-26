@@ -7,7 +7,7 @@ import { useFilterPanel } from '../../hooks/useFilterPanel'
 const Layout = () => {
   const location = useLocation()
   const { filterPanel } = useFilterPanel()
-  const showFilter = location.pathname !== '/expiration-settings'
+  const showFilter = true
 
   // Calculate side margins based on viewport width
   // At 1280px: 0.15 * width

@@ -13,7 +13,6 @@ import {
   Payment as PaymentIcon,
   ShoppingCart as OrderIcon,
   LocalOffer as PromocodeIcon,
-  Settings as SettingsIcon,
   QrCodeScanner as QrCodeIcon,
   Business as BusinessIcon,
 } from '@mui/icons-material'
@@ -28,7 +27,6 @@ const menuItems = [
   { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
   { text: 'Скан QR', icon: <QrCodeIcon />, path: '/qr-scanner' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
-  { text: 'Expiration Settings', icon: <SettingsIcon />, path: '/expiration-settings' },
 ]
 
 const Sidebar = () => {
