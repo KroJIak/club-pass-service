@@ -84,7 +84,8 @@
       "refund_success": "✅ <b>Ticket Refunded</b>\n\nYour ticket has been successfully refunded. Funds will be returned to your account.",
       "refund_error": "❌ <b>Refund Error</b>\n\nFailed to refund the ticket. Please try again later or contact support.",
       "refund_already_refunded": "⚠️ <b>Ticket Already Refunded</b>\n\nThis ticket has already been refunded.",
-      "refund_cannot_refund": "⚠️ <b>Cannot Refund Ticket</b>\n\nThis ticket cannot be refunded (it may have already been used)."
+      "refund_cannot_refund": "⚠️ <b>Cannot Refund Ticket</b>\n\nThis ticket cannot be refunded (it may have already been used).",
+      "refund_status_error": "Cannot refund this ticket, please try again"
     }
   }
 }

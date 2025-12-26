@@ -136,6 +136,26 @@ async def handle_refund_ticket_click(callback: CallbackQuery, state: FSMContext)
     locale = get_user_locale(callback.from_user.language_code)
     ticket_id = int(callback.data.split("_")[2])
     
+    # Check ticket status before showing confirmation
+    ticket = await api_service.get_ticket(ticket_id)
+    if not ticket:
+        error_text = t(locale, "messages.tickets.refund_status_error")
+        await callback.answer(error_text, show_alert=True)
+        # Return to main menu
+        from bot.handlers.menu import handle_back_to_menu
+        await handle_back_to_menu(callback, state)
+        return
+    
+    ticket_status = ticket.get("status", "").lower()
+    if ticket_status != "active":
+        # Show error and return to main menu
+        error_text = t(locale, "messages.tickets.refund_status_error")
+        await callback.answer(error_text, show_alert=True)
+        # Return to main menu
+        from bot.handlers.menu import handle_main_menu
+        await handle_main_menu(callback, state)
+        return
+    
     # Save ticket_id to state
     await state.update_data(ticket_id=ticket_id)
     
@@ -188,7 +208,31 @@ async def handle_refund_confirm_yes(callback: CallbackQuery, state: FSMContext):
     ticket_id = data.get("ticket_id")
     
     if not ticket_id:
-        await callback.answer("Ticket ID not found", show_alert=True)
+        error_text = t(locale, "messages.tickets.refund_status_error")
+        await callback.answer(error_text, show_alert=True)
+        # Return to main menu
+        from bot.handlers.menu import handle_back_to_menu
+        await handle_back_to_menu(callback, state)
+        return
+    
+    # Check ticket status before processing refund
+    ticket = await api_service.get_ticket(ticket_id)
+    if not ticket:
+        error_text = t(locale, "messages.tickets.refund_status_error")
+        await callback.answer(error_text, show_alert=True)
+        # Return to main menu
+        from bot.handlers.menu import handle_back_to_menu
+        await handle_back_to_menu(callback, state)
+        return
+    
+    ticket_status = ticket.get("status", "").lower()
+    if ticket_status != "active":
+        # Show error and return to main menu
+        error_text = t(locale, "messages.tickets.refund_status_error")
+        await callback.answer(error_text, show_alert=True)
+        # Return to main menu
+        from bot.handlers.menu import handle_back_to_menu
+        await handle_back_to_menu(callback, state)
         return
     
     # Call API to refund ticket
