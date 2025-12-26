@@ -995,7 +995,24 @@ async def get_club_settings(
 ):
     """Get club settings."""
     settings = ClubSettingsRepository.get_settings(db)
-    return ClubSettingsResponse.model_validate(settings)
+    # Handle case where auto_deactivate_events might not exist in DB
+    try:
+        auto_deactivate = getattr(settings, 'auto_deactivate_events', None)
+        if auto_deactivate is None:
+            auto_deactivate = True
+    except AttributeError:
+        auto_deactivate = True
+    
+    response_data = {
+        "id": settings.id,
+        "address": settings.address,
+        "phone": settings.phone,
+        "email": settings.email,
+        "auto_deactivate_events": auto_deactivate,
+        "updated_at": settings.updated_at
+    }
+    
+    return ClubSettingsResponse(**response_data)
 
 
 @router.put("/admin/club-settings", response_model=ClubSettingsResponse)

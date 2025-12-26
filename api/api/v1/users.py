@@ -152,15 +152,26 @@ async def get_club_settings_public(
     try:
         settings = ClubSettingsRepository.get_settings(db)
         # Handle case where auto_deactivate_events might not exist in DB
-        settings_dict = {
+        # Use model_dump if available, otherwise build dict manually
+        try:
+            # Try to get auto_deactivate_events attribute
+            auto_deactivate = getattr(settings, 'auto_deactivate_events', None)
+            if auto_deactivate is None:
+                auto_deactivate = True
+        except AttributeError:
+            auto_deactivate = True
+        
+        # Build response dict
+        response_data = {
             "id": settings.id,
             "address": settings.address,
             "phone": settings.phone,
             "email": settings.email,
-            "auto_deactivate_events": getattr(settings, 'auto_deactivate_events', True),
+            "auto_deactivate_events": auto_deactivate,
             "updated_at": settings.updated_at
         }
-        return ClubSettingsResponse.model_validate(settings_dict)
+        
+        return ClubSettingsResponse(**response_data)
     except Exception as e:
         logger.error(f"Error getting club settings: {e}", exc_info=True)
         raise HTTPException(
