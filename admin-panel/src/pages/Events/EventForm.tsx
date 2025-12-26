@@ -21,6 +21,7 @@ import ArrayField from '../../components/forms/ArrayField'
 import BooleanField from '../../components/forms/BooleanField'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
 import TicketTypeForm from './TicketTypeForm'
+import TicketTypeTemplateForm from '../TicketTypes/TicketTypeTemplateForm'
 
 interface EventFormProps {
   open?: boolean
@@ -330,15 +331,25 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
             <Divider sx={{ my: 3 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Ticket Types</Typography>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={handleCreateTicketType}
-                disabled={!eventId}
-              >
-                Add Ticket Type
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={() => setTemplateFormOpen(true)}
+                >
+                  Create Template
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={handleCreateTicketType}
+                  disabled={!eventId}
+                >
+                  Add Ticket Type
+                </Button>
+              </Box>
             </Box>
             {loadingTicketTypes ? (
               <Typography>Loading ticket types...</Typography>
