@@ -33,9 +33,9 @@ async def send_support_response(request: SendMessageRequest):
         
         # Format message with headers and quote
         formatted_message = (
-            f"<b>Ваше обращение</b>\n\n"
+            f"<b>Ваше обращение</b>\n"
             f"<blockquote>{request.original_message}</blockquote>\n\n"
-            f"<b>Ответ администратора</b>\n\n"
+            f"<b>Ответ администратора</b>\n"
             f"{request.admin_response}"
         )
         
