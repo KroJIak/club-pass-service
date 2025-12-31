@@ -1671,6 +1671,21 @@ async def send_message_to_user(
             )
             response.raise_for_status()
             return {"status": "success", "message": "Message sent successfully"}
+    except httpx.HTTPStatusError as e:
+        # Get error details from bot API response
+        error_detail = f"Failed to send message"
+        try:
+            error_data = e.response.json()
+            if "detail" in error_data:
+                error_detail = error_data["detail"]
+        except:
+            error_detail = f"Failed to send message: {e.response.text if hasattr(e.response, 'text') else str(e)}"
+        
+        logger.error(f"Failed to send message to bot API: {error_detail}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_detail
+        )
     except httpx.HTTPError as e:
         logger.error(f"Failed to send message to bot API: {e}")
         raise HTTPException(

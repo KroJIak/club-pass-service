@@ -245,14 +245,18 @@ const SupportMessagesList: React.FC = () => {
     setSendMessageOpen(false)
     setSendMessageUser(null)
     setSendMessageText('')
+    setSendMessageError('')
   }
+
+  const [sendMessageError, setSendMessageError] = useState<string>('')
 
   const handleSendMessage = async () => {
     if (!sendMessageUser || !sendMessageText.trim()) {
-      alert('Please select a user and enter a message')
+      setSendMessageError('Please select a user and enter a message')
       return
     }
 
+    setSendMessageError('')
     setSendingMessage(true)
     try {
       await api.post('/admin/send-message', {
@@ -263,7 +267,8 @@ const SupportMessagesList: React.FC = () => {
       handleCloseSendMessage()
     } catch (error: any) {
       console.error('Failed to send message:', error)
-      alert(error.response?.data?.detail || 'Failed to send message')
+      const errorMessage = error.response?.data?.detail || 'Failed to send message'
+      setSendMessageError(errorMessage)
     } finally {
       setSendingMessage(false)
     }
@@ -271,22 +276,9 @@ const SupportMessagesList: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Support Messages
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<SendIcon />}
-          onClick={() => {
-            setSendMessageOpen(true)
-            setSendMessageUser(null)
-            setSendMessageText('')
-          }}
-        >
-          Send Message
-        </Button>
-      </Box>
+      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+        Support Messages
+      </Typography>
 
       {/* Statistics Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>

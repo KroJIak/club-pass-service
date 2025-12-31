@@ -109,10 +109,13 @@ async def send_direct_message(request: SendDirectMessageRequest):
                 detail="Bot instance not available"
             )
         
+        # Format message with header
+        formatted_message = f"<b>Сообщение от администратора:</b>\n{request.message}"
+        
         # Send direct message
         await bot.send_message(
             chat_id=request.telegram_user_id,
-            text=request.message,
+            text=formatted_message,
             parse_mode="HTML",
         )
         
