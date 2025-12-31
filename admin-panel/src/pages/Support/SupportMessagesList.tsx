@@ -271,9 +271,22 @@ const SupportMessagesList: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
-        Support Messages
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1">
+          Support Messages
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<SendIcon />}
+          onClick={() => {
+            setSendMessageOpen(true)
+            setSendMessageUser(null)
+            setSendMessageText('')
+          }}
+        >
+          Send Message
+        </Button>
+      </Box>
 
       {/* Statistics Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
