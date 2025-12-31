@@ -550,9 +550,13 @@ const SupportMessagesList: React.FC = () => {
               label="Message"
               placeholder="Enter your message..."
               value={sendMessageText}
-              onChange={(e) => setSendMessageText(e.target.value)}
+              onChange={(e) => {
+                setSendMessageText(e.target.value)
+                setSendMessageError('')
+              }}
               required
-              helperText="You can use HTML formatting (e.g., &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;)"
+              error={!!sendMessageError}
+              helperText={sendMessageError || "You can use HTML formatting (e.g., &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;)"}
             />
           </Box>
         </DialogContent>
