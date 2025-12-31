@@ -369,7 +369,14 @@ const SupportMessagesList: React.FC = () => {
             </FormControl>
           </Grid>
         </Grid>
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={fetchMessages}
+          >
+            Refresh
+          </Button>
           <Button variant="outlined" onClick={clearFilters}>
             Clear Filters
           </Button>
