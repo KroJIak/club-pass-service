@@ -318,7 +318,7 @@ const SupportMessagesList: React.FC = () => {
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               InputLabelProps={{ shrink: true }}
-              error={dateFrom && dateTo && dateFrom > dateTo}
+              error={!!(dateFrom && dateTo && dateFrom > dateTo)}
               helperText={dateFrom && dateTo && dateFrom > dateTo ? 'Date To must be after Date From' : ''}
             />
           </Grid>
