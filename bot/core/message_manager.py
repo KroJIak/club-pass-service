@@ -166,10 +166,26 @@ async def safe_edit_message(
     user_id = callback.from_user.id
     bot = callback.bot
     chat_id = callback.message.chat.id
+    message_id = callback.message.message_id
     
     if photo_input is None:
         if locale and screen_key:
             photo_input = get_screen_image(locale, screen_key)
+    
+    # Check if this message is in pending_user_messages (marked as temporary)
+    # If so, we should send new message instead of editing
+    pending = temporary_messages_middleware.pending_user_messages.get(user_id, [])
+    is_temporary = (chat_id, message_id) in pending
+    
+    if is_temporary:
+        # Message is marked as temporary, send new one instead of editing
+        # Remove it from pending first (it will be deleted by flush)
+        temporary_messages_middleware.pending_user_messages[user_id] = [
+            msg for msg in pending if msg != (chat_id, message_id)
+        ]
+        new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
+        await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
+        return False
     
     try:
         new_message = await _edit_callback_message(callback, text, reply_markup, parse_mode, photo_input)
