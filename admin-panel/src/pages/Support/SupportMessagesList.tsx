@@ -241,12 +241,6 @@ const SupportMessagesList: React.FC = () => {
     setSortBy('newest')
   }
 
-  const handleOpenSendMessage = () => {
-    setSendMessageOpen(true)
-    setSendMessageUser(null)
-    setSendMessageText('')
-  }
-
   const handleCloseSendMessage = () => {
     setSendMessageOpen(false)
     setSendMessageUser(null)
