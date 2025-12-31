@@ -183,6 +183,14 @@ async def safe_edit_message(
             await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
             return True
         
+        # If message was deleted (not found), send new message
+        if "message to edit not found" in error_msg or "message not found" in error_msg:
+            # Message was already deleted, send new one
+            old_message_id = callback.message.message_id
+            new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
+            await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
+            return False
+        
         # If editing fails for other reasons (e.g., different content type),
         # delete old message and send new one
         old_message_id = callback.message.message_id
