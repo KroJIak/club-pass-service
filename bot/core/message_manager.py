@@ -79,6 +79,7 @@ async def _edit_callback_message(
     """
     Edit callback message. Returns new Message if photo was sent, None if edited in place.
     If photo_path is provided and message already has photo, will replace the photo.
+    Raises TelegramBadRequest if message was deleted.
     """
     if callback.message.photo:
         # Message already has photo
@@ -102,7 +103,11 @@ async def _edit_callback_message(
             return None
     elif photo_input:
         # Message doesn't have photo, but we need to add one - delete old and send new
-        await callback.message.delete()
+        # Try to delete, but if already deleted, ignore error
+        try:
+            await callback.message.delete()
+        except TelegramBadRequest:
+            pass  # Message already deleted, continue to send new
         return await callback.message.answer_photo(
             photo=photo_input,
             caption=text if text else None,
