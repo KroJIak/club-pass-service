@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Box,
   Card,
@@ -13,12 +13,19 @@ import {
   Chip,
   IconButton,
   Grid,
+  Autocomplete,
+  Paper,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
   Send as SendIcon,
+  Search as SearchIcon,
+  Mail as MailIcon,
+  CheckCircle as CheckCircleIcon,
+  Inbox as InboxIcon,
 } from '@mui/icons-material'
 import api from '../../services/api'
+import { User } from '../../types'
 import dayjs from 'dayjs'
 
 interface SupportMessage {
@@ -36,12 +43,55 @@ interface SupportMessage {
   last_name: string | null
 }
 
+type SortOption = 'newest' | 'oldest' | 'status'
+
 const SupportMessagesList: React.FC = () => {
   const [messages, setMessages] = useState<SupportMessage[]>([])
+  const [allMessages, setAllMessages] = useState<SupportMessage[]>([])
   const [loading, setLoading] = useState(true)
+  const [users, setUsers] = useState<User[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  
+  // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
+  const [searchText, setSearchText] = useState<string>('')
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
+  
   const [responseText, setResponseText] = useState<{ [key: number]: string }>({})
   const [respondingTo, setRespondingTo] = useState<number | null>(null)
+
+  // Fetch users for autocomplete
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const response = await api.get('/admin/users')
+      setUsers(response.data.users || [])
+    } catch (error) {
+      console.error('Failed to fetch users:', error)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMessages()
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchText])
+
+  // Fetch messages when filters change
+  useEffect(() => {
+    fetchMessages()
+  }, [statusFilter, selectedUser, dateFrom, dateTo])
 
   const fetchMessages = async () => {
     setLoading(true)
@@ -50,8 +100,23 @@ const SupportMessagesList: React.FC = () => {
       if (statusFilter !== 'all') {
         params.status = statusFilter
       }
+      if (selectedUser) {
+        params.user_id = selectedUser.id
+      }
+      if (dateFrom) {
+        params.date_from = dateFrom
+      }
+      if (dateTo) {
+        params.date_to = dateTo
+      }
+      if (searchText.trim().length >= 2) {
+        params.search = searchText.trim()
+      }
+      
       const response = await api.get('/admin/support-messages', { params })
-      setMessages(response.data.messages || [])
+      const fetchedMessages = response.data.messages || []
+      setAllMessages(fetchedMessages)
+      setMessages(fetchedMessages)
     } catch (error: any) {
       console.error('Failed to fetch support messages:', error)
       alert(error.response?.data?.detail || 'Failed to fetch support messages')
@@ -60,9 +125,41 @@ const SupportMessagesList: React.FC = () => {
     }
   }
 
+  // Apply sorting
   useEffect(() => {
-    fetchMessages()
-  }, [statusFilter])
+    let sorted = [...allMessages]
+    
+    switch (sortBy) {
+      case 'newest':
+        sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        break
+      case 'oldest':
+        sorted.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+        break
+      case 'status':
+        const statusOrder = { 'new': 0, 'responded': 1, 'closed': 2 }
+        sorted.sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
+        break
+    }
+    
+    setMessages(sorted)
+  }, [sortBy, allMessages])
+
+  // Calculate statistics
+  const statistics = useMemo(() => {
+    const newCount = allMessages.filter(m => m.status === 'new').length
+    const respondedCount = allMessages.filter(m => m.status === 'responded').length
+    const totalCount = allMessages.length
+    return { newCount, respondedCount, totalCount }
+  }, [allMessages])
+
+  const getUserLabel = (user: User) => {
+    if (user.first_name || user.last_name) {
+      const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
+      return user.username ? `${name} (@${user.username})` : name
+    }
+    return user.username || `User #${user.id}`
+  }
 
   const handleDelete = async (messageId: number) => {
     if (!confirm('Delete this support message?')) return
@@ -124,26 +221,156 @@ const SupportMessagesList: React.FC = () => {
     return msg.username || `User #${msg.user_id}`
   }
 
+  const clearFilters = () => {
+    setStatusFilter('all')
+    setSelectedUser(null)
+    setDateFrom('')
+    setDateTo('')
+    setSearchText('')
+    setSortBy('newest')
+  }
+
   return (
     <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" component="h1">
-          Support Messages
-        </Typography>
-        <FormControl sx={{ minWidth: 200 }}>
-          <InputLabel>Status Filter</InputLabel>
-          <Select
-            value={statusFilter}
-            label="Status Filter"
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="new">New</MenuItem>
-            <MenuItem value="responded">Responded</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+      <Typography variant="h4" component="h1" sx={{ mb: 3 }}>
+        Support Messages
+      </Typography>
 
+      {/* Statistics Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ bgcolor: 'error.light', color: 'error.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <MailIcon />
+                <Typography variant="h6">New Messages</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ mt: 1 }}>
+                {statistics.newCount}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ bgcolor: 'success.light', color: 'success.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CheckCircleIcon />
+                <Typography variant="h6">Responded</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ mt: 1 }}>
+                {statistics.respondedCount}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ bgcolor: 'grey.300', color: 'text.primary' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <InboxIcon />
+                <Typography variant="h6">Total</Typography>
+              </Box>
+              <Typography variant="h4" sx={{ mt: 1 }}>
+                {statistics.totalCount}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Filters Panel */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={3}>
+            <Autocomplete
+              options={users}
+              getOptionLabel={getUserLabel}
+              loading={loadingUsers}
+              value={selectedUser}
+              onChange={(_, newValue) => {
+                setSelectedUser(newValue)
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Filter by User"
+                  placeholder="Select user..."
+                />
+              )}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Date From"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Date To"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              error={dateFrom && dateTo && dateFrom > dateTo}
+              helperText={dateFrom && dateTo && dateFrom > dateTo ? 'Date To must be after Date From' : ''}
+            />
+          </Grid>
+          <Grid item xs={12} md={2}>
+            <TextField
+              fullWidth
+              label="Search"
+              placeholder="Search in messages..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} md={1.5}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="new">New</MenuItem>
+                <MenuItem value="responded">Responded</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={1.5}>
+            <FormControl fullWidth>
+              <InputLabel>Sort</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort"
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+              >
+                <MenuItem value="newest">Newest First</MenuItem>
+                <MenuItem value="oldest">Oldest First</MenuItem>
+                <MenuItem value="status">By Status</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="outlined" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Messages List */}
       {loading ? (
         <Typography>Loading...</Typography>
       ) : messages.length === 0 ? (
@@ -242,4 +469,3 @@ const SupportMessagesList: React.FC = () => {
 }
 
 export default SupportMessagesList
-

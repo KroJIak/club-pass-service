@@ -1425,6 +1425,10 @@ async def update_club_settings(
 @router.get("/admin/support-messages", response_model=SupportMessageListResponse)
 async def get_all_support_messages(
     status: Optional[str] = None,
+    user_id: Optional[int] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    search: Optional[str] = None,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
@@ -1441,7 +1445,42 @@ async def get_all_support_messages(
                 detail=f"Invalid status: {status}. Must be one of: new, responded, closed"
             )
     
-    messages = SupportMessageRepository.get_all(db, status=status_filter)
+    # Parse date filters
+    date_from_dt = None
+    date_to_dt = None
+    if date_from:
+        try:
+            date_from_dt = datetime.strptime(date_from, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid date_from format. Expected YYYY-MM-DD, got: {date_from}"
+            )
+    
+    if date_to:
+        try:
+            date_to_dt = datetime.strptime(date_to, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid date_to format. Expected YYYY-MM-DD, got: {date_to}"
+            )
+    
+    # Validate date range
+    if date_from_dt and date_to_dt and date_from_dt > date_to_dt:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="date_from must be less than or equal to date_to"
+        )
+    
+    messages = SupportMessageRepository.get_all(
+        db,
+        status=status_filter,
+        user_id=user_id,
+        date_from=date_from_dt,
+        date_to=date_to_dt,
+        search=search,
+    )
     
     # Populate user info
     result = []
