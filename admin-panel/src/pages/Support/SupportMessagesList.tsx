@@ -15,6 +15,10 @@ import {
   Grid,
   Autocomplete,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
@@ -63,6 +67,12 @@ const SupportMessagesList: React.FC = () => {
   
   const [responseText, setResponseText] = useState<{ [key: number]: string }>({})
   const [respondingTo, setRespondingTo] = useState<number | null>(null)
+  
+  // Send message dialog state
+  const [sendMessageOpen, setSendMessageOpen] = useState(false)
+  const [sendMessageUser, setSendMessageUser] = useState<User | null>(null)
+  const [sendMessageText, setSendMessageText] = useState('')
+  const [sendingMessage, setSendingMessage] = useState(false)
 
   // Fetch users for autocomplete
   useEffect(() => {
@@ -229,6 +239,40 @@ const SupportMessagesList: React.FC = () => {
     setDateTo('')
     setSearchText('')
     setSortBy('newest')
+  }
+
+  const handleOpenSendMessage = () => {
+    setSendMessageOpen(true)
+    setSendMessageUser(null)
+    setSendMessageText('')
+  }
+
+  const handleCloseSendMessage = () => {
+    setSendMessageOpen(false)
+    setSendMessageUser(null)
+    setSendMessageText('')
+  }
+
+  const handleSendMessage = async () => {
+    if (!sendMessageUser || !sendMessageText.trim()) {
+      alert('Please select a user and enter a message')
+      return
+    }
+
+    setSendingMessage(true)
+    try {
+      await api.post('/admin/send-message', {
+        telegram_user_id: sendMessageUser.telegram_user_id,
+        message: sendMessageText.trim(),
+      })
+      alert('Message sent successfully!')
+      handleCloseSendMessage()
+    } catch (error: any) {
+      console.error('Failed to send message:', error)
+      alert(error.response?.data?.detail || 'Failed to send message')
+    } finally {
+      setSendingMessage(false)
+    }
   }
 
   return (

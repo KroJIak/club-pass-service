@@ -1637,6 +1637,48 @@ async def update_support_message(
     return SupportMessageResponse(**msg_dict)
 
 
+@router.post("/admin/send-message")
+async def send_message_to_user(
+    request_data: dict,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Send a direct message to a user (admin only)."""
+    import os
+    import httpx
+    
+    telegram_user_id = request_data.get("telegram_user_id")
+    message = request_data.get("message")
+    
+    if not telegram_user_id or not message:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="telegram_user_id and message are required"
+        )
+    
+    # Get bot API URL from config
+    bot_api_url = os.getenv("BOT_API_URL", "http://bot:8002")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{bot_api_url}/send-direct-message",
+                json={
+                    "telegram_user_id": telegram_user_id,
+                    "message": message,
+                },
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            return {"status": "success", "message": "Message sent successfully"}
+    except httpx.HTTPError as e:
+        logger.error(f"Failed to send message to bot API: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send message: {str(e)}"
+        )
+
+
 @router.delete("/admin/support-messages/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_support_message(
     message_id: int,

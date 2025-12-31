@@ -18,6 +18,12 @@ class SendMessageRequest(BaseModel):
     admin_response: str
 
 
+class SendDirectMessageRequest(BaseModel):
+    """Request to send a direct message to a user."""
+    telegram_user_id: int
+    message: str
+
+
 @app.post("/send-support-response")
 async def send_support_response(request: SendMessageRequest):
     """Send support response to user with quoted original message."""
@@ -90,4 +96,49 @@ def set_bot_instance(bot: Bot):
 def get_bot_instance() -> Optional[Bot]:
     """Get the global bot instance."""
     return _bot_instance
+
+
+@app.post("/send-direct-message")
+async def send_direct_message(request: SendDirectMessageRequest):
+    """Send a direct message to a user (admin to user)."""
+    try:
+        bot = get_bot_instance()
+        if not bot:
+            raise HTTPException(
+                status_code=503,
+                detail="Bot instance not available"
+            )
+        
+        # Send direct message
+        await bot.send_message(
+            chat_id=request.telegram_user_id,
+            text=request.message,
+            parse_mode="HTML",
+        )
+        
+        # Mark last system message (menu) as temporary
+        from bot.core.middleware import temporary_messages_middleware
+        
+        old_system = temporary_messages_middleware.get_last_system_message(request.telegram_user_id)
+        if old_system:
+            old_chat_id, old_message_id = old_system
+            temporary_messages_middleware.pending_user_messages[request.telegram_user_id].append(
+                (old_chat_id, old_message_id)
+            )
+            temporary_messages_middleware.clear_last_system_message(request.telegram_user_id)
+            temporary_messages_middleware._persist_state()
+            logger.info(
+                f"Marked last system message as temporary for user {request.telegram_user_id}: "
+                f"chat_id={old_chat_id} message_id={old_message_id}"
+            )
+        
+        logger.info(f"Sent direct message to user {request.telegram_user_id}")
+        return {"status": "success", "message": "Message sent successfully"}
+        
+    except Exception as e:
+        logger.error(f"Failed to send direct message to user {request.telegram_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send message: {str(e)}"
+        )
 
