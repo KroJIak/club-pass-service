@@ -23,6 +23,7 @@ import {
   Mail as MailIcon,
   CheckCircle as CheckCircleIcon,
   Inbox as InboxIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material'
 import api from '../../services/api'
 import { User } from '../../types'
