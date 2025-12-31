@@ -521,6 +521,54 @@ const SupportMessagesList: React.FC = () => {
           ))}
         </Grid>
       )}
+
+      {/* Send Message Dialog */}
+      <Dialog open={sendMessageOpen} onClose={handleCloseSendMessage} maxWidth="sm" fullWidth>
+        <DialogTitle>Send Message to User</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Autocomplete
+              options={users}
+              getOptionLabel={getUserLabel}
+              loading={loadingUsers}
+              value={sendMessageUser}
+              onChange={(_, newValue) => {
+                setSendMessageUser(newValue)
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select User"
+                  placeholder="Choose user..."
+                  required
+                />
+              )}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={6}
+              label="Message"
+              placeholder="Enter your message..."
+              value={sendMessageText}
+              onChange={(e) => setSendMessageText(e.target.value)}
+              required
+              helperText="You can use HTML formatting (e.g., &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;)"
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSendMessage}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSendMessage}
+            disabled={!sendMessageUser || !sendMessageText.trim() || sendingMessage}
+            startIcon={<SendIcon />}
+          >
+            {sendingMessage ? 'Sending...' : 'Send'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
