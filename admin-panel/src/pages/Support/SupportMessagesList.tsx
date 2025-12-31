@@ -239,39 +239,39 @@ const SupportMessagesList: React.FC = () => {
       {/* Statistics Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ bgcolor: 'error.light', color: 'error.contrastText' }}>
-            <CardContent>
+          <Card sx={{ bgcolor: 'error.dark', color: 'white' }}>
+            <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <MailIcon />
-                <Typography variant="h6">New Messages</Typography>
+                <MailIcon fontSize="small" />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>New Messages</Typography>
               </Box>
-              <Typography variant="h4" sx={{ mt: 1 }}>
+              <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.newCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ bgcolor: 'success.light', color: 'success.contrastText' }}>
-            <CardContent>
+          <Card sx={{ bgcolor: 'success.dark', color: 'white' }}>
+            <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <CheckCircleIcon />
-                <Typography variant="h6">Responded</Typography>
+                <CheckCircleIcon fontSize="small" />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>Responded</Typography>
               </Box>
-              <Typography variant="h4" sx={{ mt: 1 }}>
+              <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.respondedCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <Card sx={{ bgcolor: 'grey.300', color: 'text.primary' }}>
-            <CardContent>
+          <Card sx={{ bgcolor: 'grey.700', color: 'white' }}>
+            <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <InboxIcon />
-                <Typography variant="h6">Total</Typography>
+                <InboxIcon fontSize="small" />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>Total</Typography>
               </Box>
-              <Typography variant="h4" sx={{ mt: 1 }}>
+              <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.totalCount}
               </Typography>
             </CardContent>
@@ -281,6 +281,23 @@ const SupportMessagesList: React.FC = () => {
 
       {/* Filters Panel */}
       <Paper sx={{ p: 2, mb: 3 }}>
+        {/* Search on separate row */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Search"
+              placeholder="Search in messages..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              InputProps={{
+                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              }}
+            />
+          </Grid>
+        </Grid>
+        
+        {/* Other filters */}
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
             <Autocomplete
@@ -322,19 +339,7 @@ const SupportMessagesList: React.FC = () => {
               helperText={dateFrom && dateTo && dateFrom > dateTo ? 'Date To must be after Date From' : ''}
             />
           </Grid>
-          <Grid item xs={12} md={2}>
-            <TextField
-              fullWidth
-              label="Search"
-              placeholder="Search in messages..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={1.5}>
+          <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
               <InputLabel>Status</InputLabel>
               <Select
@@ -348,7 +353,7 @@ const SupportMessagesList: React.FC = () => {
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={12} md={1.5}>
+          <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
               <InputLabel>Sort</InputLabel>
               <Select
