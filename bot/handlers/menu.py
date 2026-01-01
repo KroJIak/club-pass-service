@@ -167,12 +167,25 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "support_new_message")
 async def handle_support_new_message(callback: CallbackQuery, state: FSMContext):
     """Handle 'Write again' button - open support form."""
-    # Same logic as handle_support, but sends a new message instead of editing
     locale = get_user_locale(callback.from_user.language_code)
     support_text = (
         f"{t(locale, 'messages.support_title')}\n\n"
         f"{t(locale, 'messages.support_prompt')}"
     )
+    
+    user_id = callback.from_user.id
+    bot = callback.bot
+    
+    # Delete old system message before sending new one
+    old_system = temporary_messages_middleware.get_last_system_message(user_id)
+    if old_system:
+        old_chat_id, old_message_id = old_system
+        # Don't delete the message we're clicking on (admin response)
+        if not (old_chat_id == callback.message.chat.id and old_message_id == callback.message.message_id):
+            await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
+    
+    # Clear last system message tracking
+    temporary_messages_middleware.clear_last_system_message(user_id)
     
     # Send new system message with support form
     from bot.core.message_manager import get_screen_image
@@ -184,14 +197,13 @@ async def handle_support_new_message(callback: CallbackQuery, state: FSMContext)
         parse_mode="HTML",
     )
     
-    # Update last system message
-    user_id = callback.from_user.id
+    # Set new message as system message
     temporary_messages_middleware.set_last_system_message(
         user_id, new_message.chat.id, new_message.message_id
     )
     
-    # Mark previous system message (menu) as temporary, but NOT the admin response message
-    await _freeze_previous_system_message(bot=callback.bot, user_id=user_id)
+    # Flush pending temporary user messages
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
     
     await callback.answer()
     
