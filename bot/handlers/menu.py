@@ -190,13 +190,8 @@ async def handle_support_new_message(callback: CallbackQuery, state: FSMContext)
         user_id, new_message.chat.id, new_message.message_id
     )
     
-    # Mark previous message (admin response) as temporary
-    old_chat_id = callback.message.chat.id
-    old_message_id = callback.message.message_id
-    temporary_messages_middleware.pending_user_messages[user_id].append(
-        (old_chat_id, old_message_id)
-    )
-    temporary_messages_middleware._persist_state()
+    # Mark previous system message (menu) as temporary, but NOT the admin response message
+    await _freeze_previous_system_message(bot=callback.bot, user_id=user_id)
     
     await callback.answer()
     

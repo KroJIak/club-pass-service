@@ -166,7 +166,7 @@ async def safe_edit_message(
     user_id = callback.from_user.id
     bot = callback.bot
     chat_id = callback.message.chat.id
-1    message_id = callback.message.message_id
+    message_id = callback.message.message_id
     
     if photo_input is None:
         if locale and screen_key:
