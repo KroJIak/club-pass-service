@@ -38,11 +38,12 @@ async def send_support_response(request: SendMessageRequest):
             )
         
         # Format message with headers and quote
+        # Original message in collapsible spoiler, admin response in blockquote
         formatted_message = (
             f"<b>Ваше обращение</b>\n"
-            f"<blockquote>{request.original_message}</blockquote>\n\n"
+            f"<spoiler><blockquote>{request.original_message}</blockquote></spoiler>\n\n"
             f"<b>Ответ администратора</b>\n"
-            f"{request.admin_response}"
+            f"<blockquote>{request.admin_response}</blockquote>"
         )
         
         # Send support response
@@ -109,8 +110,11 @@ async def send_direct_message(request: SendDirectMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with header
-        formatted_message = f"<b>Сообщение от администратора:</b>\n{request.message}"
+        # Format message with header and blockquote
+        formatted_message = (
+            f"<b>Сообщение от администратора</b>\n"
+            f"<blockquote>{request.message}</blockquote>"
+        )
         
         # Send direct message
         await bot.send_message(
