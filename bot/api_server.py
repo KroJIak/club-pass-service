@@ -46,11 +46,27 @@ async def send_support_response(request: SendMessageRequest):
             f"<blockquote>{request.admin_response}</blockquote>"
         )
         
+        # Create inline keyboard with "Write again" button
+        from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+        from aiogram.utils.keyboard import InlineKeyboardBuilder
+        from bot.core.i18n import DEFAULT_LOCALE, t
+        
+        # Use default locale for button text (user's locale is not available here)
+        locale = DEFAULT_LOCALE
+        
+        keyboard_builder = InlineKeyboardBuilder()
+        keyboard_builder.add(InlineKeyboardButton(
+            text=t(locale, "buttons.write_again"),
+            callback_data="support_new_message"
+        ))
+        reply_markup = keyboard_builder.as_markup()
+        
         # Send support response
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
             parse_mode="HTML",
+            reply_markup=reply_markup,
         )
         
         # Mark last system message (menu) as temporary

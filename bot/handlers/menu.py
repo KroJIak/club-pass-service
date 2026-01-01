@@ -164,6 +164,46 @@ async def handle_support(callback: CallbackQuery, state: FSMContext):
     await state.set_state(SupportStates.waiting_message)
 
 
+@router.callback_query(F.data == "support_new_message")
+async def handle_support_new_message(callback: CallbackQuery, state: FSMContext):
+    """Handle 'Write again' button - open support form."""
+    # Same logic as handle_support, but sends a new message instead of editing
+    locale = get_user_locale(callback.from_user.language_code)
+    support_text = (
+        f"{t(locale, 'messages.support_title')}\n\n"
+        f"{t(locale, 'messages.support_prompt')}"
+    )
+    
+    # Send new system message with support form
+    from bot.core.message_manager import get_screen_image
+    photo_input = get_screen_image(locale, "support")
+    new_message = await callback.message.answer_photo(
+        photo=photo_input,
+        caption=support_text,
+        reply_markup=get_support_cancel_keyboard(locale),
+        parse_mode="HTML",
+    )
+    
+    # Update last system message
+    user_id = callback.from_user.id
+    temporary_messages_middleware.set_last_system_message(
+        user_id, new_message.chat.id, new_message.message_id
+    )
+    
+    # Mark previous message (admin response) as temporary
+    old_chat_id = callback.message.chat.id
+    old_message_id = callback.message.message_id
+    temporary_messages_middleware.pending_user_messages[user_id].append(
+        (old_chat_id, old_message_id)
+    )
+    temporary_messages_middleware._persist_state()
+    
+    await callback.answer()
+    
+    # Set state to wait for support message
+    await state.set_state(SupportStates.waiting_message)
+
+
 @router.message(SupportStates.waiting_message, F.text)
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
