@@ -19,3 +19,6 @@ qrcode[pil]==7.4.2
 # HTTP server for API integration
 fastapi==0.104.1
 uvicorn==0.24.0
+
+# Timezone support
+pytz==2024.1
