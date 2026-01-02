@@ -29,4 +29,5 @@ class SupportMessage(Base):
     
     # Relationships
     user = relationship("User", backref="support_messages")
+    photos = relationship("SupportMessagePhoto", back_populates="support_message", cascade="all, delete-orphan")
 

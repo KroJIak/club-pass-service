@@ -91,6 +91,12 @@ class SupportMessageRepository:
         support_message = db.query(SupportMessage).filter(SupportMessage.id == message_id).first()
         if not support_message:
             return False
+        
+        # Delete photos explicitly to avoid cascade issues
+        # The cascade should handle this, but being explicit is safer
+        for photo in support_message.photos:
+            db.delete(photo)
+        
         db.delete(support_message)
         db.commit()
         return True
