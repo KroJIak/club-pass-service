@@ -351,12 +351,12 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
     # 1. Check if event exists and is active
     event = await api_service.get_event(event_id)
     if not event:
-        error_text = t(locale, "messages.purchase.event_not_found", default="❌ Событие не найдено")
+        error_text = t(locale, "messages.purchase.event_not_found")
         await callback.answer(error_text, show_alert=True)
         return
     
     if not event.get("is_active", False):
-        error_text = t(locale, "messages.purchase.event_inactive", default="❌ Событие неактивно")
+        error_text = t(locale, "messages.purchase.event_inactive")
         await callback.answer(error_text, show_alert=True)
         return
     
@@ -364,19 +364,14 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
     ticket_types = await api_service.get_ticket_types(event_id)
     ticket_type = next((tt for tt in ticket_types if tt.get("id") == ticket_type_id), None)
     if not ticket_type:
-        error_text = t(locale, "messages.purchase.ticket_type_not_found", default="❌ Тип билета не найден")
+        error_text = t(locale, "messages.purchase.ticket_type_not_found")
         await callback.answer(error_text, show_alert=True)
         return
     
     # 3. Check if enough tickets are available
     available_quantity = ticket_type.get("available_quantity", 0)
     if available_quantity < quantity:
-        error_text = t(
-            locale,
-            "messages.purchase.not_enough_tickets",
-            default="❌ Недостаточно билетов. Доступно: {available}",
-            available=available_quantity
-        )
+        error_text = t(locale, "messages.purchase.not_enough_tickets", available=available_quantity)
         await callback.answer(error_text, show_alert=True)
         return
     
@@ -393,7 +388,7 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
             current_time = datetime.now(tz)
             
             if end_dt_tz <= current_time:
-                error_text = t(locale, "messages.purchase.event_ended", default="❌ Событие уже закончилось")
+                error_text = t(locale, "messages.purchase.event_ended")
                 await callback.answer(error_text, show_alert=True)
                 return
         except (ValueError, Exception) as e:
