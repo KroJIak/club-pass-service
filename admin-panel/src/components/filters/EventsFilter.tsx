@@ -103,13 +103,6 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleDjToggle = (dj: string) => {
-    const newDjs = localFilter.selectedDjs.includes(dj)
-      ? localFilter.selectedDjs.filter((d) => d !== dj)
-      : [...localFilter.selectedDjs, dj]
-    handleFilterChange({ selectedDjs: newDjs })
-  }
-
   const handleTicketTypeToggle = (name: string) => {
     const newTypes = localFilter.selectedTicketTypes.includes(name)
       ? localFilter.selectedTicketTypes.filter((t) => t !== name)
