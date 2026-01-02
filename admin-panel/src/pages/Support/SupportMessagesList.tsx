@@ -198,6 +198,9 @@ const SupportMessagesList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   
+  // Image modal state
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null)
+  
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
