@@ -32,6 +32,14 @@ class PaymentRepository:
         return payment
     
     @staticmethod
+    def get_all(db: Session) -> List[Payment]:
+        """Get all payments."""
+        from sqlalchemy.orm import joinedload
+        return db.query(Payment).options(
+            joinedload(Payment.user)
+        ).order_by(Payment.created_at.desc()).all()
+    
+    @staticmethod
     def get_by_id(db: Session, payment_id: int) -> Optional[Payment]:
         """Get payment by ID."""
         return db.query(Payment).filter(Payment.id == payment_id).first()
