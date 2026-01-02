@@ -69,6 +69,9 @@ def get_ticket_types_keyboard(locale: str, ticket_types: list) -> InlineKeyboard
     builder = InlineKeyboardBuilder()
     for ticket_type in ticket_types:
         available = ticket_type.get('available_quantity', ticket_type.get('available', 0))
+        # Skip ticket types with zero availability
+        if available <= 0:
+            continue
         available_text = f" ({available} {t(locale, 'labels.available')})" if available > 0 else ""
         price = ticket_type.get('price', 0)
         if isinstance(price, str):

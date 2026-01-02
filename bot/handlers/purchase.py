@@ -82,9 +82,9 @@ async def handle_event_selected(callback: CallbackQuery, state: FSMContext):
     event_name = event.get("name", "")
     event_description = event.get("description", "") or ""
     
-    # Format DJs list with backticks
+    # Format DJs list with HTML code tags
     djs = event.get("djs", [])
-    djs_list = ", ".join([f"`{dj}`" for dj in djs]) if djs else ""
+    djs_list = ", ".join([f"<code>{dj}</code>" for dj in djs]) if djs else ""
     
     # Format dates: DD.MM, HH:MM
     start_date_str = event.get("start_date", "")
@@ -140,7 +140,6 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
     
     # Save selected ticket type to state
     await state.update_data(ticket_type_id=ticket_type_id)
-    await state.set_state(PurchaseStates.selecting_quantity)
     
     # Fetch ticket types to get details
     ticket_types = await api_service.get_ticket_types(event_id)
@@ -150,6 +149,79 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
         await callback.answer("Ticket type not found", show_alert=True)
         return
     
+    available_quantity = ticket_type.get("available_quantity", 0)
+    
+    # If only 1 ticket available, skip quantity selection and go directly to confirmation
+    if available_quantity == 1:
+        # Set quantity to 1 and go directly to confirmation
+        await state.update_data(quantity=1)
+        await state.set_state(PurchaseStates.confirming_order)
+        
+        # Fetch full details from API
+        event = await api_service.get_event(event_id)
+        if not event:
+            await callback.answer("Event not found", show_alert=True)
+            return
+        
+        price_per_ticket = float(ticket_type.get("price", 0))
+        total_price = price_per_ticket * 1
+        
+        # Format prices without .0 if integer
+        price_per_ticket_formatted = int(price_per_ticket) if price_per_ticket.is_integer() else price_per_ticket
+        total_price_formatted = int(total_price) if total_price.is_integer() else total_price
+        
+        event_name = event.get("name", "")
+        
+        # Format event date/time range - remove year but keep end date/time in messages
+        start_date = event.get("start_date", "")
+        start_time = event.get("start_time", "")
+        end_date = event.get("end_date", "")
+        end_time = event.get("end_time", "")
+        
+        # Format date without year
+        def format_date_without_year(date_str: str) -> str:
+            """Format date from DD.MM.YYYY to DD.MM."""
+            if not date_str:
+                return date_str
+            parts = date_str.split('.')
+            if len(parts) >= 2:
+                return f"{parts[0]}.{parts[1]}"
+            return date_str
+        
+        start_date_short = format_date_without_year(start_date)
+        end_date_short = format_date_without_year(end_date) if end_date else ''
+        
+        # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
+        if end_date and end_time:
+            event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
+        else:
+            event_datetime = f"{start_date_short} {start_time}"
+        
+        text = t(
+            locale,
+            "messages.purchase.confirm_order",
+            event_name=event_name,
+            event_date=event_datetime,
+            ticket_type_name=ticket_type.get("name", ""),
+            quantity=1,
+            price_per_ticket=price_per_ticket_formatted,
+            total_price=total_price_formatted,
+        )
+        
+        from bot.core.keyboards import get_confirm_order_keyboard
+        await safe_edit_message(
+            callback,
+            text,
+            reply_markup=get_confirm_order_keyboard(locale, total_price_formatted),
+            locale=locale,
+            screen_key="buy_ticket"
+        )
+        await callback.answer()
+        return
+    
+    # If more than 1 ticket available, show quantity selection
+    await state.set_state(PurchaseStates.selecting_quantity)
+    
     price = float(ticket_type.get("price", 0))
     price_formatted = int(price) if price.is_integer() else price
     text = t(
@@ -157,10 +229,10 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
         "messages.purchase.select_quantity",
         ticket_type_name=ticket_type.get("name", ""),
         price=price_formatted,
-        available=ticket_type.get("available_quantity", 0),
+        available=available_quantity,
     )
     
-    max_quantity = min(ticket_type.get("available_quantity", 5), 5)
+    max_quantity = min(available_quantity, 5)
     await safe_edit_message(
         callback,
         text,
@@ -493,9 +565,9 @@ async def handle_back_to_ticket_types(callback: CallbackQuery, state: FSMContext
     event_name = event.get("name", "")
     event_description = event.get("description", "") or ""
     
-    # Format DJs list with backticks
+    # Format DJs list with HTML code tags
     djs = event.get("djs", [])
-    djs_list = ", ".join([f"`{dj}`" for dj in djs]) if djs else ""
+    djs_list = ", ".join([f"<code>{dj}</code>" for dj in djs]) if djs else ""
     
     # Format dates: DD.MM, HH:MM
     start_date_str = event.get("start_date", "")
