@@ -66,7 +66,7 @@
     "purchase": {
       "select_event": "🎉 <b>Выберите событие</b>",
       "no_events": "😔 <b>Нет доступных событий</b>\n\nК сожалению, сейчас нет активных мероприятий. Попробуйте позже!",
-      "select_ticket_type": "🎫 <b>Выберите тип билета</b>\n\n<b>Событие:</b> {event_name}\n<b>Дата и время:</b> {event_date}",
+      "select_ticket_type": "🎫 <b>Выберите тип билета</b>\n\n<b>Событие:</b> {event_name}\n\n{event_description}\n\n<b>DJs:</b> {djs_list}\n\n<b>Дата начала:</b> {start_date}\n<b>Дата окончания:</b> {end_date}",
       "select_quantity": "🔢 <b>Выберите количество</b>\n\n<b>Тип билета:</b> {ticket_type_name}\n<b>Цена:</b> {price} ₽\n<b>Доступно:</b> {available} шт.",
       "confirm_order": "✅ <b>Подтверждение заказа</b>\n\n<b>Событие:</b> {event_name}\n<b>Дата и время:</b> {event_date}\n\n<b>Тип билета:</b> {ticket_type_name}\n<b>Количество:</b> {quantity} шт.\n<b>Цена за билет:</b> {price_per_ticket} ₽\n\n💵 <b>Итого к оплате:</b> {total_price} ₽",
       "processing_payment": "💳 <b>Обработка оплаты</b>\n\nВаш заказ обрабатывается. Сейчас вы будете перенаправлены на страницу оплаты...",
