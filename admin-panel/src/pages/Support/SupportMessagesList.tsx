@@ -641,36 +641,52 @@ const SupportMessagesList: React.FC = () => {
           {tabValue === 0 && (
             <>
           <Grid item xs={12} md={2.5}>
-            <TextField
-              fullWidth
-              select
-              label="Status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              SelectProps={{
-                native: false,
-              }}
-            >
-              <MenuItem value="all">All</MenuItem>
-              <MenuItem value="new">New</MenuItem>
-              <MenuItem value="responded">Responded</MenuItem>
-            </TextField>
+            <FormControl fullWidth>
+              <InputLabel id="status-filter-label">Status</InputLabel>
+              <Select
+                labelId="status-filter-label"
+                id="status-filter-select"
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+                MenuProps={{
+                  disablePortal: false,
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="new">New</MenuItem>
+                <MenuItem value="responded">Responded</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
           <Grid item xs={12} md={2.5}>
-            <TextField
-              fullWidth
-              select
-              label="Sort"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as SortOption)}
-              SelectProps={{
-                native: false,
-              }}
-            >
-              <MenuItem value="newest">Newest First</MenuItem>
-              <MenuItem value="oldest">Oldest First</MenuItem>
-              <MenuItem value="status">By Status</MenuItem>
-            </TextField>
+            <FormControl fullWidth>
+              <InputLabel id="sort-filter-label">Sort</InputLabel>
+              <Select
+                labelId="sort-filter-label"
+                id="sort-filter-select"
+                value={sortBy}
+                label="Sort"
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                MenuProps={{
+                  disablePortal: false,
+                  PaperProps: {
+                    style: {
+                      maxHeight: 300,
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="newest">Newest First</MenuItem>
+                <MenuItem value="oldest">Oldest First</MenuItem>
+                <MenuItem value="status">By Status</MenuItem>
+              </Select>
+            </FormControl>
           </Grid>
             </>
           )}
