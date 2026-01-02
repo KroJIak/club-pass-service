@@ -26,6 +26,7 @@ from api.repositories.support_message_repository import SupportMessageRepository
 from api.repositories.support_message_photo_repository import SupportMessagePhotoRepository
 from api.repositories.admin_message_repository import AdminMessageRepository
 from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+from api.repositories.staff_user_repository import StaffUserRepository
 from api.services.telegram_service import download_file_from_telegram
 from api.services.file_storage_service import save_support_photo, get_full_file_path
 from api.core.config import settings
@@ -49,6 +50,9 @@ from api.api.v1.schemas import (
     SupportMessageListResponse,
     AdminMessageResponse,
     AdminMessagePhotoResponse,
+    StaffUserResponse,
+    StaffUserCreate,
+    StaffUserListResponse,
 )
 from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage
 from api.models.ticket import TicketStatus

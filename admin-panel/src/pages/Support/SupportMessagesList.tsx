@@ -396,9 +396,9 @@ const SupportMessagesList: React.FC = () => {
     if (sendingResponse[messageId]) {
       return
     }
-    
+
     const response = responseText[messageId]?.trim() || ''
-    const photos = responsePhotos[messageId] || []
+      const photos = responsePhotos[messageId] || []
     
     // Allow sending only photos or only text or both
     if (!response && photos.length === 0) {
@@ -810,7 +810,7 @@ const SupportMessagesList: React.FC = () => {
                             rel="noopener noreferrer"
                             sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline' } }}
                           >
-                            {getUserDisplayName(msg)}
+                        {getUserDisplayName(msg)}
                           </Link>
                         ) : (
                           getUserDisplayName(msg)
@@ -838,7 +838,7 @@ const SupportMessagesList: React.FC = () => {
 
                   <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                     {msg.message && msg.message.trim() && (
-                      <Typography variant="body1">{msg.message}</Typography>
+                    <Typography variant="body1">{msg.message}</Typography>
                     )}
                     {/* User photos */}
                     {msg.photos && msg.photos.filter(p => !p.is_admin_photo).length > 0 && (
@@ -884,7 +884,7 @@ const SupportMessagesList: React.FC = () => {
                         {msg.responded_at && ` on ${formatDate(msg.responded_at)}`}
                       </Typography>
                       {msg.admin_response && (
-                        <Typography variant="body1">{msg.admin_response}</Typography>
+                      <Typography variant="body1">{msg.admin_response}</Typography>
                       )}
                       {/* Admin photos */}
                       {msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0 && (
@@ -996,8 +996,8 @@ const SupportMessagesList: React.FC = () => {
                             </Button>
                             <Button 
                               onClick={() => {
-                                setRespondingTo(null)
-                                setResponsePhotos((prev) => ({ ...prev, [msg.id]: [] }))
+                              setRespondingTo(null)
+                              setResponsePhotos((prev) => ({ ...prev, [msg.id]: [] }))
                               }}
                               disabled={sendingResponse[msg.id]}
                             >
@@ -1094,13 +1094,13 @@ const SupportMessagesList: React.FC = () => {
                               </ImageListItem>
                             ))}
                           </ImageList>
-                        </Box>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
             </Grid>
+          ))}
+        </Grid>
           )}
         </>
       )}

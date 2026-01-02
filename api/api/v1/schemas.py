@@ -376,3 +376,35 @@ class SupportMessageListResponse(BaseModel):
     """Schema for list of support messages."""
     messages: List[SupportMessageResponse]
 
+
+# Staff User schemas
+class StaffUserCreate(BaseModel):
+    """Schema for creating a staff user."""
+    telegram_user_id: int
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class StaffUserResponse(BaseModel):
+    """Schema for staff user response."""
+    id: int
+    telegram_user_id: int
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class StaffUserListResponse(BaseModel):
+    """Schema for list of staff users."""
+    staff_users: List[StaffUserResponse]
+
+
+class StaffAccessCheckResponse(BaseModel):
+    """Schema for staff access check response."""
+    has_access: bool
+    staff_user: Optional[StaffUserResponse] = None
+

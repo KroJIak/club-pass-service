@@ -1,0 +1,2 @@
+"""Staff bot core package."""
+

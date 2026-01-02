@@ -59,9 +59,9 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
 
   // Extract unique DJs from events (case-insensitive grouping)
   const djMap = new Map<string, string>() // lowercase -> original case
-  events
-    .flatMap((e) => e.djs || [])
-    .filter((dj) => dj && dj.trim() !== '')
+      events
+        .flatMap((e) => e.djs || [])
+        .filter((dj) => dj && dj.trim() !== '')
     .forEach((dj) => {
       const lower = dj.toLowerCase()
       if (!djMap.has(lower)) {

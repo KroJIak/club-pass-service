@@ -28,15 +28,15 @@ def upgrade():
     existing_tables = inspector.get_table_names()
     
     if 'expiration_settings' not in existing_tables:
-        op.create_table(
-            'expiration_settings',
-            sa.Column('id', sa.Integer(), nullable=False),
-            sa.Column('ticket_expiration_enabled', sa.Boolean(), nullable=False, server_default='true'),
-            sa.Column('event_deactivation_enabled', sa.Boolean(), nullable=False, server_default='true'),
-            sa.Column('updated_at', sa.DateTime(), nullable=False),
-            sa.PrimaryKeyConstraint('id')
-        )
-        
+    op.create_table(
+        'expiration_settings',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('ticket_expiration_enabled', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('event_deactivation_enabled', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('updated_at', sa.DateTime(), nullable=False),
+        sa.PrimaryKeyConstraint('id')
+    )
+    
         # Insert default settings only if table was just created
         op.execute("""
             INSERT INTO expiration_settings (id, ticket_expiration_enabled, event_deactivation_enabled, updated_at)
@@ -45,11 +45,11 @@ def upgrade():
         """)
     else:
         # Table already exists, just ensure default settings exist
-        op.execute("""
-            INSERT INTO expiration_settings (id, ticket_expiration_enabled, event_deactivation_enabled, updated_at)
-            VALUES (1, true, true, NOW())
+    op.execute("""
+        INSERT INTO expiration_settings (id, ticket_expiration_enabled, event_deactivation_enabled, updated_at)
+        VALUES (1, true, true, NOW())
             ON CONFLICT (id) DO NOTHING
-        """)
+    """)
 
 
 def downgrade():

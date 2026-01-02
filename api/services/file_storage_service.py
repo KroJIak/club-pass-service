@@ -100,7 +100,7 @@ def save_support_photo(file_content: bytes, filename: str, mime_type: str, compr
     if compress:
         file_ext = '.jpg'
     else:
-        file_ext = Path(filename).suffix or _get_extension_from_mime_type(mime_type)
+    file_ext = Path(filename).suffix or _get_extension_from_mime_type(mime_type)
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = os.path.join(upload_dir, unique_filename)
     

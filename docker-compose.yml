@@ -93,6 +93,35 @@ services:
       - api
     restart: unless-stopped
 
+  staff-bot:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.staff-bot
+    container_name: club-pass-staff-bot
+    environment:
+      STAFF_BOT_TOKEN: ${STAFF_BOT_TOKEN}
+      API_URL: http://api:8000
+      API_PREFIX: /api
+      MINI_APP_URL: ${MINI_APP_URL:-http://localhost:3001}
+    depends_on:
+      - api
+    volumes:
+      - ./staff-bot:/app/staff-bot
+    restart: unless-stopped
+
+  mini-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.mini-app
+      args:
+        VITE_API_URL: ""  # Use relative paths with nginx proxy
+    container_name: club-pass-mini-app
+    ports:
+      - "${MINI_APP_PORT:-3001}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
   expiration-service:
     build:
       context: .
