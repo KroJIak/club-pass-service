@@ -146,7 +146,7 @@ const SupportMessagesList: React.FC = () => {
   // Fetch messages when filters change
   useEffect(() => {
     if (tabValue === 0) {
-      fetchMessages()
+    fetchMessages()
     } else {
       fetchAdminMessages()
     }
@@ -518,34 +518,34 @@ const SupportMessagesList: React.FC = () => {
           </Grid>
           {tabValue === 0 && (
             <>
-              <Grid item xs={12} md={2.5}>
-                <FormControl fullWidth>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    label="Status"
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <MenuItem value="all">All</MenuItem>
-                    <MenuItem value="new">New</MenuItem>
-                    <MenuItem value="responded">Responded</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={2.5}>
-                <FormControl fullWidth>
-                  <InputLabel>Sort</InputLabel>
-                  <Select
-                    value={sortBy}
-                    label="Sort"
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  >
-                    <MenuItem value="newest">Newest First</MenuItem>
-                    <MenuItem value="oldest">Oldest First</MenuItem>
-                    <MenuItem value="status">By Status</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
+          <Grid item xs={12} md={2.5}>
+            <FormControl fullWidth>
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <MenuItem value="all">All</MenuItem>
+                <MenuItem value="new">New</MenuItem>
+                <MenuItem value="responded">Responded</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={2.5}>
+            <FormControl fullWidth>
+              <InputLabel>Sort</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort"
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+              >
+                <MenuItem value="newest">Newest First</MenuItem>
+                <MenuItem value="oldest">Oldest First</MenuItem>
+                <MenuItem value="status">By Status</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
             </>
           )}
         </Grid>
@@ -566,13 +566,13 @@ const SupportMessagesList: React.FC = () => {
       {/* Messages List */}
       {tabValue === 0 ? (
         <>
-          {loading ? (
-            <Typography>Loading...</Typography>
-          ) : messages.length === 0 ? (
-            <Typography>No support messages found</Typography>
-          ) : (
-            <Grid container spacing={2}>
-              {messages.map((msg) => (
+      {loading ? (
+        <Typography>Loading...</Typography>
+      ) : messages.length === 0 ? (
+        <Typography>No support messages found</Typography>
+      ) : (
+        <Grid container spacing={2}>
+          {messages.map((msg) => (
             <Grid item xs={12} key={msg.id}>
               <Card>
                 <CardContent>
@@ -746,8 +746,8 @@ const SupportMessagesList: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
-              ))}
-            </Grid>
+          ))}
+        </Grid>
           )}
         </>
       ) : (
