@@ -290,6 +290,21 @@ class ClubSettingsUpdate(BaseModel):
 
 
 # SupportMessage schemas
+class SupportMessagePhotoResponse(BaseModel):
+    """Schema for support message photo response."""
+    id: int
+    support_message_id: int
+    file_path: str
+    file_name: str
+    file_size: int
+    mime_type: str
+    is_admin_photo: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class SupportMessageResponse(BaseModel):
     """Schema for support message response."""
     id: int
@@ -305,6 +320,7 @@ class SupportMessageResponse(BaseModel):
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    photos: List[SupportMessagePhotoResponse] = []
 
     class Config:
         from_attributes = True
@@ -314,12 +330,47 @@ class SupportMessageCreate(BaseModel):
     """Schema for creating a support message."""
     user_id: int
     message: str
+    photo_file_ids: Optional[List[str]] = None
 
 
 class SupportMessageUpdate(BaseModel):
     """Schema for updating a support message."""
     status: Optional[SupportMessageStatus] = None
     admin_response: Optional[str] = None
+
+
+# AdminMessage schemas
+class AdminMessagePhotoResponse(BaseModel):
+    """Schema for admin message photo response."""
+    id: int
+    admin_message_id: int
+    file_path: str
+    file_name: str
+    file_size: int
+    mime_type: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminMessageResponse(BaseModel):
+    """Schema for admin message response."""
+    id: int
+    user_id: int
+    message: Optional[str] = None
+    sent_by: str
+    created_at: datetime
+    updated_at: datetime
+    # Related data
+    username: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    photos: List[AdminMessagePhotoResponse] = []
+
+    class Config:
+        from_attributes = True
+    photo_file_ids: Optional[List[str]] = None
 
 
 class SupportMessageListResponse(BaseModel):

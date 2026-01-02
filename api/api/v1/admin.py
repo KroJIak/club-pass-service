@@ -1,6 +1,8 @@
 """Admin CRUD endpoints for all models."""
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+import os
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, UploadFile, File, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional, List
@@ -22,6 +24,12 @@ from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.repositories.support_message_repository import SupportMessageRepository
+from api.repositories.support_message_photo_repository import SupportMessagePhotoRepository
+from api.repositories.admin_message_repository import AdminMessageRepository
+from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+from api.services.telegram_service import download_file_from_telegram
+from api.services.file_storage_service import save_support_photo, get_full_file_path
+from api.core.config import settings
 from api.services.ticket_service import TicketService
 from api.services.event_scheduling_service import schedule_event_deactivation, cancel_event_deactivation
 from api.api.v1.schemas import (
@@ -36,9 +44,12 @@ from api.api.v1.schemas import (
     ClubSettingsResponse,
     ClubSettingsUpdate,
     SupportMessageResponse,
+    SupportMessagePhotoResponse,
     SupportMessageCreate,
     SupportMessageUpdate,
     SupportMessageListResponse,
+    AdminMessageResponse,
+    AdminMessagePhotoResponse,
 )
 from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, Promocode, SupportMessage
 from api.models.ticket import TicketStatus
@@ -1482,7 +1493,7 @@ async def get_all_support_messages(
         search=search,
     )
     
-    # Populate user info
+    # Populate user info and photos
     result = []
     for msg in messages:
         msg_dict = SupportMessageResponse.model_validate(msg).model_dump()
@@ -1490,6 +1501,9 @@ async def get_all_support_messages(
             msg_dict['username'] = msg.user.username
             msg_dict['first_name'] = msg.user.first_name
             msg_dict['last_name'] = msg.user.last_name
+        # Get photos for this message
+        photos = SupportMessagePhotoRepository.get_by_support_message_id(db, msg.id)
+        msg_dict['photos'] = [SupportMessagePhotoResponse.model_validate(p).model_dump() for p in photos]
         result.append(SupportMessageResponse(**msg_dict))
     
     return SupportMessageListResponse(messages=result)
@@ -1514,8 +1528,87 @@ async def get_support_message(
         msg_dict['username'] = message.user.username
         msg_dict['first_name'] = message.user.first_name
         msg_dict['last_name'] = message.user.last_name
-    
+    # Get photos for this message
+    photos = SupportMessagePhotoRepository.get_by_support_message_id(db, message_id)
+    msg_dict['photos'] = [SupportMessagePhotoResponse.model_validate(p).model_dump() for p in photos]
     return SupportMessageResponse(**msg_dict)
+
+
+@router.get("/admin/support-messages/{message_id}/photos/{photo_id}")
+async def get_support_message_photo(
+    message_id: int,
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get a support message photo file (admin only)."""
+    photo = SupportMessagePhotoRepository.get_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo with id {photo_id} not found"
+        )
+    
+    if photo.support_message_id != message_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Photo {photo_id} does not belong to message {message_id}"
+        )
+    
+    full_path = get_full_file_path(photo.file_path)
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo file not found: {photo.file_path}"
+        )
+    
+    return FileResponse(
+        full_path,
+        media_type=photo.mime_type,
+        filename=photo.file_name,
+    )
+
+
+@router.post("/admin/upload-photo")
+async def upload_photo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Upload a photo file and return the file path."""
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Validate file size
+        max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
+        if len(file_content) > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File size exceeds maximum allowed size ({settings.MAX_PHOTO_SIZE_MB}MB)"
+            )
+        
+        # Validate MIME type
+        mime_type = file.content_type or "image/jpeg"
+        if not mime_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be an image"
+            )
+        
+        # Save file
+        file_path = save_support_photo(file_content, file.filename or "photo.jpg", mime_type)
+        
+        return {"file_path": file_path, "filename": file.filename, "mime_type": mime_type}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading photo: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload photo: {str(e)}"
+        )
 
 
 @router.put("/admin/support-messages/{message_id}/respond", response_model=SupportMessageResponse)
@@ -1527,6 +1620,7 @@ async def respond_to_support_message(
 ):
     """Respond to a support message (admin only)."""
     from api.models.support_message import SupportMessageStatus
+    from api.core.config import settings
     import os
     import httpx
     
@@ -1537,14 +1631,53 @@ async def respond_to_support_message(
             detail=f"Support message with id {message_id} not found"
         )
     
-    admin_response = response_data.get('admin_response')
-    if not admin_response:
+    admin_response = response_data.get('admin_response', '')
+    photo_file_ids = response_data.get('photo_file_ids', [])
+    photo_paths = response_data.get('photo_paths', [])
+    
+    if not admin_response and not photo_file_ids and not photo_paths:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="admin_response is required"
+            detail="admin_response or photos are required"
         )
     
     admin_username = current_admin.get("sub", "admin")
+    
+    # Handle photos if provided
+    photo_file_ids = response_data.get('photo_file_ids', [])
+    photo_paths = response_data.get('photo_paths', [])  # Paths from uploaded files
+    
+    # Process photo_paths (from direct upload) - save to database for history
+    if photo_paths:
+        logger.info(f"Processing {len(photo_paths)} photos from uploaded files for admin response to message {message_id}")
+        for photo_path in photo_paths:
+            try:
+                # Get file info
+                from api.services.file_storage_service import get_full_file_path
+                full_path = get_full_file_path(photo_path)
+                if os.path.exists(full_path):
+                    file_size = os.path.getsize(full_path)
+                    filename = os.path.basename(photo_path)
+                    
+                    # Determine MIME type from extension
+                    import mimetypes
+                    mime_type, _ = mimetypes.guess_type(full_path)
+                    if not mime_type:
+                        mime_type = "image/jpeg"
+                    
+                    # Create photo record
+                    SupportMessagePhotoRepository.create(
+                        db=db,
+                        support_message_id=message_id,
+                        file_path=photo_path,
+                        file_name=filename,
+                        file_size=file_size,
+                        mime_type=mime_type,
+                        is_admin_photo=True,
+                    )
+                    logger.info(f"Added uploaded photo for support message {message_id}: {filename}")
+            except Exception as e:
+                logger.error(f"Error processing photo path {photo_path}: {e}", exc_info=True)
     
     updated_message = SupportMessageRepository.update(
         db=db,
@@ -1572,14 +1705,22 @@ async def respond_to_support_message(
                 logger.warning("BOT_API_URL not configured, cannot send support response")
             else:
                 async with httpx.AsyncClient() as client:
+                    # Send photo_file_ids if available (bot will use them directly)
+                    # Otherwise send photo_paths if available (uploaded files)
+                    request_data = {
+                        "telegram_user_id": telegram_user_id,
+                        "original_message": message.message,
+                        "admin_response": admin_response,
+                    }
+                    if photo_file_ids:
+                        request_data["photo_file_ids"] = photo_file_ids
+                    elif photo_paths:
+                        request_data["photo_paths"] = photo_paths
+                    
                     response = await client.post(
                         f"{bot_api_url}/send-support-response",
-                        json={
-                            "telegram_user_id": telegram_user_id,
-                            "original_message": message.message,
-                            "admin_response": admin_response,
-                        },
-                        timeout=10.0,
+                        json=request_data,
+                        timeout=30.0,  # Increased timeout for file operations
                     )
                     if response.status_code != 200:
                         logger.warning(f"Failed to send message to user {telegram_user_id}: {response.text}")
@@ -1591,6 +1732,8 @@ async def respond_to_support_message(
         logger.error(f"Error sending support response to user: {e}", exc_info=True)
         # Don't fail the request if sending fails - message is already saved
     
+    # Refresh to get photos
+    db.refresh(updated_message)
     msg_dict = SupportMessageResponse.model_validate(updated_message).model_dump()
     if updated_message.user:
         msg_dict['username'] = updated_message.user.username
@@ -1646,28 +1789,91 @@ async def send_message_to_user(
     """Send a direct message to a user (admin only)."""
     import os
     import httpx
+    from api.services.file_storage_service import get_full_file_path
+    from api.repositories.user_repository import UserRepository
+    from api.repositories.admin_message_repository import AdminMessageRepository
+    from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
     
     telegram_user_id = request_data.get("telegram_user_id")
     message = request_data.get("message")
+    photo_file_ids = request_data.get("photo_file_ids", [])
+    photo_paths = request_data.get("photo_paths", [])  # Paths from uploaded files
     
-    if not telegram_user_id or not message:
+    if not telegram_user_id or (not message and not photo_paths and not photo_file_ids):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="telegram_user_id and message are required"
+            detail="telegram_user_id and either message or photos are required"
         )
     
+    # Get user by telegram_user_id
+    user = UserRepository.get_by_telegram_id(db, telegram_user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with telegram_user_id {telegram_user_id} not found"
+        )
+    
+    admin_username = current_admin.get("sub", "admin")
+    
+    # Save message to database
+    admin_message = AdminMessageRepository.create(
+        db=db,
+        user_id=user.id,
+        message=message,
+        sent_by=admin_username,
+    )
+    
+    # Process photo_paths (from direct upload) - save to database
+    if photo_paths:
+        logger.info(f"Processing {len(photo_paths)} photos from uploaded files for direct message to user {telegram_user_id}")
+        for photo_path in photo_paths:
+            try:
+                full_path = get_full_file_path(photo_path)
+                if os.path.exists(full_path):
+                    file_size = os.path.getsize(full_path)
+                    filename = os.path.basename(photo_path)
+                    
+                    # Determine MIME type from extension
+                    import mimetypes
+                    mime_type, _ = mimetypes.guess_type(full_path)
+                    if not mime_type:
+                        mime_type = "image/jpeg"
+                    
+                    # Create photo record
+                    AdminMessagePhotoRepository.create(
+                        db=db,
+                        admin_message_id=admin_message.id,
+                        file_path=photo_path,
+                        file_name=filename,
+                        file_size=file_size,
+                        mime_type=mime_type,
+                    )
+                    logger.info(f"Saved uploaded photo for admin message {admin_message.id}: {filename}")
+                else:
+                    logger.warning(f"Photo file not found: {full_path}")
+            except Exception as e:
+                logger.error(f"Error processing photo path {photo_path}: {e}", exc_info=True)
+    
     # Get bot API URL from config
-    bot_api_url = os.getenv("BOT_API_URL", "http://bot:8002")
+    bot_api_url = settings.BOT_API_URL
     
     try:
         async with httpx.AsyncClient() as client:
+            request_payload = {
+                "telegram_user_id": telegram_user_id,
+                "message": message or "",
+            }
+            # Send photo_file_ids if available (bot will use them directly)
+            # Otherwise send photo_paths if available (uploaded files)
+            if photo_file_ids:
+                request_payload["photo_file_ids"] = photo_file_ids
+            elif photo_paths:
+                request_payload["photo_paths"] = photo_paths
+            
             response = await client.post(
                 f"{bot_api_url}/send-direct-message",
-                json={
-                    "telegram_user_id": telegram_user_id,
-                    "message": message,
-                },
-                timeout=10.0,
+                json=request_payload,
+                timeout=30.0,  # Increased timeout for file operations
             )
             response.raise_for_status()
             return {"status": "success", "message": "Message sent successfully"}
@@ -1701,9 +1907,87 @@ async def delete_support_message(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Delete a support message (admin only)."""
+    from api.services.file_storage_service import delete_support_photo
+    import os
+    
+    message = SupportMessageRepository.get_by_id(db, message_id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Support message with id {message_id} not found"
+        )
+    
+    # Delete all photos associated with this message
+    photos = SupportMessagePhotoRepository.get_by_support_message_id(db, message_id)
+    for photo in photos:
+        delete_support_photo(photo.file_path)
+    
     if not SupportMessageRepository.delete(db, message_id):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Support message with id {message_id} not found"
         )
     return None
+
+
+@router.get("/admin/admin-messages", response_model=List[AdminMessageResponse])
+async def get_admin_messages(
+    user_id: Optional[int] = None,
+    sent_by: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    limit: Optional[int] = 50,
+    offset: Optional[int] = 0,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get admin messages history (admin only)."""
+    from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+    
+    # Parse date strings
+    date_from_obj = None
+    date_to_obj = None
+    if date_from:
+        try:
+            date_from_obj = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date_from format. Use ISO format."
+            )
+    if date_to:
+        try:
+            date_to_obj = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date_to format. Use ISO format."
+            )
+    
+    # Get messages
+    messages = AdminMessageRepository.get_all(
+        db=db,
+        user_id=user_id,
+        sent_by=sent_by,
+        date_from=date_from_obj,
+        date_to=date_to_obj,
+        limit=limit,
+        offset=offset,
+    )
+    
+    # Build response with user info and photos
+    result = []
+    for msg in messages:
+        msg_dict = AdminMessageResponse.model_validate(msg).model_dump()
+        if msg.user:
+            msg_dict['username'] = msg.user.username
+            msg_dict['first_name'] = msg.user.first_name
+            msg_dict['last_name'] = msg.user.last_name
+        
+        # Get photos
+        photos = AdminMessagePhotoRepository.get_by_admin_message_id(db, msg.id)
+        msg_dict['photos'] = [AdminMessagePhotoResponse.model_validate(photo).model_dump() for photo in photos]
+        
+        result.append(AdminMessageResponse(**msg_dict))
+    
+    return result

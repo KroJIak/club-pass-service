@@ -1,10 +1,12 @@
 """Simple HTTP server for bot to receive messages from API."""
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import logging
 import re
 from aiogram import Bot
+from aiogram.types import BufferedInputFile
 from bot.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -26,12 +28,16 @@ class SendMessageRequest(BaseModel):
     telegram_user_id: int
     original_message: str
     admin_response: str
+    photo_file_ids: Optional[List[str]] = None
+    photo_paths: Optional[List[str]] = None  # Paths to photo files on server
 
 
 class SendDirectMessageRequest(BaseModel):
     """Request to send a direct message to a user."""
     telegram_user_id: int
     message: str
+    photo_file_ids: Optional[List[str]] = None
+    photo_paths: Optional[List[str]] = None  # Paths to photo files on server
 
 
 @app.post("/send-support-response")
@@ -75,7 +81,38 @@ async def send_support_response(request: SendMessageRequest):
         ))
         reply_markup = keyboard_builder.as_markup()
         
-        # Send support response
+        # Send support response with photos if any
+        if request.photo_file_ids:
+            # Send photos first using file_ids
+            from aiogram.types import InputMediaPhoto
+            media_group = []
+            for file_id in request.photo_file_ids:
+                media_group.append(InputMediaPhoto(media=file_id))
+            
+            # Send media group
+            await bot.send_media_group(
+                chat_id=request.telegram_user_id,
+                media=media_group,
+            )
+        elif request.photo_paths:
+            # Send photos using file paths
+            from aiogram.types import FSInputFile, InputMediaPhoto
+            import os
+            media_group = []
+            for photo_path in request.photo_paths:
+                full_path = os.path.join(os.getcwd(), photo_path)
+                if os.path.exists(full_path):
+                    photo_file = FSInputFile(full_path)
+                    media_group.append(InputMediaPhoto(media=photo_file))
+            
+            if media_group:
+                # Send media group
+                await bot.send_media_group(
+                    chat_id=request.telegram_user_id,
+                    media=media_group,
+                )
+        
+        # Send text message
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
@@ -129,6 +166,8 @@ def get_bot_instance() -> Optional[Bot]:
     return _bot_instance
 
 
+
+
 @app.post("/send-direct-message")
 async def send_direct_message(request: SendDirectMessageRequest):
     """Send a direct message to a user (admin to user)."""
@@ -162,7 +201,38 @@ async def send_direct_message(request: SendDirectMessageRequest):
         ))
         reply_markup = keyboard_builder.as_markup()
         
-        # Send direct message
+        # Send direct message with photos if any
+        if request.photo_file_ids:
+            # Send photos first using file_ids
+            from aiogram.types import InputMediaPhoto
+            media_group = []
+            for file_id in request.photo_file_ids:
+                media_group.append(InputMediaPhoto(media=file_id))
+            
+            # Send media group
+            await bot.send_media_group(
+                chat_id=request.telegram_user_id,
+                media=media_group,
+            )
+        elif request.photo_paths:
+            # Send photos using file paths
+            from aiogram.types import FSInputFile, InputMediaPhoto
+            import os
+            media_group = []
+            for photo_path in request.photo_paths:
+                full_path = os.path.join(os.getcwd(), photo_path)
+                if os.path.exists(full_path):
+                    photo_file = FSInputFile(full_path)
+                    media_group.append(InputMediaPhoto(media=photo_file))
+            
+            if media_group:
+                # Send media group
+                await bot.send_media_group(
+                    chat_id=request.telegram_user_id,
+                    media=media_group,
+                )
+        
+        # Send text message
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,

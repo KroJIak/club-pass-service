@@ -19,6 +19,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  ImageList,
+  ImageListItem,
+  Tabs,
+  Tab,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
@@ -33,6 +37,17 @@ import api from '../../services/api'
 import { User } from '../../types'
 import dayjs from 'dayjs'
 
+interface SupportMessagePhoto {
+  id: number
+  support_message_id: number
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  is_admin_photo: boolean
+  created_at: string
+}
+
 interface SupportMessage {
   id: number
   user_id: number
@@ -46,14 +61,41 @@ interface SupportMessage {
   username: string | null
   first_name: string | null
   last_name: string | null
+  photos: SupportMessagePhoto[]
+}
+
+interface AdminMessagePhoto {
+  id: number
+  admin_message_id: number
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+}
+
+interface AdminMessage {
+  id: number
+  user_id: number
+  message: string | null
+  sent_by: string
+  created_at: string
+  updated_at: string
+  username: string | null
+  first_name: string | null
+  last_name: string | null
+  photos: AdminMessagePhoto[]
 }
 
 type SortOption = 'newest' | 'oldest' | 'status'
 
 const SupportMessagesList: React.FC = () => {
+  const [tabValue, setTabValue] = useState(0)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [allMessages, setAllMessages] = useState<SupportMessage[]>([])
+  const [adminMessages, setAdminMessages] = useState<AdminMessage[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingAdminMessages, setLoadingAdminMessages] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   
@@ -67,11 +109,13 @@ const SupportMessagesList: React.FC = () => {
   
   const [responseText, setResponseText] = useState<{ [key: number]: string }>({})
   const [respondingTo, setRespondingTo] = useState<number | null>(null)
+  const [responsePhotos, setResponsePhotos] = useState<{ [key: number]: File[] }>({})
   
   // Send message dialog state
   const [sendMessageOpen, setSendMessageOpen] = useState(false)
   const [sendMessageUser, setSendMessageUser] = useState<User | null>(null)
   const [sendMessageText, setSendMessageText] = useState('')
+  const [sendMessagePhotos, setSendMessagePhotos] = useState<File[]>([])
   const [sendingMessage, setSendingMessage] = useState(false)
 
   // Fetch users for autocomplete
@@ -101,8 +145,37 @@ const SupportMessagesList: React.FC = () => {
 
   // Fetch messages when filters change
   useEffect(() => {
-    fetchMessages()
-  }, [statusFilter, selectedUser, dateFrom, dateTo])
+    if (tabValue === 0) {
+      fetchMessages()
+    } else {
+      fetchAdminMessages()
+    }
+  }, [statusFilter, selectedUser, dateFrom, dateTo, tabValue])
+
+  const fetchAdminMessages = async () => {
+    setLoadingAdminMessages(true)
+    try {
+      const params: any = {}
+      if (selectedUser) {
+        params.user_id = selectedUser.id
+      }
+      if (dateFrom) {
+        params.date_from = dateFrom
+      }
+      if (dateTo) {
+        params.date_to = dateTo
+      }
+      params.limit = 100
+      params.offset = 0
+      
+      const response = await api.get('/admin/admin-messages', { params })
+      setAdminMessages(response.data || [])
+    } catch (error) {
+      console.error('Failed to fetch admin messages:', error)
+    } finally {
+      setLoadingAdminMessages(false)
+    }
+  }
 
   const fetchMessages = async () => {
     setLoading(true)
@@ -192,10 +265,30 @@ const SupportMessagesList: React.FC = () => {
     }
 
     try {
+      const photos = responsePhotos[messageId] || []
+      let photo_paths: string[] = []
+      
+      // Upload photos first if any
+      if (photos.length > 0) {
+        const uploadPromises = photos.map(async (file) => {
+          const formData = new FormData()
+          formData.append('file', file)
+          const uploadResponse = await api.post('/admin/upload-photo', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          return uploadResponse.data.file_path
+        })
+        photo_paths = await Promise.all(uploadPromises)
+      }
+      
       await api.put(`/admin/support-messages/${messageId}/respond`, {
         admin_response: response,
+        photo_paths: photo_paths,
       })
       setResponseText((prev) => ({ ...prev, [messageId]: '' }))
+      setResponsePhotos((prev) => ({ ...prev, [messageId]: [] }))
       setRespondingTo(null)
       fetchMessages()
     } catch (error: any) {
@@ -245,23 +338,42 @@ const SupportMessagesList: React.FC = () => {
     setSendMessageOpen(false)
     setSendMessageUser(null)
     setSendMessageText('')
+    setSendMessagePhotos([])
     setSendMessageError('')
   }
 
   const [sendMessageError, setSendMessageError] = useState<string>('')
 
   const handleSendMessage = async () => {
-    if (!sendMessageUser || !sendMessageText.trim()) {
-      setSendMessageError('Please select a user and enter a message')
+    if (!sendMessageUser || (!sendMessageText.trim() && sendMessagePhotos.length === 0)) {
+      setSendMessageError('Please select a user and enter a message or add photos')
       return
     }
 
     setSendMessageError('')
     setSendingMessage(true)
     try {
+      let photo_paths: string[] = []
+      
+      // Upload photos first if any
+      if (sendMessagePhotos.length > 0) {
+        const uploadPromises = sendMessagePhotos.map(async (file) => {
+          const formData = new FormData()
+          formData.append('file', file)
+          const uploadResponse = await api.post('/admin/upload-photo', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          })
+          return uploadResponse.data.file_path
+        })
+        photo_paths = await Promise.all(uploadPromises)
+      }
+      
       await api.post('/admin/send-message', {
         telegram_user_id: sendMessageUser.telegram_user_id,
-        message: sendMessageText.trim(),
+        message: sendMessageText.trim() || '',
+        photo_paths: photo_paths,
       })
       alert('Message sent successfully!')
       handleCloseSendMessage()
@@ -291,6 +403,14 @@ const SupportMessagesList: React.FC = () => {
         >
           Send Message
         </Button>
+      </Box>
+
+      {/* Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+          <Tab label="User Messages" />
+          <Tab label="Admin Messages History" />
+        </Tabs>
       </Box>
 
       {/* Statistics Cards */}
@@ -396,40 +516,44 @@ const SupportMessagesList: React.FC = () => {
               helperText={dateFrom && dateTo && dateFrom > dateTo ? 'Date To must be after Date From' : ''}
             />
           </Grid>
-          <Grid item xs={12} md={2.5}>
-            <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
-              <Select
-                value={statusFilter}
-                label="Status"
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="new">New</MenuItem>
-                <MenuItem value="responded">Responded</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} md={2.5}>
-            <FormControl fullWidth>
-              <InputLabel>Sort</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sort"
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-              >
-                <MenuItem value="newest">Newest First</MenuItem>
-                <MenuItem value="oldest">Oldest First</MenuItem>
-                <MenuItem value="status">By Status</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+          {tabValue === 0 && (
+            <>
+              <Grid item xs={12} md={2.5}>
+                <FormControl fullWidth>
+                  <InputLabel>Status</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    label="Status"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All</MenuItem>
+                    <MenuItem value="new">New</MenuItem>
+                    <MenuItem value="responded">Responded</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={2.5}>
+                <FormControl fullWidth>
+                  <InputLabel>Sort</InputLabel>
+                  <Select
+                    value={sortBy}
+                    label="Sort"
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  >
+                    <MenuItem value="newest">Newest First</MenuItem>
+                    <MenuItem value="oldest">Oldest First</MenuItem>
+                    <MenuItem value="status">By Status</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+            </>
+          )}
         </Grid>
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={fetchMessages}
+            onClick={tabValue === 0 ? fetchMessages : fetchAdminMessages}
           >
             Refresh
           </Button>
@@ -440,13 +564,15 @@ const SupportMessagesList: React.FC = () => {
       </Paper>
 
       {/* Messages List */}
-      {loading ? (
-        <Typography>Loading...</Typography>
-      ) : messages.length === 0 ? (
-        <Typography>No support messages found</Typography>
-      ) : (
-        <Grid container spacing={2}>
-          {messages.map((msg) => (
+      {tabValue === 0 ? (
+        <>
+          {loading ? (
+            <Typography>Loading...</Typography>
+          ) : messages.length === 0 ? (
+            <Typography>No support messages found</Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {messages.map((msg) => (
             <Grid item xs={12} key={msg.id}>
               <Card>
                 <CardContent>
@@ -477,6 +603,27 @@ const SupportMessagesList: React.FC = () => {
 
                   <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="body1">{msg.message}</Typography>
+                    {/* User photos */}
+                    {msg.photos && msg.photos.filter(p => !p.is_admin_photo).length > 0 && (
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="caption" color="text.secondary" gutterBottom>
+                          Photos ({msg.photos.filter(p => !p.is_admin_photo).length})
+                        </Typography>
+                        <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
+                          {msg.photos.filter(p => !p.is_admin_photo).map((photo) => (
+                            <ImageListItem key={photo.id}>
+                              <img
+                                src={`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`}
+                                alt={photo.file_name}
+                                loading="lazy"
+                                style={{ cursor: 'pointer' }}
+                                onClick={() => window.open(`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`, '_blank')}
+                              />
+                            </ImageListItem>
+                          ))}
+                        </ImageList>
+                      </Box>
+                    )}
                   </Box>
 
                   {msg.admin_response ? (
@@ -486,6 +633,27 @@ const SupportMessagesList: React.FC = () => {
                         {msg.responded_at && ` on ${formatDate(msg.responded_at)}`}
                       </Typography>
                       <Typography variant="body1">{msg.admin_response}</Typography>
+                      {/* Admin photos */}
+                      {msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" color="text.secondary" gutterBottom>
+                            Photos ({msg.photos.filter(p => p.is_admin_photo).length})
+                          </Typography>
+                          <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
+                            {msg.photos.filter(p => p.is_admin_photo).map((photo) => (
+                              <ImageListItem key={photo.id}>
+                                <img
+                                  src={`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`}
+                                  alt={photo.file_name}
+                                  loading="lazy"
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => window.open(`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`, '_blank')}
+                                />
+                              </ImageListItem>
+                            ))}
+                          </ImageList>
+                        </Box>
+                      )}
                     </Box>
                   ) : (
                     <Box sx={{ mt: 2 }}>
@@ -505,6 +673,51 @@ const SupportMessagesList: React.FC = () => {
                             }
                             sx={{ mb: 1 }}
                           />
+                          <Box sx={{ mb: 2 }}>
+                            <input
+                              accept="image/*"
+                              style={{ display: 'none' }}
+                              id={`photo-upload-${msg.id}`}
+                              type="file"
+                              multiple
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || [])
+                                setResponsePhotos((prev) => ({
+                                  ...prev,
+                                  [msg.id]: [...(prev[msg.id] || []), ...files],
+                                }))
+                              }}
+                            />
+                            <label htmlFor={`photo-upload-${msg.id}`}>
+                              <Button variant="outlined" component="span" size="small" sx={{ mr: 1 }}>
+                                Add Photos
+                              </Button>
+                            </label>
+                            {responsePhotos[msg.id] && responsePhotos[msg.id].length > 0 && (
+                              <Box sx={{ mt: 1 }}>
+                                <Typography variant="caption" color="text.secondary">
+                                  {responsePhotos[msg.id].length} photo(s) selected
+                                </Typography>
+                                <ImageList cols={3} rowHeight={80} sx={{ mt: 1 }}>
+                                  {responsePhotos[msg.id].map((file, index) => (
+                                    <ImageListItem key={index}>
+                                      <img
+                                        src={URL.createObjectURL(file)}
+                                        alt={file.name}
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => {
+                                          setResponsePhotos((prev) => ({
+                                            ...prev,
+                                            [msg.id]: prev[msg.id].filter((_, i) => i !== index),
+                                          }))
+                                        }}
+                                      />
+                                    </ImageListItem>
+                                  ))}
+                                </ImageList>
+                              </Box>
+                            )}
+                          </Box>
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                               variant="contained"
@@ -513,7 +726,10 @@ const SupportMessagesList: React.FC = () => {
                             >
                               Send Response
                             </Button>
-                            <Button onClick={() => setRespondingTo(null)}>Cancel</Button>
+                            <Button onClick={() => {
+                              setRespondingTo(null)
+                              setResponsePhotos((prev) => ({ ...prev, [msg.id]: [] }))
+                            }}>Cancel</Button>
                           </Box>
                         </Box>
                       ) : (
@@ -530,8 +746,68 @@ const SupportMessagesList: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
-          ))}
-        </Grid>
+              ))}
+            </Grid>
+          )}
+        </>
+      ) : (
+        <>
+          {loadingAdminMessages ? (
+            <Typography>Loading...</Typography>
+          ) : adminMessages.length === 0 ? (
+            <Typography>No admin messages found</Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {adminMessages.map((msg) => (
+                <Grid item xs={12} key={msg.id}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                        <Box>
+                          <Typography variant="h6" gutterBottom>
+                            To: {msg.first_name || msg.last_name || msg.username || `User #${msg.user_id}`}
+                            {msg.username && ` (@${msg.username})`}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            From: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {msg.message && (
+                        <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+                          <Typography variant="body1">{msg.message}</Typography>
+                        </Box>
+                      )}
+
+                      {/* Admin photos */}
+                      {msg.photos && msg.photos.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                          <Typography variant="caption" color="text.secondary" gutterBottom>
+                            Photos ({msg.photos.length})
+                          </Typography>
+                          <ImageList cols={3} rowHeight={150} sx={{ mt: 1 }}>
+                            {msg.photos.map((photo) => (
+                              <ImageListItem key={photo.id}>
+                                <img
+                                  src={`/api/admin/support-photos/${photo.file_path}`}
+                                  alt={photo.file_name}
+                                  loading="lazy"
+                                  style={{ cursor: 'pointer' }}
+                                  onClick={() => window.open(`/api/admin/support-photos/${photo.file_path}`, '_blank')}
+                                />
+                              </ImageListItem>
+                            ))}
+                          </ImageList>
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </>
       )}
 
       {/* Send Message Dialog */}
@@ -571,6 +847,45 @@ const SupportMessagesList: React.FC = () => {
               error={!!sendMessageError}
               helperText={sendMessageError || ""}
             />
+            <Box>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="send-message-photo-upload"
+                type="file"
+                multiple
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || [])
+                  setSendMessagePhotos((prev) => [...prev, ...files])
+                }}
+              />
+              <label htmlFor="send-message-photo-upload">
+                <Button variant="outlined" component="span" size="small">
+                  Add Photos
+                </Button>
+              </label>
+              {sendMessagePhotos.length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    {sendMessagePhotos.length} photo(s) selected
+                  </Typography>
+                  <ImageList cols={3} rowHeight={80} sx={{ mt: 1 }}>
+                    {sendMessagePhotos.map((file, index) => (
+                      <ImageListItem key={index}>
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={file.name}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setSendMessagePhotos((prev) => prev.filter((_, i) => i !== index))
+                          }}
+                        />
+                      </ImageListItem>
+                    ))}
+                  </ImageList>
+                </Box>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -578,7 +893,7 @@ const SupportMessagesList: React.FC = () => {
           <Button
             variant="contained"
             onClick={handleSendMessage}
-            disabled={!sendMessageUser || !sendMessageText.trim() || sendingMessage}
+            disabled={!sendMessageUser || (!sendMessageText.trim() && sendMessagePhotos.length === 0) || sendingMessage}
             startIcon={<SendIcon />}
           >
             {sendingMessage ? 'Sending...' : 'Send'}

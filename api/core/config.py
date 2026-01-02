@@ -41,6 +41,11 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str = "*"  # Comma-separated list of allowed origins, or "*" for all
     
+    # File storage
+    UPLOAD_DIR: str = "uploads"
+    MAX_PHOTO_SIZE_MB: int = 10
+    SUPPORT_PHOTOS_DIR: str = "uploads/support_photos"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -211,6 +211,38 @@ async def handle_support_new_message(callback: CallbackQuery, state: FSMContext)
     await state.set_state(SupportStates.waiting_message)
 
 
+@router.message(SupportStates.waiting_message, F.photo)
+async def handle_support_photo(message: Message, state: FSMContext):
+    """Handle support photo from user."""
+    # Get the largest photo
+    photo = message.photo[-1] if message.photo else None
+    if not photo:
+        return
+    
+    # Set reaction "writing hand" on user's message
+    try:
+        await message.bot.set_message_reaction(
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            reaction=[ReactionTypeEmoji(emoji="✍️")]
+        )
+    except Exception as e:
+        logger.warning(f"Failed to set reaction on support photo: {e}")
+    
+    # Get or initialize photo list in state
+    state_data = await state.get_data()
+    photo_file_ids = state_data.get("support_photo_file_ids", [])
+    photo_file_ids.append(photo.file_id)
+    await state.update_data(support_photo_file_ids=photo_file_ids)
+    
+    # Confirm photo received
+    locale = get_user_locale(message.from_user.language_code)
+    await message.answer(
+        t(locale, "messages.support_photo_received", default="✅ Фото получено. Можете отправить еще фото или текст сообщения."),
+        parse_mode="HTML"
+    )
+
+
 @router.message(SupportStates.waiting_message, F.text)
 async def handle_support_message(message: Message, state: FSMContext):
     """Handle support message from user."""
@@ -228,6 +260,10 @@ async def handle_support_message(message: Message, state: FSMContext):
         import logging
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to set reaction on support message: {e}")
+    
+    # Get photo file IDs from state if any
+    state_data = await state.get_data()
+    photo_file_ids = state_data.get("support_photo_file_ids", [])
     
     # Send message to support/admin via API
     locale = get_user_locale(message.from_user.language_code)
@@ -253,7 +289,8 @@ async def handle_support_message(message: Message, state: FSMContext):
         if user_id:
             support_result = await api_service.create_support_message(
                 user_id=user_id,
-                message=support_message
+                message=support_message,
+                photo_file_ids=photo_file_ids if photo_file_ids else None
             )
             if not support_result:
                 import logging

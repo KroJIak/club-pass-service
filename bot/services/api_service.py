@@ -202,12 +202,16 @@ class APIService:
             print(f"Error fetching club settings: {e}")
             return None
     
-    async def create_support_message(self, user_id: int, message: str) -> Optional[Dict[str, Any]]:
+    async def create_support_message(self, user_id: int, message: str, photo_file_ids: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
         """Create a support message."""
         try:
+            payload = {"user_id": user_id, "message": message}
+            if photo_file_ids:
+                payload["photo_file_ids"] = photo_file_ids
+            
             response = await self.client.post(
                 f"{self.base_url}/v1/users/support-messages",
-                json={"user_id": user_id, "message": message}
+                json=payload
             )
             response.raise_for_status()
             return response.json()

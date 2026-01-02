@@ -10,6 +10,9 @@ from api.models.order import Order
 from api.models.expiration_settings import ExpirationSettings
 from api.models.club_settings import ClubSettings
 from api.models.support_message import SupportMessage, SupportMessageStatus
+from api.models.support_message_photo import SupportMessagePhoto
+from api.models.admin_message import AdminMessage
+from api.models.admin_message_photo import AdminMessagePhoto
 
 __all__ = [
     "User",
@@ -26,5 +29,8 @@ __all__ = [
     "ClubSettings",
     "SupportMessage",
     "SupportMessageStatus",
+    "SupportMessagePhoto",
+    "AdminMessage",
+    "AdminMessagePhoto",
 ]
 

@@ -2,11 +2,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import logging
+from api.core.config import settings
 
 from api.core.db import get_db
 from api.repositories.user_repository import UserRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.repositories.support_message_repository import SupportMessageRepository
+from api.repositories.support_message_photo_repository import SupportMessagePhotoRepository
+from api.services.telegram_service import download_file_from_telegram
+from api.services.file_storage_service import save_support_photo
 from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse
 
 router = APIRouter()
@@ -92,6 +96,45 @@ async def create_support_message(
             user_id=message_data.user_id,
             message=message_data.message,
         )
+        
+        # Handle photos if provided
+        if message_data.photo_file_ids:
+            logger.info(f"Processing {len(message_data.photo_file_ids)} photos for support message {support_message.id}")
+            for file_id in message_data.photo_file_ids:
+                try:
+                    # Download file from Telegram
+                    file_data = await download_file_from_telegram(file_id)
+                    if file_data:
+                        file_content, filename, mime_type = file_data
+                        
+                        # Validate file size
+                        max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
+                        if len(file_content) > max_size:
+                            logger.warning(f"Photo {file_id} exceeds max size ({len(file_content)} > {max_size}), skipping")
+                            continue
+                        
+                        # Save file
+                        file_path = save_support_photo(file_content, filename, mime_type)
+                        
+                        # Create photo record
+                        SupportMessagePhotoRepository.create(
+                            db=db,
+                            support_message_id=support_message.id,
+                            file_path=file_path,
+                            file_name=filename,
+                            file_size=len(file_content),
+                            mime_type=mime_type,
+                            is_admin_photo=False,
+                        )
+                        logger.info(f"Saved photo for support message {support_message.id}: {filename}")
+                    else:
+                        logger.warning(f"Failed to download photo {file_id}")
+                except Exception as e:
+                    logger.error(f"Error processing photo {file_id}: {e}", exc_info=True)
+                    # Continue with other photos even if one fails
+        
+        # Refresh to get photos
+        db.refresh(support_message)
         logger.info(f"Support message created: id={support_message.id}")
         return SupportMessageResponse.model_validate(support_message)
     except Exception as e:

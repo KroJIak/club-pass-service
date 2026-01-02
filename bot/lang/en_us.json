@@ -58,9 +58,10 @@
     "screen_events": "🎉 <b>{title}</b>\n\n{in_development}",
     "screen_club_info_title": "ℹ️ <b>Club info</b>",
     "support_title": "💬 <b>Support</b>",
-    "support_prompt": "Write your message to support and we’ll get back to you.\n\nJust send the text of your message:",
+    "support_prompt": "Write your message to support and we'll get back to you.\n\nJust send the text of your message or photo:",
     "support_cancelled_toast": "Cancelled",
     "support_received": "✅ <b>Message received</b>\n\nYour message has been sent to support. We'll contact you soon.",
+    "support_photo_received": "✅ Photo received. You can send more photos or text message.",
     "club_info_not_configured": "Club information is not configured",
     "purchase": {
       "select_event": "🎉 <b>Select Event</b>",
