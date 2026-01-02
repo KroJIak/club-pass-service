@@ -1854,8 +1854,11 @@ async def send_message_to_user(
             except Exception as e:
                 logger.error(f"Error processing photo path {photo_path}: {e}", exc_info=True)
     
-    # Get bot API URL from config
-    bot_api_url = settings.BOT_API_URL
+    # Get bot API URL from environment
+    bot_api_url = os.getenv('BOT_API_URL', 'http://bot:8002')
+    if not bot_api_url:
+        logger.warning("BOT_API_URL not configured, cannot send direct message")
+        raise HTTPException(status_code=500, detail="Bot API URL not configured")
     
     try:
         async with httpx.AsyncClient() as client:
