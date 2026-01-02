@@ -253,7 +253,8 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     quantity = int(callback.data.split("_")[1])
     
     # Save quantity to state
-    await state.update_data(quantity=quantity)
+    # Clear the flag since we went through quantity selection
+    await state.update_data(quantity=quantity, skipped_quantity_selection=False)
     await state.set_state(PurchaseStates.confirming_order)
     
     # Get all selected data
