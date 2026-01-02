@@ -232,7 +232,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
                     sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
                   />
                 }
-                label={<Typography sx={{ fontSize: '0.84rem' }}>{tt.name} ({tt.price}₽)</Typography>}
+                label={<Typography sx={{ fontSize: '0.84rem' }}>{tt.name} ({Math.round(tt.price)}₽)</Typography>}
               />
           ))}
           {allTicketTypes.length > 5 && (
