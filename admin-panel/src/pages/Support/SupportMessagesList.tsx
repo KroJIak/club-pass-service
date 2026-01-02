@@ -704,7 +704,9 @@ const SupportMessagesList: React.FC = () => {
                   </Box>
 
                   <Box sx={{ mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
-                    <Typography variant="body1">{msg.message}</Typography>
+                    {msg.message && msg.message.trim() && (
+                      <Typography variant="body1">{msg.message}</Typography>
+                    )}
                     {/* User photos */}
                     {msg.photos && msg.photos.filter(p => !p.is_admin_photo).length > 0 && (
                       <Box sx={{ mt: 2 }}>

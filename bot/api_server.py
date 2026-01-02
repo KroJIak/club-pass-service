@@ -55,7 +55,12 @@ async def send_support_response(request: SendMessageRequest):
         
         # Format message with headers and collapsible quote using HTML
         # Escape text for HTML
-        escaped_original = escape_html(request.original_message)
+        # If original message is empty, show "Фотография без описания"
+        original_text = request.original_message.strip() if request.original_message else ""
+        if not original_text:
+            original_text = "Фотография без описания"
+        
+        escaped_original = escape_html(original_text)
         escaped_response = escape_html(request.admin_response)
         
         # Use <blockquote expandable> for collapsible blockquote in HTML
