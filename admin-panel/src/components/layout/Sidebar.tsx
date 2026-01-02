@@ -12,7 +12,6 @@ import {
   ConfirmationNumber as TicketIcon,
   Payment as PaymentIcon,
   ShoppingCart as OrderIcon,
-  LocalOffer as PromocodeIcon,
   QrCodeScanner as QrCodeIcon,
   Business as BusinessIcon,
   Support as SupportIcon,
@@ -27,7 +26,6 @@ const menuItems = [
   { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
-  { text: 'Promocodes', icon: <PromocodeIcon />, path: '/promocodes' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
 ]
 

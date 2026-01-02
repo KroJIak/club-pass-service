@@ -78,7 +78,6 @@ export interface Order {
   event_id: number
   ticket_type_id: number
   quantity: number
-  promocode: string | null
   payment_id: number | null
   created_at: string
   updated_at: string
@@ -89,19 +88,6 @@ export interface Order {
   ticket_type_name: string | null
 }
 
-export interface Promocode {
-  id: number
-  code: string
-  discount_percent: number | null
-  discount_amount: number | null
-  valid_from: string
-  valid_until: string
-  usage_limit: number | null
-  usage_count: number
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
 
 // Create/Update types
 export interface EventCreate {
@@ -184,25 +170,6 @@ export interface PaymentUpdate {
   status?: 'pending' | 'succeeded' | 'cancelled' | 'refunded' | null
 }
 
-export interface PromocodeCreate {
-  code: string
-  discount_percent?: number | null
-  discount_amount?: number | null
-  valid_from: string
-  valid_until: string
-  usage_limit?: number | null
-  is_active?: boolean
-}
-
-export interface PromocodeUpdate {
-  code?: string | null
-  discount_percent?: number | null
-  discount_amount?: number | null
-  valid_from?: string | null
-  valid_until?: string | null
-  usage_limit?: number | null
-  is_active?: boolean | null
-}
 
 export interface ExpirationSettings {
   id: number

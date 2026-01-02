@@ -25,7 +25,6 @@ class PaymentService:
         event_id: int,
         ticket_type_id: int,
         quantity: int,
-        promocode: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Create payment and prepare invoice data for Telegram sendInvoice.
@@ -36,7 +35,6 @@ class PaymentService:
             event_id: Event ID
             ticket_type_id: Ticket type ID
             quantity: Quantity of tickets
-            promocode: Optional promocode
         
         Returns:
             Dictionary with invoice data for sendInvoice
@@ -64,12 +62,6 @@ class PaymentService:
         # Calculate total amount
         total_amount = ticket_type.price * quantity
         
-        # Apply promocode discount if provided
-        # TODO: Implement promocode logic
-        if promocode:
-            # For now, skip promocode
-            pass
-        
         # Create order record
         order = OrderRepository.create(
             db=db,
@@ -77,7 +69,6 @@ class PaymentService:
             event_id=event_id,
             ticket_type_id=ticket_type_id,
             quantity=quantity,
-            promocode=promocode,
         )
         
         # Create payment record

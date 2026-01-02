@@ -59,7 +59,6 @@ class APIService:
         event_id: int,
         ticket_type_id: int,
         quantity: int,
-        promocode: Optional[str] = None,
         username: Optional[str] = None,
         first_name: Optional[str] = None,
         last_name: Optional[str] = None
@@ -73,7 +72,6 @@ class APIService:
             "event_id": event_id,
             "ticket_type_id": ticket_type_id,
             "quantity": quantity,
-            "promocode": promocode,
             "username": username,
             "first_name": first_name,
             "last_name": last_name

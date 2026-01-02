@@ -25,7 +25,6 @@ class OrderRepository:
             event_id=event_id,
             ticket_type_id=ticket_type_id,
             quantity=quantity,
-            promocode=promocode,
         )
         db.add(order)
         db.commit()

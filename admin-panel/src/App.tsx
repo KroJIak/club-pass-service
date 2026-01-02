@@ -8,7 +8,6 @@ import UsersList from './pages/Users/UsersList'
 import TicketsList from './pages/Tickets/TicketsList'
 import PaymentsList from './pages/Payments/PaymentsList'
 import OrdersList from './pages/Orders/OrdersList'
-import PromocodesList from './pages/Promocodes/PromocodesList'
 import QRScanner from './pages/QRScanner/QRScanner'
 import ClubSettings from './pages/ClubSettings/ClubSettings'
 import SupportMessagesList from './pages/Support/SupportMessagesList'
@@ -63,7 +62,6 @@ function App() {
               <Route path="tickets" element={<TicketsList />} />
               <Route path="payments" element={<PaymentsList />} />
               <Route path="orders" element={<OrdersList />} />
-              <Route path="promocodes" element={<PromocodesList />} />
               <Route path="qr-scanner" element={<QRScanner />} />
               <Route path="support" element={<SupportMessagesList />} />
               <Route path="club-settings" element={<ClubSettings />} />

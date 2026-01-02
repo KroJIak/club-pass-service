@@ -59,7 +59,7 @@ const OrdersList = () => {
   useEffect(() => {
     let filtered = [...allOrders]
 
-    // Search filter - по order_id, username, имени/фамилии пользователя, event_name, ticket_type_name, promocode
+    // Search filter - по order_id, username, имени/фамилии пользователя, event_name, ticket_type_name
     if (filterState.search.trim()) {
       const searchLower = filterState.search.toLowerCase()
       filtered = filtered.filter((order) => {
@@ -69,9 +69,7 @@ const OrdersList = () => {
         const lastNameMatch = order.last_name?.toLowerCase().includes(searchLower) || false
         const eventNameMatch = order.event_name?.toLowerCase().includes(searchLower) || false
         const ticketTypeNameMatch = order.ticket_type_name?.toLowerCase().includes(searchLower) || false
-        const promocodeMatch = order.promocode?.toLowerCase().includes(searchLower) || false
-        
-        return orderIdMatch || usernameMatch || firstNameMatch || lastNameMatch || eventNameMatch || ticketTypeNameMatch || promocodeMatch
+        return orderIdMatch || usernameMatch || firstNameMatch || lastNameMatch || eventNameMatch || ticketTypeNameMatch
       })
     }
 
@@ -137,11 +135,6 @@ const OrdersList = () => {
                         : `Ticket Type ID: ${order.ticket_type_id}`
                       }
                     </Typography>
-                    {order.promocode && (
-                      <Typography variant="body2" color="text.secondary">
-                        Promocode: {order.promocode}
-                      </Typography>
-                    )}
                   </Box>
                   <IconButton
                     size="small"

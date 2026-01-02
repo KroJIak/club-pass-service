@@ -20,7 +20,6 @@ from api.repositories.user_repository import UserRepository
 from api.repositories.ticket_repository import TicketRepository
 from api.repositories.payment_repository import PaymentRepository
 from api.repositories.order_repository import OrderRepository
-from api.repositories.promocode_repository import PromocodeRepository
 from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.repositories.support_message_repository import SupportMessageRepository
@@ -51,7 +50,7 @@ from api.api.v1.schemas import (
     AdminMessageResponse,
     AdminMessagePhotoResponse,
 )
-from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, Promocode, SupportMessage
+from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage
 from api.models.ticket import TicketStatus
 from api.models.payment import PaymentStatus
 
@@ -137,7 +136,6 @@ class OrderResponse(BaseModel):
     event_id: int
     ticket_type_id: int
     quantity: int
-    promocode: Optional[str] = None
     payment_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
@@ -154,7 +152,6 @@ class OrderAdminResponse(BaseModel):
     event_id: int
     ticket_type_id: int
     quantity: int
-    promocode: Optional[str] = None
     payment_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
@@ -172,51 +169,6 @@ class OrderListResponse(BaseModel):
     """Schema for list of orders."""
     orders: List[OrderAdminResponse]
 
-
-# Promocode schemas
-class PromocodeCreate(BaseModel):
-    """Schema for creating a promocode."""
-    code: str
-    discount_percent: Optional[Decimal] = None
-    discount_amount: Optional[Decimal] = None
-    valid_from: datetime
-    valid_until: datetime
-    usage_limit: Optional[int] = None
-    is_active: bool = True
-
-
-class PromocodeUpdate(BaseModel):
-    """Schema for updating a promocode."""
-    code: Optional[str] = None
-    discount_percent: Optional[Decimal] = None
-    discount_amount: Optional[Decimal] = None
-    valid_from: Optional[datetime] = None
-    valid_until: Optional[datetime] = None
-    usage_limit: Optional[int] = None
-    is_active: Optional[bool] = None
-
-
-class PromocodeResponse(BaseModel):
-    """Schema for promocode response."""
-    id: int
-    code: str
-    discount_percent: Optional[Decimal] = None
-    discount_amount: Optional[Decimal] = None
-    valid_from: datetime
-    valid_until: datetime
-    usage_limit: Optional[int] = None
-    usage_count: int
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class PromocodeListResponse(BaseModel):
-    """Schema for list of promocodes."""
-    promocodes: List[PromocodeResponse]
 
 
 # Events CRUD
@@ -1176,113 +1128,6 @@ async def delete_order(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Order with id {order_id} not found"
         )
-
-
-# Promocodes CRUD
-@router.get("/admin/promocodes", response_model=PromocodeListResponse)
-async def get_all_promocodes(
-    db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_admin),
-):
-    """Get all promocodes (admin only)."""
-    promocodes = PromocodeRepository.get_all(db)
-    return PromocodeListResponse(promocodes=[PromocodeResponse.model_validate(p) for p in promocodes])
-
-
-@router.get("/admin/promocodes/{promocode_id}", response_model=PromocodeResponse)
-async def get_promocode(
-    promocode_id: int,
-    db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_admin),
-):
-    """Get promocode by ID (admin only)."""
-    promocode = PromocodeRepository.get_by_id(db, promocode_id)
-    if not promocode:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Promocode with id {promocode_id} not found"
-        )
-    return PromocodeResponse.model_validate(promocode)
-
-
-@router.post("/admin/promocodes", response_model=PromocodeResponse)
-async def create_promocode(
-    promocode_data: PromocodeCreate,
-    db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_admin),
-):
-    """Create a new promocode."""
-    # Check if code already exists
-    existing = PromocodeRepository.get_by_code(db, promocode_data.code)
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Promocode with code {promocode_data.code} already exists"
-        )
-    
-    promocode = PromocodeRepository.create(
-        db,
-        code=promocode_data.code,
-        discount_percent=promocode_data.discount_percent,
-        discount_amount=promocode_data.discount_amount,
-        valid_from=promocode_data.valid_from,
-        valid_until=promocode_data.valid_until,
-        usage_limit=promocode_data.usage_limit,
-        is_active=promocode_data.is_active,
-    )
-    return PromocodeResponse.model_validate(promocode)
-
-
-@router.put("/admin/promocodes/{promocode_id}", response_model=PromocodeResponse)
-async def update_promocode(
-    promocode_id: int,
-    promocode_data: PromocodeUpdate,
-    db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_admin),
-):
-    """Update a promocode."""
-    # Check if code is being changed and already exists
-    if promocode_data.code is not None:
-        existing = PromocodeRepository.get_by_code(db, promocode_data.code)
-        if existing and existing.id != promocode_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Promocode with code {promocode_data.code} already exists"
-            )
-    
-    promocode = PromocodeRepository.update(
-        db,
-        promocode_id,
-        code=promocode_data.code,
-        discount_percent=promocode_data.discount_percent,
-        discount_amount=promocode_data.discount_amount,
-        valid_from=promocode_data.valid_from,
-        valid_until=promocode_data.valid_until,
-        usage_limit=promocode_data.usage_limit,
-        is_active=promocode_data.is_active,
-    )
-    if not promocode:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Promocode with id {promocode_id} not found"
-        )
-    return PromocodeResponse.model_validate(promocode)
-
-
-@router.delete("/admin/promocodes/{promocode_id}")
-async def delete_promocode(
-    promocode_id: int,
-    db: Session = Depends(get_db),
-    current_admin: dict = Depends(get_current_admin),
-):
-    """Delete a promocode (soft delete by setting is_active=False)."""
-    success = PromocodeRepository.delete(db, promocode_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Promocode with id {promocode_id} not found"
-        )
-    return {"message": f"Promocode {promocode_id} deactivated successfully"}
 
 
 # Expiration Settings

@@ -23,7 +23,6 @@ from api.models import (
     TicketTypeTemplate,
     Ticket,
     Payment,
-    Promocode,
     Order,
     ExpirationSettings,
     ClubSettings,
@@ -156,7 +155,7 @@ def init_database():
         # Check for critical tables that should exist
         required_tables = [
             "users", "events", "tickets", "payments", "orders", 
-            "promocodes", "ticket_types", "ticket_type_templates", "expiration_settings", "club_settings", "support_messages"
+            "ticket_types", "ticket_type_templates", "expiration_settings", "club_settings", "support_messages"
         ]
         
         missing_tables = []
