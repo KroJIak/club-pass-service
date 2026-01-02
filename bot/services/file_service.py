@@ -48,14 +48,15 @@ async def download_and_save_photo(bot: Bot, file_id: str) -> Optional[str]:
             logger.error(f"Failed to get file info for file_id: {file_id}")
             return None
         
-        # Download file
-        file_content = await bot.download_file(file.file_path)
+        # Download file - bot.download() returns BytesIO
+        from io import BytesIO
+        file_content: BytesIO = await bot.download(file)
         if not file_content:
             logger.error(f"Failed to download file: {file_id}")
             return None
         
         # Read file content
-        file_bytes = await file_content.read()
+        file_bytes = file_content.read()
         
         # Determine MIME type from file path
         file_path = file.file_path or ""

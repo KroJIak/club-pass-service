@@ -233,12 +233,18 @@ async def handle_support_photo(message: Message, state: FSMContext):
     from bot.services.file_service import download_and_save_photo
     photo_path = await download_and_save_photo(message.bot, photo.file_id)
     
+    if not photo_path:
+        logger.error(f"Failed to download and save photo with file_id: {photo.file_id}")
+        # Still continue to create message without photo
+    
     # Get existing photo paths from state (if user sent multiple photos)
     state_data = await state.get_data()
     photo_paths = state_data.get("support_photo_paths", [])
     if photo_path:
         photo_paths.append(photo_path)
         await state.update_data(support_photo_paths=photo_paths)
+    
+    logger.info(f"Photo paths to send: {photo_paths}")
     
     # Send message to support/admin via API immediately
     locale = get_user_locale(message.from_user.language_code)
@@ -261,6 +267,7 @@ async def handle_support_photo(message: Message, state: FSMContext):
         # Create support message with photos (no text)
         user_id = user_data.get("id")
         if user_id:
+            logger.info(f"Creating support message with photo_paths: {photo_paths}")
             support_result = await api_service.create_support_message(
                 user_id=user_id,
                 message="",  # Empty message for photo-only support messages
