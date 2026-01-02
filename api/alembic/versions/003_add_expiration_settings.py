@@ -12,7 +12,7 @@ from datetime import datetime
 
 # revision identifiers, used by Alembic.
 revision = '003'
-down_revision = '002'
+down_revision = '004_add_used_status_remove_is_used'  # Ссылается на последнюю миграцию из корневой папки
 branch_labels = None
 depends_on = None
 
