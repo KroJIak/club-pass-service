@@ -481,6 +481,10 @@ const SupportMessagesList: React.FC = () => {
       })
       alert('Message sent successfully!')
       handleCloseSendMessage()
+      // Refresh admin messages if on that tab
+      if (tabValue === 1) {
+        fetchAdminMessages()
+      }
     } catch (error: any) {
       console.error('Failed to send message:', error)
       const errorMessage = error.response?.data?.detail || 'Failed to send message'
