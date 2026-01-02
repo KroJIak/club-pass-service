@@ -221,6 +221,9 @@ async def handle_support_photo(message: Message, state: FSMContext):
     if not photo:
         return
     
+    # Get caption (text with photo) if exists
+    photo_caption = message.caption or ""
+    
     # Set reaction "writing hand" on user's message
     try:
         await message.bot.set_message_reaction(
@@ -246,7 +249,18 @@ async def handle_support_photo(message: Message, state: FSMContext):
         photo_paths.append(photo_path)
         await state.update_data(support_photo_paths=photo_paths)
     
-    logger.info(f"Photo paths to send: {photo_paths}")
+    # Get existing text from state (if user sent text before photo)
+    existing_text = state_data.get("support_text", "")
+    
+    # Combine existing text with caption
+    message_text = existing_text
+    if photo_caption:
+        if message_text:
+            message_text = f"{message_text}\n{photo_caption}"
+        else:
+            message_text = photo_caption
+    
+    logger.info(f"Photo paths to send: {photo_paths}, message text: '{message_text}'")
     
     # Send message to support/admin via API immediately
     locale = get_user_locale(message.from_user.language_code)
@@ -264,13 +278,13 @@ async def handle_support_photo(message: Message, state: FSMContext):
         logger.error(f"Failed to create/update user for support message: telegram_user_id={message.from_user.id}")
         confirmation_text = t(locale, "messages.support_received")
     else:
-        # Create support message with photos (no text)
+        # Create support message with photos and text (if any)
         user_id = user_data.get("id")
         if user_id:
-            logger.info(f"Creating support message with photo_paths: {photo_paths}")
+            logger.info(f"Creating support message with photo_paths: {photo_paths}, message: '{message_text}'")
             support_result = await api_service.create_support_message(
                 user_id=user_id,
-                message="",  # Empty message for photo-only support messages
+                message=message_text,  # Use caption or existing text
                 photo_paths=photo_paths if photo_paths else None
             )
             if not support_result:

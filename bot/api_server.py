@@ -55,7 +55,7 @@ async def send_support_response(request: SendMessageRequest):
         
         # Format message with headers and collapsible quote using HTML
         # Escape text for HTML
-        # If original message is empty, show "Фотография без описания"
+        # If original message is empty or only whitespace, show "Фотография без описания"
         original_text = request.original_message.strip() if request.original_message else ""
         if not original_text:
             original_text = "Фотография без описания"
