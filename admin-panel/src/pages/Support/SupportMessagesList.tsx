@@ -94,7 +94,7 @@ const AuthenticatedImage: React.FC<{
       <Box
         sx={{
           width: '100%',
-          height: 100,
+          height: 200,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -111,7 +111,7 @@ const AuthenticatedImage: React.FC<{
       <Box
         sx={{
           width: '100%',
-          height: 100,
+          height: 200,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -126,13 +126,31 @@ const AuthenticatedImage: React.FC<{
   }
 
   return (
-    <img
-      src={imageUrl}
-      alt={alt}
-      loading="lazy"
-      style={{ cursor: onClick ? 'pointer' : 'default', width: '100%', height: '100%', objectFit: 'contain' }}
-      onClick={onClick}
-    />
+    <Box
+      sx={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt={alt}
+        loading="lazy"
+        style={{
+          cursor: onClick ? 'pointer' : 'default',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          width: 'auto',
+          height: 'auto',
+          objectFit: 'contain',
+        }}
+        onClick={onClick}
+      />
+    </Box>
   )
 }
 
@@ -750,7 +768,7 @@ const SupportMessagesList: React.FC = () => {
                     {/* User photos */}
                     {msg.photos && msg.photos.filter(p => !p.is_admin_photo).length > 0 && (
                       <Box sx={{ mt: 2 }}>
-                        <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
+                        <ImageList cols={3} rowHeight={200} gap={8} sx={{ mt: 1 }}>
                           {msg.photos.filter(p => !p.is_admin_photo).map((photo) => (
                             <ImageListItem key={photo.id}>
                               <AuthenticatedImage
@@ -794,7 +812,7 @@ const SupportMessagesList: React.FC = () => {
                       {/* Admin photos */}
                       {msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0 && (
                         <Box sx={{ mt: 2 }}>
-                          <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
+                          <ImageList cols={3} rowHeight={200} gap={8} sx={{ mt: 1 }}>
                             {msg.photos.filter(p => p.is_admin_photo).map((photo) => (
                               <ImageListItem key={photo.id}>
                                 <AuthenticatedImage
