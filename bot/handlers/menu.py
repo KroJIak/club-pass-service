@@ -1,5 +1,6 @@
 """Main menu handlers."""
 import logging
+import asyncio
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, FSInputFile, ReactionTypeEmoji
 from aiogram.fsm.context import FSMContext
@@ -224,6 +225,9 @@ async def handle_support_photo(message: Message, state: FSMContext):
     # Get caption (text with photo) if exists
     photo_caption = message.caption or ""
     
+    # Check if this is part of a media group
+    media_group_id = message.media_group_id
+    
     # Set reaction "writing hand" on user's message
     try:
         await message.bot.set_message_reaction(
@@ -242,15 +246,15 @@ async def handle_support_photo(message: Message, state: FSMContext):
         logger.error(f"Failed to download and save photo with file_id: {photo.file_id}")
         # Still continue to create message without photo
     
-    # Get existing photo paths from state (if user sent multiple photos)
+    # Get existing data from state
     state_data = await state.get_data()
     photo_paths = state_data.get("support_photo_paths", [])
+    existing_text = state_data.get("support_text", "")
+    pending_media_group_id = state_data.get("pending_media_group_id")
+    
+    # Add photo to list
     if photo_path:
         photo_paths.append(photo_path)
-        await state.update_data(support_photo_paths=photo_paths)
-    
-    # Get existing text from state (if user sent text before photo)
-    existing_text = state_data.get("support_text", "")
     
     # Combine existing text with caption
     message_text = existing_text
@@ -260,9 +264,56 @@ async def handle_support_photo(message: Message, state: FSMContext):
         else:
             message_text = photo_caption
     
-    logger.info(f"Photo paths to send: {photo_paths}, message text: '{message_text}'")
+    # If this is part of a media group, wait a bit for other photos
+    if media_group_id:
+        # Check if we're already processing this media group
+        if pending_media_group_id == media_group_id:
+            # This is another photo from the same media group, just update state and return
+            await state.update_data(
+                support_photo_paths=photo_paths,
+                support_text=message_text,
+                pending_media_group_id=media_group_id
+            )
+            logger.info(f"Added photo to media group {media_group_id}, waiting for more...")
+            return
+        
+        # This is the first photo of a new media group
+        await state.update_data(
+            support_photo_paths=photo_paths,
+            support_text=message_text,
+            pending_media_group_id=media_group_id
+        )
+        logger.info(f"Started media group {media_group_id}, waiting for more photos...")
+        
+        # Wait a bit for other photos in the group to arrive
+        await asyncio.sleep(0.5)
+        
+        # Check state again - if media_group_id changed, another group started
+        state_data = await state.get_data()
+        if state_data.get("pending_media_group_id") != media_group_id:
+            # Another media group started, process the previous one
+            logger.info(f"Media group {media_group_id} completed, processing...")
+            # Use the data we collected
+            photo_paths = state_data.get("support_photo_paths", [])
+            message_text = state_data.get("support_text", "")
+        else:
+            # Still the same group, process it now
+            logger.info(f"Processing media group {media_group_id} after wait...")
+    else:
+        # Single photo, update state
+        await state.update_data(
+            support_photo_paths=photo_paths,
+            support_text=message_text
+        )
     
-    # Send message to support/admin via API immediately
+    # Get final data from state
+    state_data = await state.get_data()
+    final_photo_paths = state_data.get("support_photo_paths", [])
+    final_message_text = state_data.get("support_text", "")
+    
+    logger.info(f"Photo paths to send: {final_photo_paths}, message text: '{final_message_text}'")
+    
+    # Send message to support/admin via API
     locale = get_user_locale(message.from_user.language_code)
     
     # Get or create user first
@@ -281,11 +332,11 @@ async def handle_support_photo(message: Message, state: FSMContext):
         # Create support message with photos and text (if any)
         user_id = user_data.get("id")
         if user_id:
-            logger.info(f"Creating support message with photo_paths: {photo_paths}, message: '{message_text}'")
+            logger.info(f"Creating support message with photo_paths: {final_photo_paths}, message: '{final_message_text}'")
             support_result = await api_service.create_support_message(
                 user_id=user_id,
-                message=message_text,  # Use caption or existing text
-                photo_paths=photo_paths if photo_paths else None
+                message=final_message_text,  # Use caption or existing text
+                photo_paths=final_photo_paths if final_photo_paths else None
             )
             if not support_result:
                 logger.error(f"Failed to create support message for user_id={user_id}")
@@ -301,6 +352,7 @@ async def handle_support_photo(message: Message, state: FSMContext):
         confirmation_text=confirmation_text,
     )
 
+    # Clear state after processing
     await state.clear()
 
 
