@@ -1997,6 +1997,36 @@ async def get_admin_messages(
     return result
 
 
+@router.delete("/admin/admin-messages/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_admin_message(
+    message_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete an admin message (admin only)."""
+    from api.services.file_storage_service import delete_support_photo
+    from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+    
+    message = AdminMessageRepository.get_by_id(db, message_id)
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Admin message with id {message_id} not found"
+        )
+    
+    # Delete all photos associated with this message
+    photos = AdminMessagePhotoRepository.get_by_admin_message_id(db, message_id)
+    for photo in photos:
+        delete_support_photo(photo.file_path)
+    
+    if not AdminMessageRepository.delete(db, message_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Admin message with id {message_id} not found"
+        )
+    return None
+
+
 @router.get("/admin/admin-messages/{message_id}/photos/{photo_id}")
 async def get_admin_message_photo(
     message_id: int,

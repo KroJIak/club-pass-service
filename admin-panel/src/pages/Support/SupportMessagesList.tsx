@@ -378,6 +378,18 @@ const SupportMessagesList: React.FC = () => {
     }
   }
 
+  const handleDeleteAdminMessage = async (messageId: number) => {
+    if (!confirm('Delete this admin message?')) return
+
+    try {
+      await api.delete(`/admin/admin-messages/${messageId}`)
+      fetchAdminMessages()
+    } catch (error: any) {
+      console.error('Failed to delete admin message:', error)
+      alert(error.response?.data?.detail || 'Failed to delete admin message')
+    }
+  }
+
   const handleRespond = async (messageId: number) => {
     // Prevent multiple clicks
     if (sendingResponse[messageId]) {
@@ -1021,6 +1033,13 @@ const SupportMessagesList: React.FC = () => {
                             From: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
                           </Typography>
                         </Box>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDeleteAdminMessage(msg.id)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
                       </Box>
 
                       {msg.message && (
