@@ -979,7 +979,7 @@ const SupportMessagesList: React.FC = () => {
                       {/* Admin photos */}
                       {msg.photos && msg.photos.length > 0 && (
                         <Box sx={{ mt: 2 }}>
-                          <ImageList cols={3} rowHeight={150} sx={{ mt: 1 }}>
+                          <ImageList cols={3} rowHeight={200} gap={8} sx={{ mt: 1 }}>
                             {msg.photos.map((photo) => (
                               <ImageListItem key={photo.id}>
                                 <AuthenticatedImage

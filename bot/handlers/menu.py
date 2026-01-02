@@ -286,7 +286,8 @@ async def handle_support_photo(message: Message, state: FSMContext):
         logger.info(f"Started media group {media_group_id}, waiting for more photos...")
         
         # Wait a bit for other photos in the group to arrive
-        await asyncio.sleep(0.5)
+        # Telegram sends media group photos with small delays, so we wait longer
+        await asyncio.sleep(1.5)
         
         # Check state again - if media_group_id changed, another group started
         state_data = await state.get_data()
@@ -299,6 +300,10 @@ async def handle_support_photo(message: Message, state: FSMContext):
         else:
             # Still the same group, process it now
             logger.info(f"Processing media group {media_group_id} after wait...")
+            # Get the latest state data
+            state_data = await state.get_data()
+            photo_paths = state_data.get("support_photo_paths", [])
+            message_text = state_data.get("support_text", "")
     else:
         # Single photo, update state
         await state.update_data(
