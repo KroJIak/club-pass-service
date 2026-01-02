@@ -360,14 +360,16 @@ const SupportMessagesList: React.FC = () => {
   }
 
   const handleRespond = async (messageId: number) => {
-    const response = responseText[messageId]?.trim()
-    if (!response) {
-      alert('Please enter a response')
+    const response = responseText[messageId]?.trim() || ''
+    const photos = responsePhotos[messageId] || []
+    
+    // Allow sending only photos or only text or both
+    if (!response && photos.length === 0) {
+      alert('Please enter a response or add photos')
       return
     }
 
     try {
-      const photos = responsePhotos[messageId] || []
       let photo_paths: string[] = []
       
       // Upload photos first if any
@@ -386,7 +388,7 @@ const SupportMessagesList: React.FC = () => {
       }
       
       await api.put(`/admin/support-messages/${messageId}/respond`, {
-        admin_response: response,
+        admin_response: response,  // Can be empty if only photos
         photo_paths: photo_paths,
       })
       setResponseText((prev) => ({ ...prev, [messageId]: '' }))
@@ -622,8 +624,9 @@ const SupportMessagesList: React.FC = () => {
             <>
           <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
-              <InputLabel>Status</InputLabel>
+              <InputLabel id="status-filter-label">Status</InputLabel>
               <Select
+                labelId="status-filter-label"
                 value={statusFilter}
                 label="Status"
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -636,8 +639,9 @@ const SupportMessagesList: React.FC = () => {
           </Grid>
           <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
-              <InputLabel>Sort</InputLabel>
+              <InputLabel id="sort-filter-label">Sort</InputLabel>
               <Select
+                labelId="sort-filter-label"
                 value={sortBy}
                 label="Sort"
                 onChange={(e) => setSortBy(e.target.value as SortOption)}

@@ -61,7 +61,13 @@ async def send_support_response(request: SendMessageRequest):
             original_text = "Фотография без описания"
         
         escaped_original = escape_html(original_text)
-        escaped_response = escape_html(request.admin_response)
+        
+        # If admin response is empty, show "Фотография без описания"
+        admin_response_text = request.admin_response.strip() if request.admin_response else ""
+        if not admin_response_text:
+            admin_response_text = "Фотография без описания"
+        
+        escaped_response = escape_html(admin_response_text)
         
         # Use <blockquote expandable> for collapsible blockquote in HTML
         formatted_message = (
