@@ -1991,3 +1991,41 @@ async def get_admin_messages(
         result.append(AdminMessageResponse(**msg_dict))
     
     return result
+
+
+@router.get("/admin/admin-messages/{message_id}/photos/{photo_id}")
+async def get_admin_message_photo(
+    message_id: int,
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get an admin message photo file (admin only)."""
+    from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+    
+    photo = AdminMessagePhotoRepository.get_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo with id {photo_id} not found"
+        )
+    
+    if photo.admin_message_id != message_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Photo {photo_id} does not belong to message {message_id}"
+        )
+    
+    full_path = get_full_file_path(photo.file_path)
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo file not found: {photo.file_path}"
+        )
+    
+    return FileResponse(
+        full_path,
+        media_type=photo.mime_type,
+        filename=photo.file_name,
+    )

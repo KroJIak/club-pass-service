@@ -43,7 +43,8 @@ const AuthenticatedImage: React.FC<{
   photoId: number
   alt: string
   onClick?: () => void
-}> = ({ messageId, photoId, alt, onClick }) => {
+  isAdminMessage?: boolean
+}> = ({ messageId, photoId, alt, onClick, isAdminMessage = false }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -52,8 +53,11 @@ const AuthenticatedImage: React.FC<{
     const loadImage = async () => {
       try {
         const token = localStorage.getItem('token')
+        const endpoint = isAdminMessage
+          ? `/admin/admin-messages/${messageId}/photos/${photoId}`
+          : `/admin/support-messages/${messageId}/photos/${photoId}`
         const response = await api.get(
-          `/admin/support-messages/${messageId}/photos/${photoId}`,
+          endpoint,
           {
             responseType: 'blob',
             headers: {
@@ -80,7 +84,7 @@ const AuthenticatedImage: React.FC<{
         URL.revokeObjectURL(imageUrl)
       }
     }
-  }, [messageId, photoId])
+  }, [messageId, photoId, isAdminMessage])
 
   if (loading) {
     return (
@@ -919,12 +923,31 @@ const SupportMessagesList: React.FC = () => {
                           <ImageList cols={3} rowHeight={150} sx={{ mt: 1 }}>
                             {msg.photos.map((photo) => (
                               <ImageListItem key={photo.id}>
-                                <img
-                                  src={`/api/admin/support-photos/${photo.file_path}`}
+                                <AuthenticatedImage
+                                  messageId={msg.id}
+                                  photoId={photo.id}
                                   alt={photo.file_name}
-                                  loading="lazy"
-                                  style={{ cursor: 'pointer' }}
-                                  onClick={() => window.open(`/api/admin/support-photos/${photo.file_path}`, '_blank')}
+                                  isAdminMessage={true}
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem('token')
+                                      const response = await api.get(
+                                        `/admin/admin-messages/${msg.id}/photos/${photo.id}`,
+                                        {
+                                          responseType: 'blob',
+                                          headers: {
+                                            Authorization: `Bearer ${token}`,
+                                          },
+                                        }
+                                      )
+                                      const blob = new Blob([response.data])
+                                      const url = URL.createObjectURL(blob)
+                                      window.open(url, '_blank')
+                                      setTimeout(() => URL.revokeObjectURL(url), 100)
+                                    } catch (err) {
+                                      console.error('Failed to open image:', err)
+                                    }
+                                  }}
                                 />
                               </ImageListItem>
                             ))}
