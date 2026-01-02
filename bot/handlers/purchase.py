@@ -1,4 +1,6 @@
 """Ticket purchase flow handlers."""
+from datetime import datetime
+import pytz
 from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -344,6 +346,60 @@ async def handle_confirm_order(callback: CallbackQuery, state: FSMContext):
     if not all([event_id, ticket_type_id, quantity]):
         await callback.answer("Missing order data", show_alert=True)
         return
+    
+    # Validation checks before confirming order
+    # 1. Check if event exists and is active
+    event = await api_service.get_event(event_id)
+    if not event:
+        error_text = t(locale, "messages.purchase.event_not_found", default="❌ Событие не найдено")
+        await callback.answer(error_text, show_alert=True)
+        return
+    
+    if not event.get("is_active", False):
+        error_text = t(locale, "messages.purchase.event_inactive", default="❌ Событие неактивно")
+        await callback.answer(error_text, show_alert=True)
+        return
+    
+    # 2. Check if ticket type exists
+    ticket_types = await api_service.get_ticket_types(event_id)
+    ticket_type = next((tt for tt in ticket_types if tt.get("id") == ticket_type_id), None)
+    if not ticket_type:
+        error_text = t(locale, "messages.purchase.ticket_type_not_found", default="❌ Тип билета не найден")
+        await callback.answer(error_text, show_alert=True)
+        return
+    
+    # 3. Check if enough tickets are available
+    available_quantity = ticket_type.get("available_quantity", 0)
+    if available_quantity < quantity:
+        error_text = t(
+            locale,
+            "messages.purchase.not_enough_tickets",
+            default="❌ Недостаточно билетов. Доступно: {available}",
+            available=available_quantity
+        )
+        await callback.answer(error_text, show_alert=True)
+        return
+    
+    # 4. Check if event hasn't ended yet
+    end_date_str = event.get("end_date", "")
+    end_time_str = event.get("end_time", "")
+    if end_date_str and end_time_str:
+        try:
+            # Parse end date/time: "DD.MM.YYYY HH:MM"
+            end_dt = datetime.strptime(f"{end_date_str} {end_time_str}", "%d.%m.%Y %H:%M")
+            # Use Europe/Moscow timezone (default for Russian events)
+            tz = pytz.timezone("Europe/Moscow")
+            end_dt_tz = tz.localize(end_dt)
+            current_time = datetime.now(tz)
+            
+            if end_dt_tz <= current_time:
+                error_text = t(locale, "messages.purchase.event_ended", default="❌ Событие уже закончилось")
+                await callback.answer(error_text, show_alert=True)
+                return
+        except (ValueError, Exception) as e:
+            # If date parsing fails, log but continue (don't block order)
+            # This is a fallback - ideally dates should always be valid
+            pass
     
     # Create order in API and get invoice data
     order_data = await api_service.create_order(
