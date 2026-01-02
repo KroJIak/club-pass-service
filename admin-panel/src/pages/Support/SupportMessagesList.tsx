@@ -910,7 +910,7 @@ const SupportMessagesList: React.FC = () => {
                             </Button>
                           </Box>
                         </Box>
-                      ) : (
+                      ) : msg.status !== 'responded' && msg.status !== 'closed' ? (
                         <Button
                           variant="outlined"
                           startIcon={<SendIcon />}
@@ -918,7 +918,7 @@ const SupportMessagesList: React.FC = () => {
                         >
                           Respond
                         </Button>
-                      )}
+                      ) : null}
                     </Box>
                   )}
                 </CardContent>
