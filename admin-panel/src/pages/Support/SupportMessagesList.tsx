@@ -23,6 +23,9 @@ import {
   ImageListItem,
   Tabs,
   Tab,
+  Modal,
+  Backdrop,
+  Fade,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
@@ -127,7 +130,7 @@ const AuthenticatedImage: React.FC<{
       src={imageUrl}
       alt={alt}
       loading="lazy"
-      style={{ cursor: onClick ? 'pointer' : 'default', width: '100%', height: '100%', objectFit: 'cover' }}
+      style={{ cursor: onClick ? 'pointer' : 'default', width: '100%', height: '100%', objectFit: 'contain' }}
       onClick={onClick}
     />
   )
@@ -726,9 +729,7 @@ const SupportMessagesList: React.FC = () => {
                                     )
                                     const blob = new Blob([response.data])
                                     const url = URL.createObjectURL(blob)
-                                    window.open(url, '_blank')
-                                    // Cleanup after a delay
-                                    setTimeout(() => URL.revokeObjectURL(url), 100)
+                                    setSelectedImage({ url, alt: photo.file_name })
                                   } catch (err) {
                                     console.error('Failed to open image:', err)
                                   }
@@ -775,9 +776,7 @@ const SupportMessagesList: React.FC = () => {
                                       )
                                       const blob = new Blob([response.data])
                                       const url = URL.createObjectURL(blob)
-                                      window.open(url, '_blank')
-                                      // Cleanup after a delay
-                                      setTimeout(() => URL.revokeObjectURL(url), 100)
+                                      setSelectedImage({ url, alt: photo.file_name })
                                     } catch (err) {
                                       console.error('Failed to open image:', err)
                                     }
@@ -942,8 +941,7 @@ const SupportMessagesList: React.FC = () => {
                                       )
                                       const blob = new Blob([response.data])
                                       const url = URL.createObjectURL(blob)
-                                      window.open(url, '_blank')
-                                      setTimeout(() => URL.revokeObjectURL(url), 100)
+                                      setSelectedImage({ url, alt: photo.file_name })
                                     } catch (err) {
                                       console.error('Failed to open image:', err)
                                     }
@@ -1053,6 +1051,57 @@ const SupportMessagesList: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Image Modal */}
+      <Modal
+        open={!!selectedImage}
+        onClose={() => {
+          if (selectedImage) {
+            URL.revokeObjectURL(selectedImage.url)
+            setSelectedImage(null)
+          }
+        }}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Fade in={!!selectedImage}>
+          <Box
+            sx={{
+              position: 'relative',
+              maxWidth: '90vw',
+              maxHeight: '90vh',
+              outline: 'none',
+            }}
+            onClick={() => {
+              if (selectedImage) {
+                URL.revokeObjectURL(selectedImage.url)
+                setSelectedImage(null)
+              }
+            }}
+          >
+            {selectedImage && (
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.alt}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '90vh',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+              />
+            )}
+          </Box>
+        </Fade>
+      </Modal>
     </Box>
   )
 }
