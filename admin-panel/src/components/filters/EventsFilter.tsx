@@ -57,22 +57,33 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
     onFilterChange(newFilter)
   }
 
-  // Extract unique DJs from events
-  const allDjs = Array.from(
-    new Set(
-      events
-        .flatMap((e) => e.djs || [])
-        .filter((dj) => dj && dj.trim() !== '')
-    )
-  ).sort()
+  // Extract unique DJs from events (case-insensitive grouping)
+  const djMap = new Map<string, string>() // lowercase -> original case
+  events
+    .flatMap((e) => e.djs || [])
+    .filter((dj) => dj && dj.trim() !== '')
+    .forEach((dj) => {
+      const lower = dj.toLowerCase()
+      if (!djMap.has(lower)) {
+        djMap.set(lower, dj) // Store first occurrence with original case
+      }
+    })
+  const allDjs = Array.from(djMap.values()).sort()
 
-  // Extract unique ticket type names
-  const allTicketTypeNames = Array.from(
-    new Set(ticketTypes.map((tt) => tt.name).filter((name) => name && name.trim() !== ''))
-  ).sort()
+  // Extract unique ticket type names with prices
+  // Group by name (case-sensitive) and show with price
+  const ticketTypeMap = new Map<string, { name: string; price: number }>()
+  ticketTypes
+    .filter((tt) => tt.name && tt.name.trim() !== '')
+    .forEach((tt) => {
+      if (!ticketTypeMap.has(tt.name)) {
+        ticketTypeMap.set(tt.name, { name: tt.name, price: tt.price })
+      }
+    })
+  const allTicketTypes = Array.from(ticketTypeMap.values()).sort((a, b) => a.name.localeCompare(b.name))
 
   const visibleDjs = djsExpanded ? allDjs : allDjs.slice(0, 5)
-  const visibleTicketTypes = ticketTypesExpanded ? allTicketTypeNames : allTicketTypeNames.slice(0, 5)
+  const visibleTicketTypes = ticketTypesExpanded ? allTicketTypes : allTicketTypes.slice(0, 5)
 
   // Calculate price range from ticket types
   const prices = ticketTypes.map((tt) => tt.price)
@@ -104,6 +115,28 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
       ? localFilter.selectedTicketTypes.filter((t) => t !== name)
       : [...localFilter.selectedTicketTypes, name]
     handleFilterChange({ selectedTicketTypes: newTypes })
+  }
+  
+  // Helper to check if DJ matches (case-insensitive)
+  const isDjSelected = (dj: string) => {
+    const djLower = dj.toLowerCase()
+    return localFilter.selectedDjs.some((selectedDj) => selectedDj.toLowerCase() === djLower)
+  }
+  
+  // Helper to toggle DJ (case-insensitive)
+  const handleDjToggleCaseInsensitive = (dj: string) => {
+    const djLower = dj.toLowerCase()
+    const existingIndex = localFilter.selectedDjs.findIndex((d) => d.toLowerCase() === djLower)
+    
+    let newDjs: string[]
+    if (existingIndex >= 0) {
+      // Remove if exists
+      newDjs = localFilter.selectedDjs.filter((_, index) => index !== existingIndex)
+    } else {
+      // Add if not exists
+      newDjs = [...localFilter.selectedDjs, dj]
+    }
+    handleFilterChange({ selectedDjs: newDjs })
   }
 
   return (
@@ -149,8 +182,8 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
                 key={dj}
                 control={
                   <Checkbox
-                    checked={localFilter.selectedDjs.includes(dj)}
-                    onChange={() => handleDjToggle(dj)}
+                    checked={isDjSelected(dj)}
+                    onChange={() => handleDjToggleCaseInsensitive(dj)}
                     size="small"
                     sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
                   />
@@ -195,27 +228,27 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
 
       <FilterSection title="Ticket Types">
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {visibleTicketTypes.map((name) => (
+          {visibleTicketTypes.map((tt) => (
               <FormControlLabel
-                key={name}
+                key={tt.name}
                 control={
                   <Checkbox
-                    checked={localFilter.selectedTicketTypes.includes(name)}
-                    onChange={() => handleTicketTypeToggle(name)}
+                    checked={localFilter.selectedTicketTypes.includes(tt.name)}
+                    onChange={() => handleTicketTypeToggle(tt.name)}
                     size="small"
                     sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }}
                   />
                 }
-                label={<Typography sx={{ fontSize: '0.84rem' }}>{name}</Typography>}
+                label={<Typography sx={{ fontSize: '0.84rem' }}>{tt.name} ({tt.price}₽)</Typography>}
               />
           ))}
-          {allTicketTypeNames.length > 5 && (
+          {allTicketTypes.length > 5 && (
             <Button
               size="small"
               onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
               sx={{ mt: 1, alignSelf: 'flex-start', fontSize: '0.75rem' }}
             >
-              {ticketTypesExpanded ? 'Show Less' : `Show All (${allTicketTypeNames.length})`}
+              {ticketTypesExpanded ? 'Show Less' : `Show All (${allTicketTypes.length})`}
             </Button>
           )}
         </Box>

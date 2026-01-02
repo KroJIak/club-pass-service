@@ -113,10 +113,11 @@ const EventsList = () => {
       })
     }
 
-    // DJs filter
+    // DJs filter (case-insensitive)
     if (filterState.selectedDjs.length > 0) {
       filtered = filtered.filter((event) => {
-        return event.djs?.some((dj) => filterState.selectedDjs.includes(dj))
+        const selectedDjsLower = filterState.selectedDjs.map((d) => d.toLowerCase())
+        return event.djs?.some((dj) => selectedDjsLower.includes(dj.toLowerCase()))
       })
     }
 
