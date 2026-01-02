@@ -576,6 +576,22 @@ async def delete_ticket_type(
             detail=f"Ticket type with id {ticket_type_id} not found"
         )
     
+    # Check if there are any orders with this ticket type
+    orders_with_ticket_type = db.query(Order).filter(Order.ticket_type_id == ticket_type_id).count()
+    if orders_with_ticket_type > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete ticket type with id {ticket_type_id}: there are {orders_with_ticket_type} order(s) associated with it"
+        )
+    
+    # Check if there are any tickets with this ticket type
+    tickets_with_ticket_type = db.query(Ticket).filter(Ticket.ticket_type_id == ticket_type_id).count()
+    if tickets_with_ticket_type > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete ticket type with id {ticket_type_id}: there are {tickets_with_ticket_type} ticket(s) associated with it"
+        )
+    
     db.delete(ticket_type)
     db.commit()
     return None
