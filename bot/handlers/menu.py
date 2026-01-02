@@ -238,6 +238,7 @@ async def handle_support_photo(message: Message, state: FSMContext):
     photo_paths = state_data.get("support_photo_paths", [])
     if photo_path:
         photo_paths.append(photo_path)
+        await state.update_data(support_photo_paths=photo_paths)
     
     # Send message to support/admin via API immediately
     locale = get_user_locale(message.from_user.language_code)
