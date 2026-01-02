@@ -605,6 +605,8 @@ const SupportMessagesList: React.FC = () => {
               onChange={(_, newValue) => {
                 setSelectedUser(newValue)
               }}
+              openOnFocus
+              disablePortal={false}
               renderInput={(params) => (
                 <TextField
                   {...params}
