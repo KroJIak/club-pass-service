@@ -10,13 +10,12 @@ from bot.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-def escape_markdownv2(text: str) -> str:
-    """Escape special characters for MarkdownV2."""
-    # Characters that need to be escaped in MarkdownV2
-    special_chars = r'_*[]()~`>#+-=|{}.!'
-    # Escape each special character
-    for char in special_chars:
-        text = text.replace(char, f'\\{char}')
+def escape_html(text: str) -> str:
+    """Escape special characters for HTML."""
+    # Escape HTML special characters
+    text = text.replace('&', '&amp;')
+    text = text.replace('<', '&lt;')
+    text = text.replace('>', '&gt;')
     return text
 
 app = FastAPI(title="Bot API Server")
@@ -48,17 +47,17 @@ async def send_support_response(request: SendMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with headers and collapsible quote using MarkdownV2
-        # Escape text for MarkdownV2
-        escaped_original = escape_markdownv2(request.original_message)
-        escaped_response = escape_markdownv2(request.admin_response)
+        # Format message with headers and collapsible quote using HTML
+        # Escape text for HTML
+        escaped_original = escape_html(request.original_message)
+        escaped_response = escape_html(request.admin_response)
         
-        # Use >! for collapsible blockquote in MarkdownV2
+        # Use <blockquote expandable> for collapsible blockquote in HTML
         formatted_message = (
-            f"*Ваше обращение*\n"
-            f">\\! {escaped_original}\n\n"
-            f"*Ответ администратора*\n"
-            f"> {escaped_response}"
+            f"<b>Ваше обращение</b>\n"
+            f"<blockquote expandable>{escaped_original}</blockquote>\n\n"
+            f"<b>Ответ администратора</b>\n"
+            f"<blockquote>{escaped_response}</blockquote>"
         )
         
         # Create inline keyboard with "Write again" button
@@ -80,7 +79,7 @@ async def send_support_response(request: SendMessageRequest):
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
-            parse_mode="MarkdownV2",
+            parse_mode="HTML",
             reply_markup=reply_markup,
         )
         
@@ -141,18 +140,18 @@ async def send_direct_message(request: SendDirectMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with header and blockquote using MarkdownV2
-        escaped_message = escape_markdownv2(request.message)
+        # Format message with header and blockquote using HTML
+        escaped_message = escape_html(request.message)
         formatted_message = (
-            f"*Сообщение от администратора*\n"
-            f">{escaped_message}"
+            f"<b>Сообщение от администратора</b>\n"
+            f"<blockquote>{escaped_message}</blockquote>"
         )
         
         # Send direct message
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
-            parse_mode="MarkdownV2",
+            parse_mode="HTML",
         )
         
         # Mark last system message (menu) as temporary
