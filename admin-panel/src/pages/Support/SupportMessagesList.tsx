@@ -708,9 +708,6 @@ const SupportMessagesList: React.FC = () => {
                     {/* User photos */}
                     {msg.photos && msg.photos.filter(p => !p.is_admin_photo).length > 0 && (
                       <Box sx={{ mt: 2 }}>
-                        <Typography variant="caption" color="text.secondary" gutterBottom>
-                          Photos ({msg.photos.filter(p => !p.is_admin_photo).length})
-                        </Typography>
                         <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
                           {msg.photos.filter(p => !p.is_admin_photo).map((photo) => (
                             <ImageListItem key={photo.id}>
@@ -755,9 +752,6 @@ const SupportMessagesList: React.FC = () => {
                       {/* Admin photos */}
                       {msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0 && (
                         <Box sx={{ mt: 2 }}>
-                          <Typography variant="caption" color="text.secondary" gutterBottom>
-                            Photos ({msg.photos.filter(p => p.is_admin_photo).length})
-                          </Typography>
                           <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
                             {msg.photos.filter(p => p.is_admin_photo).map((photo) => (
                               <ImageListItem key={photo.id}>
@@ -919,9 +913,6 @@ const SupportMessagesList: React.FC = () => {
                       {/* Admin photos */}
                       {msg.photos && msg.photos.length > 0 && (
                         <Box sx={{ mt: 2 }}>
-                          <Typography variant="caption" color="text.secondary" gutterBottom>
-                            Photos ({msg.photos.length})
-                          </Typography>
                           <ImageList cols={3} rowHeight={150} sx={{ mt: 1 }}>
                             {msg.photos.map((photo) => (
                               <ImageListItem key={photo.id}>
