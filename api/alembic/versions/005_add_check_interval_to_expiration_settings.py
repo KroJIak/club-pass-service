@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '005'
-down_revision = '004_add_used_status_remove_is_used'
+down_revision = '003'  # Ссылается на миграцию 003 из api/alembic/versions/
 branch_labels = None
 depends_on = None
 
