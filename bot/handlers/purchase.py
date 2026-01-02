@@ -154,7 +154,8 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
     # If only 1 ticket available, skip quantity selection and go directly to confirmation
     if available_quantity == 1:
         # Set quantity to 1 and go directly to confirmation
-        await state.update_data(quantity=1)
+        # Mark that we skipped quantity selection so back button works correctly
+        await state.update_data(quantity=1, skipped_quantity_selection=True)
         await state.set_state(PurchaseStates.confirming_order)
         
         # Fetch full details from API
@@ -220,6 +221,8 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
         return
     
     # If more than 1 ticket available, show quantity selection
+    # Clear the flag since we're going through quantity selection
+    await state.update_data(skipped_quantity_selection=False)
     await state.set_state(PurchaseStates.selecting_quantity)
     
     price = float(ticket_type.get("price", 0))
@@ -464,6 +467,13 @@ async def handle_back_to_quantity(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     event_id = data.get("event_id")
     ticket_type_id = data.get("ticket_type_id")
+    skipped_quantity_selection = data.get("skipped_quantity_selection", False)
+    
+    # If we skipped quantity selection (because only 1 ticket was available),
+    # go back to ticket types selection instead
+    if skipped_quantity_selection:
+        await handle_back_to_ticket_types(callback, state)
+        return
     
     if not ticket_type_id or not event_id:
         # If no ticket_type_id or event_id, go back to ticket types
