@@ -45,6 +45,14 @@ class TicketTypeRepository:
             db.commit()
     
     @staticmethod
+    def increase_availability(db: Session, ticket_type_id: int, quantity: int) -> None:
+        """Increase available quantity for ticket type."""
+        ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
+        if ticket_type:
+            ticket_type.available_quantity += quantity
+            db.commit()
+    
+    @staticmethod
     def get_all(db: Session) -> List[TicketType]:
         """Get all ticket types (including inactive)."""
         return db.query(TicketType).order_by(TicketType.id.desc()).all()

@@ -112,7 +112,9 @@ class TicketRepository:
     
     @staticmethod
     def refund_ticket(db: Session, ticket_id: int) -> Optional[Ticket]:
-        """Refund a ticket (mark as refunded)."""
+        """Refund a ticket (mark as refunded) and restore available quantity."""
+        from api.repositories.ticket_type_repository import TicketTypeRepository
+        
         ticket = TicketRepository.get_by_id(db, ticket_id)
         if not ticket:
             return None
@@ -125,6 +127,10 @@ class TicketRepository:
         
         ticket.status = TicketStatus.REFUNDED
         ticket.refunded_at = datetime.utcnow()
+        
+        # Restore available quantity for ticket type
+        TicketTypeRepository.increase_availability(db, ticket.ticket_type_id, 1)
+        
         db.commit()
         db.refresh(ticket)
         return ticket
