@@ -569,6 +569,9 @@ async def delete_ticket_type(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Delete a ticket type (hard delete)."""
+    from api.models.order import Order
+    from api.models.ticket import Ticket
+    
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
     if not ticket_type:
         raise HTTPException(
@@ -576,21 +579,17 @@ async def delete_ticket_type(
             detail=f"Ticket type with id {ticket_type_id} not found"
         )
     
-    # Check if there are any orders with this ticket type
-    orders_with_ticket_type = db.query(Order).filter(Order.ticket_type_id == ticket_type_id).count()
-    if orders_with_ticket_type > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot delete ticket type with id {ticket_type_id}: there are {orders_with_ticket_type} order(s) associated with it"
-        )
+    # Explicitly delete related orders first to avoid constraint violations
+    # Orders have RESTRICT, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
+    orders = db.query(Order).filter(Order.ticket_type_id == ticket_type_id).all()
+    for order in orders:
+        db.delete(order)
     
-    # Check if there are any tickets with this ticket type
-    tickets_with_ticket_type = db.query(Ticket).filter(Ticket.ticket_type_id == ticket_type_id).count()
-    if tickets_with_ticket_type > 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot delete ticket type with id {ticket_type_id}: there are {tickets_with_ticket_type} ticket(s) associated with it"
-        )
+    # Explicitly delete related tickets first to avoid constraint violations
+    # Tickets have CASCADE, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
+    tickets = db.query(Ticket).filter(Ticket.ticket_type_id == ticket_type_id).all()
+    for ticket in tickets:
+        db.delete(ticket)
     
     db.delete(ticket_type)
     db.commit()
