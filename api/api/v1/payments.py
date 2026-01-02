@@ -47,7 +47,6 @@ async def create_order(
             event_id=order_data.event_id,
             ticket_type_id=order_data.ticket_type_id,
             quantity=order_data.quantity,
-            promocode=order_data.promocode,
         )
         logger.info(f"Payment invoice created: order_id={invoice_data['order_id']}, payment_id={invoice_data['payment_id']}")
         

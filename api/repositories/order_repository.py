@@ -15,7 +15,6 @@ class OrderRepository:
         event_id: int,
         ticket_type_id: int,
         quantity: int,
-        promocode: Optional[str] = None,
     ) -> Order:
         """Create a new order."""
         order_id = str(uuid.uuid4())
