@@ -212,6 +212,7 @@ const SupportMessagesList: React.FC = () => {
   const [responseText, setResponseText] = useState<{ [key: number]: string }>({})
   const [respondingTo, setRespondingTo] = useState<number | null>(null)
   const [responsePhotos, setResponsePhotos] = useState<{ [key: number]: File[] }>({})
+  const [sendingResponse, setSendingResponse] = useState<{ [key: number]: boolean }>({})
   
   // Send message dialog state
   const [sendMessageOpen, setSendMessageOpen] = useState(false)
@@ -360,6 +361,11 @@ const SupportMessagesList: React.FC = () => {
   }
 
   const handleRespond = async (messageId: number) => {
+    // Prevent multiple clicks
+    if (sendingResponse[messageId]) {
+      return
+    }
+    
     const response = responseText[messageId]?.trim() || ''
     const photos = responsePhotos[messageId] || []
     
@@ -368,6 +374,9 @@ const SupportMessagesList: React.FC = () => {
       alert('Please enter a response or add photos')
       return
     }
+
+    // Set sending state immediately
+    setSendingResponse((prev) => ({ ...prev, [messageId]: true }))
 
     try {
       let photo_paths: string[] = []
@@ -398,6 +407,9 @@ const SupportMessagesList: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to send response:', error)
       alert(error.response?.data?.detail || 'Failed to send response')
+    } finally {
+      // Clear sending state
+      setSendingResponse((prev) => ({ ...prev, [messageId]: false }))
     }
   }
 
@@ -627,34 +639,36 @@ const SupportMessagesList: React.FC = () => {
           {tabValue === 0 && (
             <>
           <Grid item xs={12} md={2.5}>
-            <FormControl fullWidth>
-              <InputLabel id="status-filter-label">Status</InputLabel>
-              <Select
-                labelId="status-filter-label"
-                value={statusFilter}
-                label="Status"
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="new">New</MenuItem>
-                <MenuItem value="responded">Responded</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              select
+              label="Status"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              SelectProps={{
+                native: false,
+              }}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="new">New</MenuItem>
+              <MenuItem value="responded">Responded</MenuItem>
+            </TextField>
           </Grid>
           <Grid item xs={12} md={2.5}>
-            <FormControl fullWidth>
-              <InputLabel id="sort-filter-label">Sort</InputLabel>
-              <Select
-                labelId="sort-filter-label"
-                value={sortBy}
-                label="Sort"
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
-              >
-                <MenuItem value="newest">Newest First</MenuItem>
-                <MenuItem value="oldest">Oldest First</MenuItem>
-                <MenuItem value="status">By Status</MenuItem>
-              </Select>
-            </FormControl>
+            <TextField
+              fullWidth
+              select
+              label="Sort"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              SelectProps={{
+                native: false,
+              }}
+            >
+              <MenuItem value="newest">Newest First</MenuItem>
+              <MenuItem value="oldest">Oldest First</MenuItem>
+              <MenuItem value="status">By Status</MenuItem>
+            </TextField>
           </Grid>
             </>
           )}
@@ -863,13 +877,19 @@ const SupportMessagesList: React.FC = () => {
                               variant="contained"
                               startIcon={<SendIcon />}
                               onClick={() => handleRespond(msg.id)}
+                              disabled={sendingResponse[msg.id]}
                             >
-                              Send Response
+                              {sendingResponse[msg.id] ? 'Sending...' : 'Send Response'}
                             </Button>
-                            <Button onClick={() => {
-                              setRespondingTo(null)
-                              setResponsePhotos((prev) => ({ ...prev, [msg.id]: [] }))
-                            }}>Cancel</Button>
+                            <Button 
+                              onClick={() => {
+                                setRespondingTo(null)
+                                setResponsePhotos((prev) => ({ ...prev, [msg.id]: [] }))
+                              }}
+                              disabled={sendingResponse[msg.id]}
+                            >
+                              Cancel
+                            </Button>
                           </Box>
                         </Box>
                       ) : (
