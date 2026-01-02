@@ -569,7 +569,7 @@ const SupportMessagesList: React.FC = () => {
               }}
               required
               error={!!sendMessageError}
-              helperText={sendMessageError || "You can use HTML formatting (e.g., &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;)"}
+              helperText={sendMessageError || ""}
             />
           </Box>
         </DialogContent>

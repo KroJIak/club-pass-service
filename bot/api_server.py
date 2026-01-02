@@ -3,10 +3,21 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import logging
+import re
 from aiogram import Bot
 from bot.core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def escape_markdownv2(text: str) -> str:
+    """Escape special characters for MarkdownV2."""
+    # Characters that need to be escaped in MarkdownV2
+    special_chars = r'_*[]()~`>#+-=|{}.!'
+    # Escape each special character
+    for char in special_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
 
 app = FastAPI(title="Bot API Server")
 
@@ -37,13 +48,17 @@ async def send_support_response(request: SendMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with headers and quote
-        # Original message and admin response in blockquotes
+        # Format message with headers and collapsible quote using MarkdownV2
+        # Escape text for MarkdownV2
+        escaped_original = escape_markdownv2(request.original_message)
+        escaped_response = escape_markdownv2(request.admin_response)
+        
+        # Use >! for collapsible blockquote in MarkdownV2
         formatted_message = (
-            f"<b>Ваше обращение</b>\n"
-            f"<blockquote>{request.original_message}</blockquote>\n\n"
-            f"<b>Ответ администратора</b>\n"
-            f"<blockquote>{request.admin_response}</blockquote>"
+            f"*Ваше обращение*\n"
+            f">\\!{escaped_original}\n\n"
+            f"*Ответ администратора*\n"
+            f">{escaped_response}"
         )
         
         # Create inline keyboard with "Write again" button
@@ -65,7 +80,7 @@ async def send_support_response(request: SendMessageRequest):
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
-            parse_mode="HTML",
+            parse_mode="MarkdownV2",
             reply_markup=reply_markup,
         )
         
@@ -126,17 +141,18 @@ async def send_direct_message(request: SendDirectMessageRequest):
                 detail="Bot instance not available"
             )
         
-        # Format message with header and blockquote
+        # Format message with header and blockquote using MarkdownV2
+        escaped_message = escape_markdownv2(request.message)
         formatted_message = (
-            f"<b>Сообщение от администратора</b>\n"
-            f"<blockquote>{request.message}</blockquote>"
+            f"*Сообщение от администратора*\n"
+            f">{escaped_message}"
         )
         
         # Send direct message
         await bot.send_message(
             chat_id=request.telegram_user_id,
             text=formatted_message,
-            parse_mode="HTML",
+            parse_mode="MarkdownV2",
         )
         
         # Mark last system message (menu) as temporary
