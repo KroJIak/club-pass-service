@@ -399,11 +399,13 @@ const SupportMessagesList: React.FC = () => {
     try {
       let photo_paths: string[] = []
       
-      // Upload photos first if any
+      // Upload photos first if any (with compression)
       if (photos.length > 0) {
         const uploadPromises = photos.map(async (file) => {
+          // Compress image before upload
+          const compressedFile = await compressImage(file)
           const formData = new FormData()
-          formData.append('file', file)
+          formData.append('file', compressedFile)
           const uploadResponse = await api.post('/admin/upload-photo', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
