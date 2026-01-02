@@ -478,6 +478,53 @@ const SupportMessagesList: React.FC = () => {
 
   const [sendMessageError, setSendMessageError] = useState<string>('')
 
+  // Compress image before upload
+  const compressImage = async (file: File, maxWidth: number = 1920, quality: number = 0.85): Promise<File> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+
+          // Resize if too large
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width
+            width = maxWidth
+          }
+
+          canvas.width = width
+          canvas.height = height
+
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height)
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  const compressedFile = new File([blob], file.name, { type: 'image/jpeg' })
+                  resolve(compressedFile)
+                } else {
+                  resolve(file)
+                }
+              },
+              'image/jpeg',
+              quality
+            )
+          } else {
+            resolve(file)
+          }
+        }
+        img.onerror = () => resolve(file)
+        img.src = e.target?.result as string
+      }
+      reader.onerror = () => resolve(file)
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleSendMessage = async () => {
     if (!sendMessageUser || (!sendMessageText.trim() && sendMessagePhotos.length === 0)) {
       setSendMessageError('Please select a user and enter a message or add photos')
@@ -489,11 +536,13 @@ const SupportMessagesList: React.FC = () => {
     try {
       let photo_paths: string[] = []
       
-      // Upload photos first if any
+      // Upload photos first if any (with compression)
       if (sendMessagePhotos.length > 0) {
         const uploadPromises = sendMessagePhotos.map(async (file) => {
+          // Compress image before upload
+          const compressedFile = await compressImage(file)
           const formData = new FormData()
-          formData.append('file', file)
+          formData.append('file', compressedFile)
           const uploadResponse = await api.post('/admin/upload-photo', formData, {
             headers: {
               'Content-Type': 'multipart/form-data',
@@ -802,13 +851,15 @@ const SupportMessagesList: React.FC = () => {
                     )}
                   </Box>
 
-                  {msg.admin_response ? (
+                  {(msg.admin_response || (msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0)) ? (
                     <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                       <Typography variant="subtitle2" gutterBottom>
                         Admin Response {msg.responded_by && `by ${msg.responded_by}`}
                         {msg.responded_at && ` on ${formatDate(msg.responded_at)}`}
                       </Typography>
-                      <Typography variant="body1">{msg.admin_response}</Typography>
+                      {msg.admin_response && (
+                        <Typography variant="body1">{msg.admin_response}</Typography>
+                      )}
                       {/* Admin photos */}
                       {msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0 && (
                         <Box sx={{ mt: 2 }}>

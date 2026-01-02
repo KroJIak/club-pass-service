@@ -4,6 +4,8 @@ import uuid
 import logging
 from pathlib import Path
 from typing import Optional
+from io import BytesIO
+from PIL import Image
 from api.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -16,23 +18,89 @@ def ensure_upload_directory() -> str:
     return upload_dir
 
 
-def save_support_photo(file_content: bytes, filename: str, mime_type: str) -> str:
+def compress_image(image_bytes: bytes, max_size_mb: float = 2.0, quality: int = 85) -> bytes:
     """
-    Save support photo to disk.
+    Compress image to reduce file size while maintaining reasonable quality.
+    
+    Args:
+        image_bytes: Original image bytes
+        max_size_mb: Maximum file size in MB (default 2MB)
+        quality: JPEG quality (1-100, default 85)
+        
+    Returns:
+        Compressed image bytes
+    """
+    try:
+        max_size_bytes = int(max_size_mb * 1024 * 1024)
+        
+        # If image is already small enough, return as is
+        if len(image_bytes) <= max_size_bytes:
+            return image_bytes
+        
+        # Open image
+        img = Image.open(BytesIO(image_bytes))
+        
+        # Convert RGBA to RGB if necessary (for JPEG)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Calculate target dimensions (reduce if too large)
+        max_dimension = 1920  # Max width or height
+        if img.width > max_dimension or img.height > max_dimension:
+            ratio = min(max_dimension / img.width, max_dimension / img.height)
+            new_size = (int(img.width * ratio), int(img.height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Compress to JPEG
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=quality, optimize=True)
+        compressed_bytes = output.getvalue()
+        
+        # If still too large, reduce quality further
+        if len(compressed_bytes) > max_size_bytes:
+            quality = 75
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=quality, optimize=True)
+            compressed_bytes = output.getvalue()
+        
+        logger.info(f"Compressed image: {len(image_bytes)} -> {len(compressed_bytes)} bytes ({len(compressed_bytes)/len(image_bytes)*100:.1f}%)")
+        return compressed_bytes
+    except Exception as e:
+        logger.warning(f"Failed to compress image, using original: {e}")
+        return image_bytes
+
+
+def save_support_photo(file_content: bytes, filename: str, mime_type: str, compress: bool = True) -> str:
+    """
+    Save support photo to disk with optional compression.
     
     Args:
         file_content: Photo file content as bytes
         filename: Original filename
         mime_type: MIME type of the file
+        compress: Whether to compress the image (default True)
         
     Returns:
         Relative file path from project root
     """
+    # Compress image if enabled
+    if compress:
+        file_content = compress_image(file_content)
+    
     # Ensure directory exists
     upload_dir = ensure_upload_directory()
     
-    # Generate unique filename
-    file_ext = Path(filename).suffix or _get_extension_from_mime_type(mime_type)
+    # Generate unique filename (always use .jpg for compressed images)
+    if compress:
+        file_ext = '.jpg'
+    else:
+        file_ext = Path(filename).suffix or _get_extension_from_mime_type(mime_type)
     unique_filename = f"{uuid.uuid4()}{file_ext}"
     file_path = os.path.join(upload_dir, unique_filename)
     

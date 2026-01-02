@@ -1597,10 +1597,11 @@ async def upload_photo(
                 detail="File must be an image"
             )
         
-        # Save file
-        file_path = save_support_photo(file_content, file.filename or "photo.jpg", mime_type)
+        # Save file with compression
+        file_path = save_support_photo(file_content, file.filename or "photo.jpg", mime_type, compress=True)
         
-        return {"file_path": file_path, "filename": file.filename, "mime_type": mime_type}
+        # Return JPEG mime type for compressed images
+        return {"file_path": file_path, "filename": file.filename, "mime_type": "image/jpeg"}
     except HTTPException:
         raise
     except Exception as e:
