@@ -56,9 +56,9 @@ async def send_support_response(request: SendMessageRequest):
         # Use >! for collapsible blockquote in MarkdownV2
         formatted_message = (
             f"*Ваше обращение*\n"
-            f">\\!{escaped_original}\n\n"
+            f">\\! {escaped_original}\n\n"
             f"*Ответ администратора*\n"
-            f">{escaped_response}"
+            f"> {escaped_response}"
         )
         
         # Create inline keyboard with "Write again" button
