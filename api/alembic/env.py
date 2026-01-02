@@ -23,8 +23,13 @@ config.set_main_option("sqlalchemy.url", (
 ))
 
 # Interpret the config file for Python logging.
+# Only load logging config if alembic.ini has logging configuration
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    try:
+        fileConfig(config.config_file_name)
+    except (KeyError, ValueError):
+        # If alembic.ini doesn't have logging config, skip it
+        pass
 
 # add your model's MetaData object here for 'autogenerate' support
 target_metadata = Base.metadata
