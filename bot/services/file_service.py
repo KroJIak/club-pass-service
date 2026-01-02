@@ -4,6 +4,8 @@ import uuid
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
+from io import BytesIO
+from PIL import Image
 from aiogram import Bot
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,64 @@ def _get_extension_from_mime_type(mime_type: str) -> str:
         'image/webp': '.webp',
     }
     return mime_to_ext.get(mime_type.lower(), '.jpg')
+
+
+def compress_image(image_bytes: bytes, max_size_mb: float = 2.0, quality: int = 85) -> bytes:
+    """
+    Compress image to reduce file size while maintaining reasonable quality.
+    
+    Args:
+        image_bytes: Original image bytes
+        max_size_mb: Maximum file size in MB (default 2MB)
+        quality: JPEG quality (1-100, default 85)
+        
+    Returns:
+        Compressed image bytes
+    """
+    try:
+        max_size_bytes = int(max_size_mb * 1024 * 1024)
+        
+        # If image is already small enough, return as is
+        if len(image_bytes) <= max_size_bytes:
+            return image_bytes
+        
+        # Open image
+        img = Image.open(BytesIO(image_bytes))
+        
+        # Convert RGBA to RGB if necessary (for JPEG)
+        if img.mode in ('RGBA', 'LA', 'P'):
+            background = Image.new('RGB', img.size, (255, 255, 255))
+            if img.mode == 'P':
+                img = img.convert('RGBA')
+            background.paste(img, mask=img.split()[-1] if img.mode in ('RGBA', 'LA') else None)
+            img = background
+        elif img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Calculate target dimensions (reduce if too large)
+        max_dimension = 1920  # Max width or height
+        if img.width > max_dimension or img.height > max_dimension:
+            ratio = min(max_dimension / img.width, max_dimension / img.height)
+            new_size = (int(img.width * ratio), int(img.height * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Compress to JPEG
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=quality, optimize=True)
+        compressed_bytes = output.getvalue()
+        
+        # If still too large, reduce quality further
+        if len(compressed_bytes) > max_size_bytes:
+            quality = 75
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=quality, optimize=True)
+            compressed_bytes = output.getvalue()
+        
+        logger.info(f"Compressed image: {len(image_bytes)} -> {len(compressed_bytes)} bytes ({len(compressed_bytes)/len(image_bytes)*100:.1f}%)")
+        return compressed_bytes
+    except Exception as e:
+        logger.warning(f"Failed to compress image, using original: {e}")
+        return image_bytes
 
 
 async def download_and_save_photo(bot: Bot, file_id: str) -> Optional[str]:
@@ -58,19 +118,14 @@ async def download_and_save_photo(bot: Bot, file_id: str) -> Optional[str]:
         # Read file content
         file_bytes = file_content.read()
         
-        # Determine MIME type from file path
-        file_path = file.file_path or ""
-        mime_type = "image/jpeg"  # Default
-        if file_path.endswith(".png"):
-            mime_type = "image/png"
-        elif file_path.endswith(".gif"):
-            mime_type = "image/gif"
-        elif file_path.endswith(".webp"):
-            mime_type = "image/webp"
+        # Compress image before saving
+        file_bytes = compress_image(file_bytes)
         
-        # Generate unique filename
-        file_ext = _get_extension_from_mime_type(mime_type)
-        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        # Determine MIME type (always JPEG after compression)
+        mime_type = "image/jpeg"
+        
+        # Generate unique filename (always .jpg for compressed images)
+        unique_filename = f"{uuid.uuid4()}.jpg"
         
         # Ensure directory exists
         upload_dir = ensure_upload_directory()
