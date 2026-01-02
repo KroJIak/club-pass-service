@@ -68,7 +68,7 @@
       "no_events": "😔 <b>No Available Events</b>\n\nUnfortunately, there are no active events at the moment. Please try again later!",
       "select_ticket_type": "🎫 <b>Select Ticket Type</b>\n\n<b>Event:</b> {event_name}\n\n{event_description}\n\n<b>DJs:</b> {djs_list}\n\n<b>Start Date:</b> {start_date}\n<b>End Date:</b> {end_date}",
       "select_quantity": "🔢 <b>Select Quantity</b>\n\n<b>Ticket Type:</b> {ticket_type_name}\n<b>Price:</b> {price} ₽\n<b>Available:</b> {available} pcs.",
-      "confirm_order": "✅ <b>Order Confirmation</b>\n\n<b>Event:</b> {event_name}\n<b>Date and Time:</b> {event_date}\n\n<b>Ticket Type:</b> {ticket_type_name}\n<b>Quantity:</b> {quantity} pcs.\n<b>Price per ticket:</b> {price_per_ticket} ₽\n\n💵 <b>Total:</b> {total_price} ₽",
+      "confirm_order": "✅ <b>Order Confirmation</b>\n\n<b>Event:</b> {event_name}\n\n<b>Start Date:</b> {start_date}\n<b>End Date:</b> {end_date}\n\n<b>Ticket Type:</b> {ticket_type_name}\n<b>Quantity:</b> {quantity} pcs.\n<b>Price per ticket:</b> {price_per_ticket} ₽\n\n💵 <b>Total:</b> {total_price} ₽",
       "processing_payment": "💳 <b>Processing Payment</b>\n\nYour order is being processed. You will be redirected to the payment page shortly...",
       "order_cancelled": "❌ <b>Order Cancelled</b>\n\nYou have cancelled the order. You can start over anytime.",
       "order_error": "❌ <b>Order Creation Error</b>\n\nAn error occurred while creating the order. Please try again later.",

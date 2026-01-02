@@ -172,13 +172,13 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
         
         event_name = event.get("name", "")
         
-        # Format event date/time range - remove year but keep end date/time in messages
-        start_date = event.get("start_date", "")
-        start_time = event.get("start_time", "")
-        end_date = event.get("end_date", "")
-        end_time = event.get("end_time", "")
+        # Format dates: DD.MM, HH:MM
+        start_date_str = event.get("start_date", "")
+        start_time_str = event.get("start_time", "")
+        end_date_str = event.get("end_date", "")
+        end_time_str = event.get("end_time", "")
         
-        # Format date without year
+        # Format date without year: DD.MM
         def format_date_without_year(date_str: str) -> str:
             """Format date from DD.MM.YYYY to DD.MM."""
             if not date_str:
@@ -188,20 +188,20 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
                 return f"{parts[0]}.{parts[1]}"
             return date_str
         
-        start_date_short = format_date_without_year(start_date)
-        end_date_short = format_date_without_year(end_date) if end_date else ''
+        # Format start date: DD.MM, HH:MM
+        start_date_short = format_date_without_year(start_date_str)
+        start_date_formatted = f"{start_date_short}, {start_time_str}" if start_date_short and start_time_str else (start_date_short or start_time_str or "")
         
-        # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
-        if end_date and end_time:
-            event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
-        else:
-            event_datetime = f"{start_date_short} {start_time}"
+        # Format end date: DD.MM, HH:MM
+        end_date_short = format_date_without_year(end_date_str) if end_date_str else ''
+        end_date_formatted = f"{end_date_short}, {end_time_str}" if end_date_short and end_time_str else (end_date_short or end_time_str or "")
         
         text = t(
             locale,
             "messages.purchase.confirm_order",
             event_name=event_name,
-            event_date=event_datetime,
+            start_date=start_date_formatted,
+            end_date=end_date_formatted,
             ticket_type_name=ticket_type.get("name", ""),
             quantity=1,
             price_per_ticket=price_per_ticket_formatted,
@@ -279,13 +279,13 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
     
     event_name = event.get("name", "")
     
-    # Format event date/time range - remove year but keep end date/time in messages
-    start_date = event.get("start_date", "")
-    start_time = event.get("start_time", "")
-    end_date = event.get("end_date", "")
-    end_time = event.get("end_time", "")
+    # Format dates: DD.MM, HH:MM
+    start_date_str = event.get("start_date", "")
+    start_time_str = event.get("start_time", "")
+    end_date_str = event.get("end_date", "")
+    end_time_str = event.get("end_time", "")
     
-    # Format date without year
+    # Format date without year: DD.MM
     def format_date_without_year(date_str: str) -> str:
         """Format date from DD.MM.YYYY to DD.MM."""
         if not date_str:
@@ -295,21 +295,20 @@ async def handle_quantity_selected(callback: CallbackQuery, state: FSMContext):
             return f"{parts[0]}.{parts[1]}"
         return date_str
     
-    start_date_short = format_date_without_year(start_date)
-    end_date_short = format_date_without_year(end_date) if end_date else ''
+    # Format start date: DD.MM, HH:MM
+    start_date_short = format_date_without_year(start_date_str)
+    start_date_formatted = f"{start_date_short}, {start_time_str}" if start_date_short and start_time_str else (start_date_short or start_time_str or "")
     
-    # Format as "DD.MM HH:MM - DD.MM HH:MM" or just start if end is missing
-    if end_date and end_time:
-        event_datetime = f"{start_date_short} {start_time} - {end_date_short} {end_time}"
-    else:
-        event_datetime = f"{start_date_short} {start_time}"
+    # Format end date: DD.MM, HH:MM
+    end_date_short = format_date_without_year(end_date_str) if end_date_str else ''
+    end_date_formatted = f"{end_date_short}, {end_time_str}" if end_date_short and end_time_str else (end_date_short or end_time_str or "")
     
     text = t(
         locale,
         "messages.purchase.confirm_order",
         event_name=event_name,
-        event_date=event_datetime,
-        event_time="",  # Keep for backward compatibility but not used
+        start_date=start_date_formatted,
+        end_date=end_date_formatted,
         ticket_type_name=ticket_type.get("name", ""),
         quantity=quantity,
         price_per_ticket=price_per_ticket_formatted,
