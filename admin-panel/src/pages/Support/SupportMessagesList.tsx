@@ -37,6 +37,98 @@ import api from '../../services/api'
 import { User } from '../../types'
 import dayjs from 'dayjs'
 
+// Component to load authenticated images
+const AuthenticatedImage: React.FC<{
+  messageId: number
+  photoId: number
+  alt: string
+  onClick?: () => void
+}> = ({ messageId, photoId, alt, onClick }) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await api.get(
+          `/admin/support-messages/${messageId}/photos/${photoId}`,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        const blob = new Blob([response.data])
+        const url = URL.createObjectURL(blob)
+        setImageUrl(url)
+        setLoading(false)
+      } catch (err) {
+        console.error('Failed to load image:', err)
+        setError(true)
+        setLoading(false)
+      }
+    }
+
+    loadImage()
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl)
+      }
+    }
+  }, [messageId, photoId])
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'grey.200',
+        }}
+      >
+        <Typography variant="caption">Loading...</Typography>
+      </Box>
+    )
+  }
+
+  if (error || !imageUrl) {
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: 100,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'grey.200',
+        }}
+      >
+        <Typography variant="caption" color="error">
+          Failed to load
+        </Typography>
+      </Box>
+    )
+  }
+
+  return (
+    <img
+      src={imageUrl}
+      alt={alt}
+      loading="lazy"
+      style={{ cursor: onClick ? 'pointer' : 'default', width: '100%', height: '100%', objectFit: 'cover' }}
+      onClick={onClick}
+    />
+  )
+}
+
 interface SupportMessagePhoto {
   id: number
   support_message_id: number
@@ -612,12 +704,31 @@ const SupportMessagesList: React.FC = () => {
                         <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
                           {msg.photos.filter(p => !p.is_admin_photo).map((photo) => (
                             <ImageListItem key={photo.id}>
-                              <img
-                                src={`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`}
+                              <AuthenticatedImage
+                                messageId={msg.id}
+                                photoId={photo.id}
                                 alt={photo.file_name}
-                                loading="lazy"
-                                style={{ cursor: 'pointer' }}
-                                onClick={() => window.open(`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`, '_blank')}
+                                onClick={async () => {
+                                  try {
+                                    const token = localStorage.getItem('token')
+                                    const response = await api.get(
+                                      `/admin/support-messages/${msg.id}/photos/${photo.id}`,
+                                      {
+                                        responseType: 'blob',
+                                        headers: {
+                                          Authorization: `Bearer ${token}`,
+                                        },
+                                      }
+                                    )
+                                    const blob = new Blob([response.data])
+                                    const url = URL.createObjectURL(blob)
+                                    window.open(url, '_blank')
+                                    // Cleanup after a delay
+                                    setTimeout(() => URL.revokeObjectURL(url), 100)
+                                  } catch (err) {
+                                    console.error('Failed to open image:', err)
+                                  }
+                                }}
                               />
                             </ImageListItem>
                           ))}
@@ -642,12 +753,31 @@ const SupportMessagesList: React.FC = () => {
                           <ImageList cols={3} rowHeight={100} sx={{ mt: 1 }}>
                             {msg.photos.filter(p => p.is_admin_photo).map((photo) => (
                               <ImageListItem key={photo.id}>
-                                <img
-                                  src={`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`}
+                                <AuthenticatedImage
+                                  messageId={msg.id}
+                                  photoId={photo.id}
                                   alt={photo.file_name}
-                                  loading="lazy"
-                                  style={{ cursor: 'pointer' }}
-                                  onClick={() => window.open(`${api.defaults.baseURL}/admin/support-messages/${msg.id}/photos/${photo.id}`, '_blank')}
+                                  onClick={async () => {
+                                    try {
+                                      const token = localStorage.getItem('token')
+                                      const response = await api.get(
+                                        `/admin/support-messages/${msg.id}/photos/${photo.id}`,
+                                        {
+                                          responseType: 'blob',
+                                          headers: {
+                                            Authorization: `Bearer ${token}`,
+                                          },
+                                        }
+                                      )
+                                      const blob = new Blob([response.data])
+                                      const url = URL.createObjectURL(blob)
+                                      window.open(url, '_blank')
+                                      // Cleanup after a delay
+                                      setTimeout(() => URL.revokeObjectURL(url), 100)
+                                    } catch (err) {
+                                      console.error('Failed to open image:', err)
+                                    }
+                                  }}
                                 />
                               </ImageListItem>
                             ))}
