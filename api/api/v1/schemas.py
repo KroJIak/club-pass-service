@@ -330,7 +330,7 @@ class SupportMessageCreate(BaseModel):
     """Schema for creating a support message."""
     user_id: int
     message: str
-    photo_file_ids: Optional[List[str]] = None
+    photo_paths: Optional[List[str]] = None
 
 
 class SupportMessageUpdate(BaseModel):

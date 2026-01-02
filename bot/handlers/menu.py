@@ -229,10 +229,15 @@ async def handle_support_photo(message: Message, state: FSMContext):
     except Exception as e:
         logger.warning(f"Failed to set reaction on support photo: {e}")
     
-    # Get existing photo file IDs from state (if user sent multiple photos)
+    # Download and save photo locally
+    from bot.services.file_service import download_and_save_photo
+    photo_path = await download_and_save_photo(message.bot, photo.file_id)
+    
+    # Get existing photo paths from state (if user sent multiple photos)
     state_data = await state.get_data()
-    photo_file_ids = state_data.get("support_photo_file_ids", [])
-    photo_file_ids.append(photo.file_id)
+    photo_paths = state_data.get("support_photo_paths", [])
+    if photo_path:
+        photo_paths.append(photo_path)
     
     # Send message to support/admin via API immediately
     locale = get_user_locale(message.from_user.language_code)
@@ -258,7 +263,7 @@ async def handle_support_photo(message: Message, state: FSMContext):
             support_result = await api_service.create_support_message(
                 user_id=user_id,
                 message="",  # Empty message for photo-only support messages
-                photo_file_ids=photo_file_ids if photo_file_ids else None
+                photo_paths=photo_paths if photo_paths else None
             )
             if not support_result:
                 import logging
@@ -297,9 +302,9 @@ async def handle_support_message(message: Message, state: FSMContext):
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to set reaction on support message: {e}")
     
-    # Get photo file IDs from state if any
+    # Get photo paths from state if any (already downloaded and saved)
     state_data = await state.get_data()
-    photo_file_ids = state_data.get("support_photo_file_ids", [])
+    photo_paths = state_data.get("support_photo_paths", [])
     
     # Send message to support/admin via API
     locale = get_user_locale(message.from_user.language_code)
@@ -326,7 +331,7 @@ async def handle_support_message(message: Message, state: FSMContext):
             support_result = await api_service.create_support_message(
                 user_id=user_id,
                 message=support_message,
-                photo_file_ids=photo_file_ids if photo_file_ids else None
+                photo_paths=photo_paths if photo_paths else None
             )
             if not support_result:
                 import logging
