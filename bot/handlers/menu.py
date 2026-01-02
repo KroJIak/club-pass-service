@@ -229,18 +229,54 @@ async def handle_support_photo(message: Message, state: FSMContext):
     except Exception as e:
         logger.warning(f"Failed to set reaction on support photo: {e}")
     
-    # Get or initialize photo list in state
+    # Get existing photo file IDs from state (if user sent multiple photos)
     state_data = await state.get_data()
     photo_file_ids = state_data.get("support_photo_file_ids", [])
     photo_file_ids.append(photo.file_id)
-    await state.update_data(support_photo_file_ids=photo_file_ids)
     
-    # Confirm photo received
+    # Send message to support/admin via API immediately
     locale = get_user_locale(message.from_user.language_code)
-    await message.answer(
-        t(locale, "messages.support_photo_received", default="✅ Фото получено. Можете отправить еще фото или текст сообщения."),
-        parse_mode="HTML"
+    
+    # Get or create user first
+    user_data = await api_service.create_or_update_user(
+        telegram_user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name,
     )
+    
+    if not user_data:
+        # If user creation fails, still show confirmation but log error
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to create/update user for support message: telegram_user_id={message.from_user.id}")
+        confirmation_text = t(locale, "messages.support_received")
+    else:
+        # Create support message with photos (no text)
+        user_id = user_data.get("id")
+        if user_id:
+            support_result = await api_service.create_support_message(
+                user_id=user_id,
+                message="",  # Empty message for photo-only support messages
+                photo_file_ids=photo_file_ids if photo_file_ids else None
+            )
+            if not support_result:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to create support message for user_id={user_id}")
+        
+        confirmation_text = t(locale, "messages.support_received")
+
+    user_id = message.from_user.id
+
+    await _finalize_support_feedback(
+        message=message,
+        user_id=user_id,
+        locale=locale,
+        confirmation_text=confirmation_text,
+    )
+
+    await state.clear()
 
 
 @router.message(SupportStates.waiting_message, F.text)
