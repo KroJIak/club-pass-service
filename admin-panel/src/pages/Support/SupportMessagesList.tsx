@@ -26,6 +26,7 @@ import {
   Modal,
   Backdrop,
   Fade,
+  Link,
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
@@ -802,7 +803,18 @@ const SupportMessagesList: React.FC = () => {
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                     <Box>
                       <Typography variant="h6" gutterBottom>
-                        {getUserDisplayName(msg)}
+                        {msg.username ? (
+                          <Link
+                            href={`https://t.me/${msg.username}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            sx={{ textDecoration: 'none', color: 'inherit', '&:hover': { textDecoration: 'underline' } }}
+                          >
+                            {getUserDisplayName(msg)}
+                          </Link>
+                        ) : (
+                          getUserDisplayName(msg)
+                        )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
                         {formatDate(msg.created_at)}
