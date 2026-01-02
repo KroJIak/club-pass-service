@@ -1,4 +1,5 @@
 """Main menu handlers."""
+import logging
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, FSInputFile, ReactionTypeEmoji
 from aiogram.fsm.context import FSMContext
@@ -17,6 +18,7 @@ from bot.core.assets import get_locale_image_path
 from bot.services.api_service import api_service
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 async def _freeze_previous_system_message(*, bot, user_id: int) -> None:
     """Remove inline keyboard from the last system message (best-effort)."""
@@ -259,8 +261,6 @@ async def handle_support_photo(message: Message, state: FSMContext):
     
     if not user_data:
         # If user creation fails, still show confirmation but log error
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to create/update user for support message: telegram_user_id={message.from_user.id}")
         confirmation_text = t(locale, "messages.support_received")
     else:
@@ -274,8 +274,6 @@ async def handle_support_photo(message: Message, state: FSMContext):
                 photo_paths=photo_paths if photo_paths else None
             )
             if not support_result:
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Failed to create support message for user_id={user_id}")
         
         confirmation_text = t(locale, "messages.support_received")
@@ -306,8 +304,6 @@ async def handle_support_message(message: Message, state: FSMContext):
         )
     except Exception as e:
         # If reaction fails, log but don't break the flow
-        import logging
-        logger = logging.getLogger(__name__)
         logger.warning(f"Failed to set reaction on support message: {e}")
     
     # Get photo paths from state if any (already downloaded and saved)
@@ -328,8 +324,6 @@ async def handle_support_message(message: Message, state: FSMContext):
     
     if not user_data:
         # If user creation fails, still show confirmation but log error
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to create/update user for support message: telegram_user_id={message.from_user.id}")
         confirmation_text = t(locale, "messages.support_received")
     else:
@@ -342,8 +336,6 @@ async def handle_support_message(message: Message, state: FSMContext):
                 photo_paths=photo_paths if photo_paths else None
             )
             if not support_result:
-                import logging
-                logger = logging.getLogger(__name__)
                 logger.error(f"Failed to create support message for user_id={user_id}")
         
         confirmation_text = t(locale, "messages.support_received")
