@@ -18,9 +18,11 @@ import {
   IconButton,
   Alert,
   CircularProgress,
+  Autocomplete,
 } from '@mui/material'
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material'
 import api from '../../services/api'
+import { User } from '../../types'
 
 interface StaffUser {
   id: number
@@ -33,18 +35,17 @@ interface StaffUser {
 
 const StaffUsersList = () => {
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingUsers, setLoadingUsers] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [openDialog, setOpenDialog] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [formData, setFormData] = useState({
-    telegram_user_id: '',
-    first_name: '',
-    last_name: '',
-  })
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
 
   useEffect(() => {
     loadStaffUsers()
+    loadUsers()
   }, [])
 
   const loadStaffUsers = async () => {
@@ -60,33 +61,56 @@ const StaffUsersList = () => {
     }
   }
 
+  const loadUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const response = await api.get('/admin/users')
+      setUsers(response.data.users)
+    } catch (err: any) {
+      console.error('Failed to load users:', err)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
   const handleAdd = () => {
-    setFormData({ telegram_user_id: '', first_name: '', last_name: '' })
+    setSelectedUser(null)
+    setError(null)
     setOpenDialog(true)
   }
 
   const handleCloseDialog = () => {
     setOpenDialog(false)
-    setFormData({ telegram_user_id: '', first_name: '', last_name: '' })
+    setSelectedUser(null)
+    setError(null)
   }
 
   const handleSubmit = async () => {
-    if (!formData.telegram_user_id) {
-      setError('Telegram User ID is required')
+    if (!selectedUser) {
+      setError('Please select a user')
       return
     }
 
     try {
+      setError(null)
       await api.post('/admin/staff-users', {
-        telegram_user_id: parseInt(formData.telegram_user_id),
-        first_name: formData.first_name || null,
-        last_name: formData.last_name || null,
+        telegram_user_id: selectedUser.telegram_user_id,
+        first_name: selectedUser.first_name || null,
+        last_name: selectedUser.last_name || null,
       })
       handleCloseDialog()
       loadStaffUsers()
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create staff user')
     }
+  }
+
+  const getUserDisplayName = (user: User) => {
+    const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
+    if (name) {
+      return `${name} (@${user.username || 'N/A'}) - ID: ${user.telegram_user_id}`
+    }
+    return `@${user.username || 'N/A'} - ID: ${user.telegram_user_id}`
   }
 
   const handleDelete = async (id: number) => {
@@ -178,31 +202,55 @@ const StaffUsersList = () => {
         <DialogTitle>Add Staff User</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-            <TextField
-              label="Telegram User ID"
-              type="number"
-              value={formData.telegram_user_id}
-              onChange={(e) => setFormData({ ...formData, telegram_user_id: e.target.value })}
-              required
-              fullWidth
+            <Autocomplete
+              options={users}
+              getOptionLabel={(option) => getUserDisplayName(option)}
+              value={selectedUser}
+              onChange={(_, newValue) => setSelectedUser(newValue)}
+              loading={loadingUsers}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select User"
+                  placeholder="Search by name, username, or Telegram ID"
+                  required
+                />
+              )}
+              filterOptions={(options, { inputValue }) => {
+                const searchLower = inputValue.toLowerCase()
+                return options.filter((user) => {
+                  const name = [user.first_name, user.last_name].filter(Boolean).join(' ').toLowerCase()
+                  const username = (user.username || '').toLowerCase()
+                  const telegramId = user.telegram_user_id.toString()
+                  return (
+                    name.includes(searchLower) ||
+                    username.includes(searchLower) ||
+                    telegramId.includes(searchLower)
+                  )
+                })
+              }}
             />
-            <TextField
-              label="First Name"
-              value={formData.first_name}
-              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Last Name"
-              value={formData.last_name}
-              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-              fullWidth
-            />
+            {selectedUser && (
+              <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Selected User:
+                </Typography>
+                <Typography variant="body1">
+                  {[selectedUser.first_name, selectedUser.last_name].filter(Boolean).join(' ') || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Username: @{selectedUser.username || 'N/A'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Telegram ID: {selectedUser.telegram_user_id}
+                </Typography>
+              </Box>
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">
+          <Button onClick={handleSubmit} variant="contained" disabled={!selectedUser}>
             Add
           </Button>
         </DialogActions>

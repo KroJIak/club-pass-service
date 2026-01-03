@@ -8,23 +8,23 @@ const Staff = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Сотрудники
+        Staff
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
-          <Tab label="Аккаунты админ-панели" />
-          <Tab label="Пользователи staff-бота" />
+          <Tab label="Admin Panel Accounts" />
+          <Tab label="Staff Bot Users" />
         </Tabs>
       </Box>
 
       {tabValue === 0 ? (
         <Paper sx={{ p: 3 }}>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Функционал создания аккаунтов админ-панели с разными правами доступа будет реализован в будущем.
+            The functionality for creating admin panel accounts with different access levels will be implemented in the future.
           </Alert>
           <Typography variant="body1" color="text.secondary">
-            Здесь будет возможность создавать и управлять аккаунтами администраторов с различными уровнями доступа.
+            Here you will be able to create and manage administrator accounts with various access levels.
           </Typography>
         </Paper>
       ) : (

@@ -27,7 +27,7 @@ const menuItems = [
   { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
-  { text: 'Сотрудники', icon: <StaffIcon />, path: '/staff' },
+  { text: 'Staff', icon: <StaffIcon />, path: '/staff' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
 ]
 

@@ -30,6 +30,30 @@ class APIService:
         except httpx.HTTPError as e:
             logger.error(f"Error checking staff access: {e}")
             return None
+    
+    async def get_or_create_user(
+        self,
+        telegram_user_id: int,
+        username: Optional[str] = None,
+        first_name: Optional[str] = None,
+        last_name: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Get existing user or create a new one in the main users table."""
+        try:
+            response = await self.client.post(
+                f"{self.base_url}{self.api_prefix}/v1/users/get-or-create",
+                json={
+                    "telegram_user_id": telegram_user_id,
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                }
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            logger.error(f"Error getting/creating user: {e}")
+            return None
 
 
 # Global API service instance

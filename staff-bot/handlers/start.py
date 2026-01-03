@@ -17,7 +17,16 @@ async def cmd_start(message: Message, state: FSMContext):
     # Clear any previous state
     await state.clear()
     
-    user_id = message.from_user.id
+    user = message.from_user
+    user_id = user.id
+    
+    # First, create or update user in the main users table
+    await api_service.get_or_create_user(
+        telegram_user_id=user_id,
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
+    )
     
     # Check if user has staff access
     access_check = await api_service.check_staff_access(user_id)
@@ -25,8 +34,8 @@ async def cmd_start(message: Message, state: FSMContext):
     if not access_check or not access_check.get("has_access", False):
         # User doesn't have access
         await message.answer(
-            "❌ У вас нет доступа к этому боту.\n\n"
-            "Обратитесь к администратору для получения доступа."
+            "❌ You don't have access to this bot.\n\n"
+            "Contact the administrator to get access."
         )
         return
     
@@ -34,11 +43,11 @@ async def cmd_start(message: Message, state: FSMContext):
     staff_user = access_check.get("staff_user", {})
     first_name = staff_user.get("first_name", "")
     last_name = staff_user.get("last_name", "")
-    name = f"{first_name} {last_name}".strip() if first_name or last_name else "Сотрудник"
+    name = f"{first_name} {last_name}".strip() if first_name or last_name else "Staff"
     
     welcome_text = (
-        f"👋 Привет, {name}!\n\n"
-        "Вы можете использовать это приложение для сканирования QR-кодов билетов."
+        f"👋 Hello, {name}!\n\n"
+        "You can use this app to scan ticket QR codes."
     )
     
     await message.answer(
