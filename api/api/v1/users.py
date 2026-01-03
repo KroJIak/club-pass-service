@@ -117,21 +117,21 @@ async def create_support_message(
                     mime_type, _ = mimetypes.guess_type(full_path)
                     if not mime_type:
                         mime_type = "image/jpeg"
-                        
-                        # Validate file size
-                        max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
+                    
+                    # Validate file size
+                    max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
                     if file_size > max_size:
                         logger.warning(f"Photo {photo_path} exceeds max size ({file_size} > {max_size}), skipping")
-                            continue
-                        
-                        # Create photo record
-                        SupportMessagePhotoRepository.create(
-                            db=db,
-                            support_message_id=support_message.id,
+                        continue
+                    
+                    # Create photo record
+                    SupportMessagePhotoRepository.create(
+                        db=db,
+                        support_message_id=support_message.id,
                         file_path=photo_path,
-                            file_name=filename,
+                        file_name=filename,
                         file_size=file_size,
-                            mime_type=mime_type,
+                        mime_type=mime_type,
                             is_admin_photo=False,
                         )
                         logger.info(f"Saved photo for support message {support_message.id}: {filename}")
