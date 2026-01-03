@@ -59,7 +59,6 @@ function App() {
         const testUserId = urlParams.get('test_user_id')
         if (testUserId) {
           addLog(`Using test_user_id from URL: ${testUserId}`)
-          const testUser = { id: parseInt(testUserId) }
           try {
             const result = await checkStaffAccess(parseInt(testUserId))
             addLog(`API Response received: ${JSON.stringify(result)}`)
