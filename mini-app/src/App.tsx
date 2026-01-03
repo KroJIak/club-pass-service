@@ -44,11 +44,13 @@ function App() {
 
       try {
         const result = await checkStaffAccess(userId)
-        setHasAccess(result.has_access)
+        console.log('Staff access check result:', result)
+        setHasAccess(result.has_access === true)
         if (!result.has_access) {
           setError('У вас нет доступа к этому приложению')
         }
       } catch (err: any) {
+        console.error('Error checking staff access:', err)
         setError(err.response?.data?.detail || 'Ошибка при проверке доступа')
       } finally {
         setLoading(false)

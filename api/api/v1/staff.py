@@ -35,6 +35,8 @@ async def check_staff_access(
     staff_user = StaffUserRepository.get_by_telegram_id(db, telegram_user_id)
     has_access = staff_user is not None
     
+    logger.info(f"Staff access check for telegram_user_id={telegram_user_id}: has_access={has_access}, staff_user={staff_user.id if staff_user else None}")
+    
     return StaffAccessCheckResponse(
         has_access=has_access,
         staff_user=StaffUserResponse.model_validate(staff_user) if staff_user else None
