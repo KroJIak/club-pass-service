@@ -52,6 +52,7 @@ from api.api.v1.schemas import (
     AdminMessagePhotoResponse,
     StaffUserResponse,
     StaffUserCreate,
+    StaffUserUpdate,
     StaffUserListResponse,
 )
 from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage

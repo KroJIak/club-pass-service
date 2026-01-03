@@ -398,6 +398,12 @@ class StaffUserResponse(BaseModel):
         from_attributes = True
 
 
+class StaffUserUpdate(BaseModel):
+    """Schema for updating a staff user."""
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
 class StaffUserListResponse(BaseModel):
     """Schema for list of staff users."""
     staff_users: List[StaffUserResponse]
