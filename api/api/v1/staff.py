@@ -32,15 +32,33 @@ async def check_staff_access(
     db: Session = Depends(get_db),
 ):
     """Check if user has staff access."""
+    logger.info(f"=== Staff access check started ===")
+    logger.info(f"Requested telegram_user_id: {telegram_user_id}")
+    logger.info(f"Type of telegram_user_id: {type(telegram_user_id)}")
+    
     staff_user = StaffUserRepository.get_by_telegram_id(db, telegram_user_id)
+    logger.info(f"Staff user found: {staff_user is not None}")
+    if staff_user:
+        logger.info(f"Staff user details: id={staff_user.id}, telegram_user_id={staff_user.telegram_user_id}, first_name={staff_user.first_name}, last_name={staff_user.last_name}")
+    else:
+        logger.warning(f"No staff user found for telegram_user_id={telegram_user_id}")
+        # Log all staff users for debugging
+        all_staff_users = StaffUserRepository.get_all(db)
+        logger.info(f"Total staff users in DB: {len(all_staff_users)}")
+        for su in all_staff_users:
+            logger.info(f"  - Staff user: id={su.id}, telegram_user_id={su.telegram_user_id}")
+    
     has_access = staff_user is not None
+    logger.info(f"has_access result: {has_access}")
     
-    logger.info(f"Staff access check for telegram_user_id={telegram_user_id}: has_access={has_access}, staff_user={staff_user.id if staff_user else None}")
-    
-    return StaffAccessCheckResponse(
+    response = StaffAccessCheckResponse(
         has_access=has_access,
         staff_user=StaffUserResponse.model_validate(staff_user) if staff_user else None
     )
+    logger.info(f"Response: has_access={response.has_access}, staff_user={response.staff_user.id if response.staff_user else None}")
+    logger.info(f"=== Staff access check completed ===")
+    
+    return response
 
 
 @router.get("/staff/tickets/token/{token}", response_model=TicketDetailResponse)
