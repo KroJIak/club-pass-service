@@ -116,6 +116,7 @@ function App() {
         } else {
           addLog('SUCCESS: Access granted')
           setError(null) // Clear any previous errors
+          setHasAccess(true) // Ensure hasAccess is set
         }
       } catch (err: any) {
         addLog(`ERROR: Exception caught: ${err.message}`)
