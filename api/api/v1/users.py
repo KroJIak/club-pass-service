@@ -132,9 +132,9 @@ async def create_support_message(
                         file_name=filename,
                         file_size=file_size,
                         mime_type=mime_type,
-                            is_admin_photo=False,
-                        )
-                        logger.info(f"Saved photo for support message {support_message.id}: {filename}")
+                        is_admin_photo=False,
+                    )
+                    logger.info(f"Saved photo for support message {support_message.id}: {filename}")
                 except Exception as e:
                     logger.error(f"Error processing photo {photo_path}: {e}", exc_info=True)
                     # Continue with other photos even if one fails
