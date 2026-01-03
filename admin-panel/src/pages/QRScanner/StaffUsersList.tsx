@@ -22,7 +22,7 @@ import {
 } from '@mui/material'
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material'
 import api from '../../services/api'
-import { User } from '../../types'
+import { User } from '../../types/index'
 
 interface StaffUser {
   id: number
