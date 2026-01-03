@@ -36,6 +36,7 @@ function App() {
 
   useEffect(() => {
     const verifyAccess = async () => {
+      console.log('Verifying access, userId:', userId)
       if (!userId) {
         setLoading(false)
         setError('Не удалось получить ID пользователя')
@@ -43,14 +44,18 @@ function App() {
       }
 
       try {
+        console.log('Calling checkStaffAccess with userId:', userId)
         const result = await checkStaffAccess(userId)
         console.log('Staff access check result:', result)
-        setHasAccess(result.has_access === true)
-        if (!result.has_access) {
+        console.log('has_access value:', result.has_access, 'type:', typeof result.has_access)
+        const accessGranted = result.has_access === true || result.has_access === 'true'
+        setHasAccess(accessGranted)
+        if (!accessGranted) {
           setError('У вас нет доступа к этому приложению')
         }
       } catch (err: any) {
         console.error('Error checking staff access:', err)
+        console.error('Error response:', err.response)
         setError(err.response?.data?.detail || 'Ошибка при проверке доступа')
       } finally {
         setLoading(false)
