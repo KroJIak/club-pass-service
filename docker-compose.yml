@@ -106,7 +106,7 @@ services:
     depends_on:
       - api
     volumes:
-      - ./staff-bot:/app/staff-bot
+      - ./staff-bot:/app
     restart: unless-stopped
 
   mini-app:
