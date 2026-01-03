@@ -93,7 +93,7 @@ function App() {
       <Box sx={{ pb: 8 }}>
         {tabValue === 0 ? <ScannerPage /> : <ListsPage />}
       </Box>
-      <BottomNav value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} />
+      <BottomNav value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} />
     </ThemeProvider>
   )
 }
