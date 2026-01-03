@@ -22,12 +22,26 @@ app = FastAPI(
 
 # CORS middleware
 # Parse CORS origins - if "*", use wildcard, otherwise split by comma
+# Combine admin panel and mini app origins
+cors_origins_list = []
+
 if settings.CORS_ORIGINS == "*":
     cors_origins = ["*"]
     allow_credentials = False  # Cannot use credentials with wildcard
 else:
-    cors_origins = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]
+    cors_origins_list.extend([origin.strip() for origin in settings.CORS_ORIGINS.split(",")])
+
+# Add mini app origins if specified
+if settings.CORS_ORIGINS_MINI_APP:
+    mini_app_origins = [origin.strip() for origin in settings.CORS_ORIGINS_MINI_APP.split(",")]
+    cors_origins_list.extend(mini_app_origins)
+
+if cors_origins_list:
+    cors_origins = list(set(cors_origins_list))  # Remove duplicates
     allow_credentials = True
+else:
+    cors_origins = ["*"]
+    allow_credentials = False
 
 app.add_middleware(
     CORSMiddleware,

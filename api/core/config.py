@@ -39,7 +39,8 @@ class Settings(BaseSettings):
     EXPIRATION_SERVICE_URL: str = "http://expiration-service:8001"
     
     # CORS
-    CORS_ORIGINS: str = "*"  # Comma-separated list of allowed origins, or "*" for all
+    CORS_ORIGINS: str = "*"  # Comma-separated list of allowed origins for admin panel, or "*" for all
+    CORS_ORIGINS_MINI_APP: Optional[str] = None  # Comma-separated list of allowed origins for mini app
     
     # File storage
     UPLOAD_DIR: str = "uploads"
