@@ -95,6 +95,18 @@ export const useTelegramWebApp = () => {
       setWebApp(tg)
       setUser(tg.initDataUnsafe.user || null)
       setInitData(tg.initData)
+    } else {
+      // For testing: try to get user_id from URL params
+      const urlParams = new URLSearchParams(window.location.search)
+      const testUserId = urlParams.get('test_user_id')
+      if (testUserId) {
+        const testUser: TelegramUser = {
+          id: parseInt(testUserId),
+          first_name: 'Test',
+          last_name: 'User',
+        }
+        setUser(testUser)
+      }
     }
   }, [])
 
