@@ -51,7 +51,46 @@ function App() {
       addLog(`webApp exists: ${!!webApp}`)
       addLog(`initData: ${initData ? 'present' : 'missing'}`)
       
-      if (!userId) {
+      // Wait a bit for user to be loaded from Telegram WebApp
+      if (!userId && !user) {
+        addLog('Waiting for user data...')
+        // Try to get from URL params for testing
+        const urlParams = new URLSearchParams(window.location.search)
+        const testUserId = urlParams.get('test_user_id')
+        if (testUserId) {
+          addLog(`Using test_user_id from URL: ${testUserId}`)
+          const testUser = { id: parseInt(testUserId) }
+          try {
+            const result = await checkStaffAccess(parseInt(testUserId))
+            addLog(`API Response received: ${JSON.stringify(result)}`)
+            setApiResponse(result)
+            const accessGranted = result.has_access === true
+            setHasAccess(accessGranted)
+            if (!accessGranted) {
+              setError('У вас нет доступа к этому приложению')
+            }
+          } catch (err: any) {
+            addLog(`ERROR: Exception caught: ${err.message}`)
+            setError(err.response?.data?.detail || 'Ошибка при проверке доступа')
+          } finally {
+            setLoading(false)
+          }
+          return
+        }
+        
+        // If no test_user_id and no user, wait a bit more
+        setTimeout(() => {
+          if (!userId && !user) {
+            addLog('ERROR: userId is still null after waiting')
+            setLoading(false)
+            setError('Не удалось получить ID пользователя')
+          }
+        }, 1000)
+        return
+      }
+      
+      const finalUserId = userId || user?.id
+      if (!finalUserId) {
         addLog('ERROR: userId is null or undefined')
         setLoading(false)
         setError('Не удалось получить ID пользователя')
@@ -59,8 +98,8 @@ function App() {
       }
 
       try {
-        addLog(`Calling API: /v1/staff/check-access?telegram_user_id=${userId}`)
-        const result = await checkStaffAccess(userId)
+        addLog(`Calling API: /v1/staff/check-access?telegram_user_id=${finalUserId}`)
+        const result = await checkStaffAccess(finalUserId)
         addLog(`API Response received: ${JSON.stringify(result)}`)
         setApiResponse(result)
         
@@ -76,6 +115,7 @@ function App() {
           setError('У вас нет доступа к этому приложению')
         } else {
           addLog('SUCCESS: Access granted')
+          setError(null) // Clear any previous errors
         }
       } catch (err: any) {
         addLog(`ERROR: Exception caught: ${err.message}`)
@@ -91,7 +131,7 @@ function App() {
     }
 
     verifyAccess()
-  }, [userId])
+  }, [userId, user])
 
   if (loading) {
     return (
@@ -111,7 +151,7 @@ function App() {
     )
   }
 
-  if (error || !hasAccess) {
+  if (error && !hasAccess) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
