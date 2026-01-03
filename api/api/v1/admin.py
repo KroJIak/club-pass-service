@@ -1928,3 +1928,82 @@ async def get_admin_message_photo(
         media_type=photo.mime_type,
         filename=photo.file_name,
     )
+# Staff Users CRUD
+@router.get("/admin/staff-users", response_model=StaffUserListResponse)
+async def get_all_staff_users(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all staff users (admin only)."""
+    staff_users = StaffUserRepository.get_all(db)
+    return StaffUserListResponse(staff_users=[StaffUserResponse.model_validate(user) for user in staff_users])
+
+
+@router.post("/admin/staff-users", response_model=StaffUserResponse, status_code=status.HTTP_201_CREATED)
+async def create_staff_user(
+    user_data: StaffUserCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Create a new staff user (admin only)."""
+    # Check if staff user with this telegram_user_id already exists
+    existing_staff_user = StaffUserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
+    if existing_staff_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Staff user with telegram_user_id {user_data.telegram_user_id} already exists"
+        )
+    
+    staff_user = StaffUserRepository.create(
+        db,
+        telegram_user_id=user_data.telegram_user_id,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+    )
+    return StaffUserResponse.model_validate(staff_user)
+
+
+@router.put("/admin/staff-users/{staff_user_id}", response_model=StaffUserResponse)
+async def update_staff_user(
+    staff_user_id: int,
+    user_data: StaffUserUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update a staff user (admin only)."""
+    staff_user = StaffUserRepository.get_by_id(db, staff_user_id)
+    if not staff_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staff user with id {staff_user_id} not found"
+        )
+    
+    updated_staff_user = StaffUserRepository.update(
+        db,
+        staff_user_id,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+    )
+    if not updated_staff_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staff user with id {staff_user_id} not found"
+        )
+    
+    return StaffUserResponse.model_validate(updated_staff_user)
+
+
+@router.delete("/admin/staff-users/{staff_user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_staff_user(
+    staff_user_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete a staff user (admin only)."""
+    if not StaffUserRepository.delete(db, staff_user_id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Staff user with id {staff_user_id} not found"
+        )
+    return None
+
