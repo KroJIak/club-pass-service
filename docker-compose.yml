@@ -150,7 +150,7 @@ services:
     container_name: club-pass-cloudpub-init
     volumes:
       - ./cloudpub-config:/cloudpub-config
-    command: sh -c "mkdir -p /cloudpub-config/cloudpub-admin-panel && chmod -R 777 /cloudpub-config"
+    command: sh -c "mkdir -p /cloudpub-config/cloudpub-admin-panel /cloudpub-config/cloudpub-mini-app && chmod -R 777 /cloudpub-config"
     restart: "no"
 
   cloudpub-admin-panel:
@@ -170,6 +170,24 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./cloudpub-config/cloudpub-admin-panel:/home/cloudpub
+
+  cloudpub-mini-app:
+    image: cloudpub/cloudpub:latest-arm64
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - TOKEN=${CLOUDPUB_TOKEN}
+      - HTTP=localhost:${MINI_APP_PORT:-3001}
+    command: run
+    depends_on:
+      mini-app:
+        condition: service_started
+      cloudpub-init:
+        condition: service_completed_successfully
+    volumes:
+      - ./cloudpub-config/cloudpub-mini-app:/home/cloudpub
 
 volumes:
   postgres_data:
