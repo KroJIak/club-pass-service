@@ -4,9 +4,9 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from staff_bot.core.config import settings
-from staff_bot.handlers import start
-from staff_bot.services.api_service import api_service
+from core.config import settings
+from handlers import start
+from services.api_service import api_service
 
 # Configure logging
 logging.basicConfig(

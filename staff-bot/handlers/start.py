@@ -4,9 +4,9 @@ from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
-from staff_bot.core.keyboards import get_mini_app_keyboard
-from staff_bot.core.config import settings
-from staff_bot.services.api_service import api_service
+from core.keyboards import get_mini_app_keyboard
+from core.config import settings
+from services.api_service import api_service
 
 router = Router()
 

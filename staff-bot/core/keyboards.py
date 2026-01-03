@@ -1,7 +1,7 @@
 """Keyboards for staff bot."""
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from staff_bot.core.config import settings
+from core.config import settings
 
 
 def get_mini_app_keyboard() -> InlineKeyboardMarkup:
