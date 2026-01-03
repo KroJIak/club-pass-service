@@ -15,8 +15,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY staff-bot/ ./staff-bot/
 
 # Set Python path
-ENV PYTHONPATH=/app:/app/staff-bot
+ENV PYTHONPATH=/app
 
-# Run the bot
-CMD ["python", "-m", "staff_bot.main"]
+# Run the bot (change to staff-bot directory and run main.py directly)
+WORKDIR /app/staff-bot
+CMD ["python", "main.py"]
 

@@ -107,6 +107,7 @@ services:
       - api
     volumes:
       - ./staff-bot:/app/staff-bot
+    working_dir: /app/staff-bot
     restart: unless-stopped
 
   mini-app:
