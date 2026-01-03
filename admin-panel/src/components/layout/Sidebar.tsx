@@ -15,6 +15,7 @@ import {
   QrCodeScanner as QrCodeIcon,
   Business as BusinessIcon,
   Support as SupportIcon,
+  Badge as StaffIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -26,6 +27,7 @@ const menuItems = [
   { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Payments', icon: <PaymentIcon />, path: '/payments' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
+  { text: 'Сотрудники', icon: <StaffIcon />, path: '/staff' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
 ]
 

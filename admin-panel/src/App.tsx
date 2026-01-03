@@ -11,6 +11,7 @@ import OrdersList from './pages/Orders/OrdersList'
 import QRScanner from './pages/QRScanner/QRScanner'
 import ClubSettings from './pages/ClubSettings/ClubSettings'
 import SupportMessagesList from './pages/Support/SupportMessagesList'
+import Staff from './pages/Staff/Staff'
 import { useAuth } from './hooks/useAuth'
 import { FilterPanelProvider } from './hooks/useFilterPanel'
 
@@ -64,6 +65,7 @@ function App() {
               <Route path="orders" element={<OrdersList />} />
               <Route path="qr-scanner" element={<QRScanner />} />
               <Route path="support" element={<SupportMessagesList />} />
+              <Route path="staff" element={<Staff />} />
               <Route path="club-settings" element={<ClubSettings />} />
             </Route>
           </Routes>
