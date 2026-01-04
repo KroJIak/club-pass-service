@@ -302,13 +302,6 @@ const ScannerPage = () => {
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  ID билета
-                </Typography>
-                <Typography variant="body1">{ticket.id}</Typography>
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
                   Токен
                 </Typography>
                 <Typography variant="body1" sx={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
@@ -350,11 +343,34 @@ const ScannerPage = () => {
                   <Typography variant="body2" color="text.secondary">
                     Пользователь
                   </Typography>
-                  <Typography variant="body1">
-                    {ticket.user.username ||
-                      `${ticket.user.first_name || ''} ${ticket.user.last_name || ''}`.trim() ||
-                      `ID: ${ticket.user.telegram_user_id}`}
-                  </Typography>
+                  {ticket.user.username ? (
+                    <Typography
+                      variant="body1"
+                      component="a"
+                      href={`https://t.me/${ticket.user.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        color: 'primary.main',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                        },
+                      }}
+                    >
+                      {ticket.user.username}
+                      {((ticket.user.first_name || ticket.user.last_name) && (
+                        <span style={{ color: 'inherit', opacity: 0.7 }}>
+                          {' '}({`${ticket.user.first_name || ''} ${ticket.user.last_name || ''}`.trim()})
+                        </span>
+                      ))}
+                    </Typography>
+                  ) : (
+                    <Typography variant="body1">
+                      {`${ticket.user.first_name || ''} ${ticket.user.last_name || ''}`.trim() || `ID: ${ticket.user.telegram_user_id}`}
+                    </Typography>
+                  )}
                 </Box>
               )}
 
