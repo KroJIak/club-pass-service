@@ -53,6 +53,22 @@ class TicketTypeRepository:
             db.commit()
     
     @staticmethod
+    def increase_total_quantity(db: Session, ticket_type_id: int, quantity: int) -> None:
+        """Increase total quantity for ticket type."""
+        ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
+        if ticket_type:
+            ticket_type.total_quantity += quantity
+            db.commit()
+    
+    @staticmethod
+    def decrease_total_quantity(db: Session, ticket_type_id: int, quantity: int) -> None:
+        """Decrease total quantity for ticket type."""
+        ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
+        if ticket_type:
+            ticket_type.total_quantity = max(0, ticket_type.total_quantity - quantity)
+            db.commit()
+    
+    @staticmethod
     def get_all(db: Session) -> List[TicketType]:
         """Get all ticket types (including inactive)."""
         return db.query(TicketType).order_by(TicketType.id.desc()).all()

@@ -932,7 +932,17 @@ async def update_ticket(
         if isinstance(status_value, TicketStatus):
             status_value = status_value.value
         old_status = ticket.status
-        ticket.status = TicketStatus(status_value)
+        new_status = TicketStatus(status_value)
+        
+        # Update total_quantity based on status change
+        if old_status == TicketStatus.ACTIVE and new_status == TicketStatus.CANCELLED:
+            # Ticket cancelled: increase total_quantity
+            TicketTypeRepository.increase_total_quantity(db, ticket.ticket_type_id, 1)
+        elif old_status == TicketStatus.CANCELLED and new_status == TicketStatus.ACTIVE:
+            # Ticket restored from cancelled: decrease total_quantity
+            TicketTypeRepository.decrease_total_quantity(db, ticket.ticket_type_id, 1)
+        
+        ticket.status = new_status
         logger.info(f"Updated status from {old_status} to {ticket.status}")
         # Set used_at when status changes to USED
         if ticket.status == TicketStatus.USED and not ticket.used_at:
@@ -1010,6 +1020,10 @@ async def delete_ticket(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Ticket with id {ticket_id} not found"
         )
+    
+    # If ticket was active, increase total_quantity
+    if ticket.status == TicketStatus.ACTIVE:
+        TicketTypeRepository.increase_total_quantity(db, ticket.ticket_type_id, 1)
     
     db.delete(ticket)
     db.commit()
