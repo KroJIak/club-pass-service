@@ -80,21 +80,18 @@ const ScannerPage = () => {
         { 
           facingMode: 'environment',
           // Request highest quality
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: 1920, min: 1280 },
+          height: { ideal: 1080, min: 720 },
         },
         {
           fps: 10,
-          // Remove qrbox to scan entire viewport
-          qrbox: undefined,
+          // Set qrbox to null to scan entire viewport, but keep visual guide
+          qrbox: function(viewfinderWidth, viewfinderHeight) {
+            // Return null to scan entire viewport
+            return null
+          },
           aspectRatio: 1.0,
           disableFlip: false,
-          // Use better video constraints for quality
-          videoConstraints: {
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
         },
         (decodedText) => {
           handleScan(decodedText)
