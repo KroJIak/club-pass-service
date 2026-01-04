@@ -90,11 +90,13 @@ const ScannerPage = () => {
         { facingMode: 'environment' },
         {
           fps: 10,
-          // Disable qrbox to scan entire area, but keep it for visual guide
+          // Set qrbox for visual guide (scanning happens everywhere)
           qrbox: { width: Math.min(300, width * 0.8), height: Math.min(300, height * 0.6) },
           aspectRatio: 1.0,
           // Enable scanning from entire viewport
           disableFlip: false,
+          // Important: html5-qrcode scans the entire video stream, not just qrbox
+          // qrbox is only for visual guidance
         },
         (decodedText) => {
           handleScan(decodedText)
