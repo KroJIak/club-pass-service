@@ -123,6 +123,16 @@ const OrdersList = () => {
                     <Typography variant="body2" color="text.secondary">
                       Quantity: {order.quantity}
                     </Typography>
+                    {order.amount !== null && (
+                      <Typography variant="body2" color="text.secondary">
+                        Amount: {order.amount} ₽
+                      </Typography>
+                    )}
+                    {order.payment_status && (
+                      <Typography variant="body2" color="text.secondary">
+                        Payment: {order.payment_status}
+                      </Typography>
+                    )}
                     <Typography variant="body2" color="text.secondary">
                       {order.event_name 
                         ? `Event: ${order.event_name} (ID: ${order.event_id})`

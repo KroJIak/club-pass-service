@@ -165,6 +165,8 @@ class OrderAdminResponse(BaseModel):
     last_name: Optional[str] = None  # User last name
     event_name: Optional[str] = None  # Event name
     ticket_type_name: Optional[str] = None  # Ticket type name
+    amount: Optional[Decimal] = None  # Payment amount
+    payment_status: Optional[str] = None  # Payment status
 
     class Config:
         from_attributes = True
@@ -1109,6 +1111,10 @@ async def get_all_orders(
         ticket_type = TicketTypeRepository.get_by_id(db, order.ticket_type_id)
         if ticket_type:
             order_data.ticket_type_name = ticket_type.name
+        # Get payment info
+        if order.payment_id and order.payment:
+            order_data.amount = order.payment.amount
+            order_data.payment_status = order.payment.status.value
         order_responses.append(order_data)
     
     return OrderListResponse(orders=order_responses)

@@ -6,7 +6,6 @@ import Layout from './components/layout/Layout'
 import EventsList from './pages/Events/EventsList'
 import UsersList from './pages/Users/UsersList'
 import TicketsList from './pages/Tickets/TicketsList'
-import PaymentsList from './pages/Payments/PaymentsList'
 import OrdersList from './pages/Orders/OrdersList'
 import QRScanner from './pages/QRScanner/QRScanner'
 import ClubSettings from './pages/ClubSettings/ClubSettings'
@@ -61,7 +60,6 @@ function App() {
               <Route path="events" element={<EventsList />} />
               <Route path="users" element={<UsersList />} />
               <Route path="tickets" element={<TicketsList />} />
-              <Route path="payments" element={<PaymentsList />} />
               <Route path="orders" element={<OrdersList />} />
               <Route path="qr-scanner" element={<QRScanner />} />
               <Route path="support" element={<SupportMessagesList />} />

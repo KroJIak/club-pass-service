@@ -86,6 +86,8 @@ export interface Order {
   last_name: string | null
   event_name: string | null
   ticket_type_name: string | null
+  amount: number | null
+  payment_status: string | null
 }
 
 
