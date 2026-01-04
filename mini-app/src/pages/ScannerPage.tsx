@@ -41,6 +41,7 @@ const ScannerPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [accepting, setAccepting] = useState(false)
+  const [debugLogs, setDebugLogs] = useState<string[]>([])
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannerContainerRef = useRef<HTMLDivElement>(null)
   const cameraActiveRef = useRef<boolean>(false)
@@ -57,48 +58,73 @@ const ScannerPage = () => {
     }
   }, [userId])
 
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString()
+    const logMessage = `[${timestamp}] ${message}`
+    setDebugLogs(prev => [...prev, logMessage])
+    console.log(logMessage)
+  }
+
   const startScanning = async () => {
-    if (!userId || cameraActiveRef.current) return
+    if (!userId || cameraActiveRef.current) {
+      addDebugLog(`startScanning: Skipped - userId: ${!!userId}, cameraActive: ${cameraActiveRef.current}`)
+      return
+    }
 
     try {
       setError(null)
+      addDebugLog('startScanning: Starting...')
       
       if (scannerRef.current) {
         try {
+          addDebugLog('startScanning: Stopping existing scanner...')
           await scannerRef.current.stop()
           scannerRef.current.clear()
-        } catch (e) {
+          addDebugLog('startScanning: Existing scanner stopped')
+        } catch (e: any) {
+          addDebugLog(`startScanning: Error stopping existing scanner: ${e.message}`)
           // Ignore stop errors
         }
       }
 
+      addDebugLog('startScanning: Creating new Html5Qrcode instance...')
       const scanner = new Html5Qrcode('qr-reader-mobile')
       scannerRef.current = scanner
+      addDebugLog('startScanning: Html5Qrcode instance created')
 
-      await scanner.start(
-        { 
-          facingMode: 'environment',
-          // Request highest quality
-          width: { ideal: 1920, min: 1280 },
-          height: { ideal: 1080, min: 720 },
-        },
-        {
-          fps: 10,
-          // Don't set qrbox to scan entire viewport (html5-qrcode scans whole video stream by default)
-          aspectRatio: 1.0,
-          disableFlip: false,
-        },
-        (decodedText) => {
-          handleScan(decodedText)
-        },
-        () => {
-          // Ignore scanning errors
-        }
-      )
-      
-      cameraActiveRef.current = true
+      addDebugLog('startScanning: Starting camera with constraints...')
+      try {
+        await scanner.start(
+          { 
+            facingMode: 'environment',
+          },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+            disableFlip: false,
+          },
+          (decodedText) => {
+            addDebugLog(`QR Code detected: ${decodedText}`)
+            handleScan(decodedText)
+          },
+          (errorMessage) => {
+            // Ignore scanning errors, but log them
+            // addDebugLog(`Scanning error: ${errorMessage}`)
+          }
+        )
+        addDebugLog('startScanning: Camera started successfully')
+        cameraActiveRef.current = true
+      } catch (startErr: any) {
+        addDebugLog(`startScanning: Error starting camera: ${startErr.message}`)
+        addDebugLog(`startScanning: Error stack: ${startErr.stack}`)
+        throw startErr
+      }
     } catch (err: any) {
-      setError(err.message || 'Failed to start camera')
+      const errorMessage = err.message || 'Failed to start camera'
+      addDebugLog(`startScanning: Fatal error: ${errorMessage}`)
+      addDebugLog(`startScanning: Error details: ${JSON.stringify(err)}`)
+      setError(errorMessage)
       cameraActiveRef.current = false
     }
   }
