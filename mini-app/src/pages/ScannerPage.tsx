@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Chip,
 } from '@mui/material'
-import { Html5Qrcode, Html5QrcodeScanType } from 'html5-qrcode'
+import { Html5Qrcode } from 'html5-qrcode'
 import { useTelegramWebApp } from '../hooks/useTelegramWebApp'
 import { getTicketByToken, markTicketAsUsed } from '../services/api'
 
