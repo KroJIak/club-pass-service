@@ -45,23 +45,18 @@ const ScannerPage = () => {
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannerContainerRef = useRef<HTMLDivElement>(null)
   const cameraActiveRef = useRef<boolean>(false)
+  const initRef = useRef<boolean>(false)
 
-  // Keep camera active at all times
+  // Initialize camera only once
   useEffect(() => {
-    if (userId && !cameraActiveRef.current) {
+    if (userId && !initRef.current) {
+      initRef.current = true
       startScanning()
     }
     return () => {
       // Don't stop camera on unmount - keep it running
     }
   }, [userId])
-
-  // Restart camera when ticket is cleared
-  useEffect(() => {
-    if (!ticket && userId && !scanning && !cameraActiveRef.current) {
-      startScanning()
-    }
-  }, [ticket, userId, scanning])
 
   const startScanning = async () => {
     if (!userId || cameraActiveRef.current) return
@@ -81,22 +76,25 @@ const ScannerPage = () => {
       const scanner = new Html5Qrcode('qr-reader-mobile')
       scannerRef.current = scanner
 
-      // Get container dimensions for full-screen scanning
-      const container = scannerContainerRef.current
-      const width = container?.clientWidth || window.innerWidth
-      const height = container?.clientHeight || window.innerHeight
-
       await scanner.start(
-        { facingMode: 'environment' },
+        { 
+          facingMode: 'environment',
+          // Request highest quality
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
         {
           fps: 10,
-          // Set qrbox for visual guide (scanning happens everywhere)
-          qrbox: { width: Math.min(300, width * 0.8), height: Math.min(300, height * 0.6) },
+          // Remove qrbox to scan entire viewport
+          qrbox: undefined,
           aspectRatio: 1.0,
-          // Enable scanning from entire viewport
           disableFlip: false,
-          // Important: html5-qrcode scans the entire video stream, not just qrbox
-          // qrbox is only for visual guidance
+          // Use better video constraints for quality
+          videoConstraints: {
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
         },
         (decodedText) => {
           handleScan(decodedText)
@@ -122,7 +120,6 @@ const ScannerPage = () => {
     setError(null)
 
     // Don't stop camera - keep it running
-    // Only pause scanning temporarily
     try {
       const ticketData = await getTicketByToken(token, userId)
       setTicket(ticketData)
@@ -208,12 +205,14 @@ const ScannerPage = () => {
   return (
     <Box
       sx={{
-        position: 'relative',
-        width: '100%',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
         height: '100vh',
         overflow: 'hidden',
         p: 0,
-        pb: 10,
+        zIndex: 1,
       }}
     >
       {!ticket && (
@@ -234,6 +233,7 @@ const ScannerPage = () => {
               width: '100%',
               height: '100%',
               position: 'relative',
+              overflow: 'hidden',
               '& video': {
                 width: '100% !important',
                 height: '100% !important',
@@ -242,7 +242,7 @@ const ScannerPage = () => {
               '& canvas': {
                 display: 'none', // Hide canvas overlay
               },
-              // Overlay for scanning area indicator
+              // Corner indicators (semi-transparent 30%)
               '&::before': {
                 content: '""',
                 position: 'absolute',
@@ -253,14 +253,113 @@ const ScannerPage = () => {
                 maxWidth: '300px',
                 height: '60%',
                 maxHeight: '300px',
-                border: '3px solid rgba(255, 255, 255, 0.6)',
-                borderRadius: '12px',
                 zIndex: 10,
                 pointerEvents: 'none',
-                boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)',
+                // Top-left corner
+                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
+                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
+                borderTopLeftRadius: '12px',
+                // Top-right corner
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '40px',
+                  height: '40px',
+                  borderTop: '3px solid rgba(255, 255, 255, 0.3)',
+                  borderRight: '3px solid rgba(255, 255, 255, 0.3)',
+                  borderTopRightRadius: '12px',
+                },
+              },
+              // Corner indicators using pseudo-elements
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '80%',
+                maxWidth: '300px',
+                height: '60%',
+                maxHeight: '300px',
+                zIndex: 10,
+                pointerEvents: 'none',
+                // Bottom corners
+                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
+                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
+                borderBottomRightRadius: '12px',
               },
             }}
           />
+          {/* Corner indicators overlay */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '80%',
+              maxWidth: '300px',
+              height: '60%',
+              maxHeight: '300px',
+              zIndex: 10,
+              pointerEvents: 'none',
+            }}
+          >
+            {/* Top-left corner */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '40px',
+                height: '40px',
+                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
+                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
+                borderTopLeftRadius: '12px',
+              }}
+            />
+            {/* Top-right corner */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                width: '40px',
+                height: '40px',
+                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
+                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
+                borderTopRightRadius: '12px',
+              }}
+            />
+            {/* Bottom-left corner */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '40px',
+                height: '40px',
+                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
+                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
+                borderBottomLeftRadius: '12px',
+              }}
+            />
+            {/* Bottom-right corner */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                right: 0,
+                width: '40px',
+                height: '40px',
+                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
+                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
+                borderBottomRightRadius: '12px',
+              }}
+            />
+          </Box>
         </Box>
       )}
 

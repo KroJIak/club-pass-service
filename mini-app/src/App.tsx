@@ -201,7 +201,7 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ pb: 8 }}>
+      <Box sx={{ height: '100vh', overflow: 'hidden', position: 'relative' }}>
         {tabValue === 0 ? <ScannerPage /> : <ListsPage />}
       </Box>
       <BottomNav value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} />
