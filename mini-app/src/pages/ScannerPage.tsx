@@ -97,13 +97,11 @@ const ScannerPage = () => {
         await scanner.start(
           { 
             facingMode: { exact: 'environment' },
-            width: { min: 640, ideal: 1920, max: 1920 },
-            height: { min: 480, ideal: 1080, max: 1080 },
-            aspectRatio: { ideal: 16 / 9 },
           },
           {
             fps: 10,
             qrbox: undefined, // Scan entire screen
+            aspectRatio: 1.7777778, // 16:9 for better quality
             disableFlip: false,
           },
           (decodedText) => {
