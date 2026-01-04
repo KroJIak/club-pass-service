@@ -41,7 +41,6 @@ const ScannerPage = () => {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [accepting, setAccepting] = useState(false)
-  const [debugLogs, setDebugLogs] = useState<string[]>([])
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannerContainerRef = useRef<HTMLDivElement>(null)
   const cameraActiveRef = useRef<boolean>(false)
@@ -58,41 +57,26 @@ const ScannerPage = () => {
     }
   }, [userId])
 
-  const addDebugLog = (message: string) => {
-    const timestamp = new Date().toLocaleTimeString()
-    const logMessage = `[${timestamp}] ${message}`
-    setDebugLogs(prev => [...prev, logMessage])
-    console.log(logMessage)
-  }
-
   const startScanning = async () => {
     if (!userId || cameraActiveRef.current) {
-      addDebugLog(`startScanning: Skipped - userId: ${!!userId}, cameraActive: ${cameraActiveRef.current}`)
       return
     }
 
     try {
       setError(null)
-      addDebugLog('startScanning: Starting...')
       
       if (scannerRef.current) {
         try {
-          addDebugLog('startScanning: Stopping existing scanner...')
           await scannerRef.current.stop()
           scannerRef.current.clear()
-          addDebugLog('startScanning: Existing scanner stopped')
         } catch (e: any) {
-          addDebugLog(`startScanning: Error stopping existing scanner: ${e.message}`)
           // Ignore stop errors
         }
       }
 
-      addDebugLog('startScanning: Creating new Html5Qrcode instance...')
       const scanner = new Html5Qrcode('qr-reader-mobile')
       scannerRef.current = scanner
-      addDebugLog('startScanning: Html5Qrcode instance created')
 
-      addDebugLog('startScanning: Starting camera with constraints...')
       try {
         await scanner.start(
           { 
@@ -104,26 +88,19 @@ const ScannerPage = () => {
             aspectRatio: 1.7777778, // 16:9 for better quality
             disableFlip: false,
           },
-          (decodedText) => {
-            addDebugLog(`QR Code detected: ${decodedText}`)
+          (decodedText: string) => {
             handleScan(decodedText)
           },
-          (_errorMessage) => {
-            // Ignore scanning errors, but log them
-            // addDebugLog(`Scanning error: ${_errorMessage}`)
+          (_errorMessage: string) => {
+            // Ignore scanning errors
           }
         )
-        addDebugLog('startScanning: Camera started successfully')
         cameraActiveRef.current = true
       } catch (startErr: any) {
-        addDebugLog(`startScanning: Error starting camera: ${startErr.message}`)
-        addDebugLog(`startScanning: Error stack: ${startErr.stack}`)
         throw startErr
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to start camera'
-      addDebugLog(`startScanning: Fatal error: ${errorMessage}`)
-      addDebugLog(`startScanning: Error details: ${JSON.stringify(err)}`)
       setError(errorMessage)
       cameraActiveRef.current = false
     }
@@ -295,39 +272,6 @@ const ScannerPage = () => {
           {error}
         </Alert>
       )}
-
-      {/* Debug logs */}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 80,
-          left: 16,
-          right: 16,
-          zIndex: 100,
-          bgcolor: 'rgba(0, 0, 0, 0.8)',
-          borderRadius: 2,
-          p: 2,
-          maxHeight: '200px',
-          overflowY: 'auto',
-        }}
-      >
-        <Typography variant="caption" sx={{ color: 'white', fontFamily: 'monospace', fontSize: '0.7rem', mb: 1, display: 'block' }}>
-          <strong>Debug Logs:</strong>
-        </Typography>
-        <Box
-          component="pre"
-          sx={{
-            color: 'white',
-            fontFamily: 'monospace',
-            fontSize: '0.7rem',
-            margin: 0,
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-          }}
-        >
-          {debugLogs.length > 0 ? debugLogs.slice(-20).join('\n') : 'No logs yet...'}
-        </Box>
-      </Box>
 
       {ticket && (
         <Box
