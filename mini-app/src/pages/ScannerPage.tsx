@@ -108,9 +108,9 @@ const ScannerPage = () => {
             addDebugLog(`QR Code detected: ${decodedText}`)
             handleScan(decodedText)
           },
-          (errorMessage) => {
+          (_errorMessage) => {
             // Ignore scanning errors, but log them
-            // addDebugLog(`Scanning error: ${errorMessage}`)
+            // addDebugLog(`Scanning error: ${_errorMessage}`)
           }
         )
         addDebugLog('startScanning: Camera started successfully')
