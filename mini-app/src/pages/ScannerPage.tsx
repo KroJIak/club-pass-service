@@ -96,12 +96,14 @@ const ScannerPage = () => {
       try {
         await scanner.start(
           { 
-            facingMode: 'environment',
+            facingMode: { exact: 'environment' },
+            width: { min: 640, ideal: 1920, max: 1920 },
+            height: { min: 480, ideal: 1080, max: 1080 },
+            aspectRatio: { ideal: 16 / 9 },
           },
           {
             fps: 10,
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0,
+            qrbox: undefined, // Scan entire screen
             disableFlip: false,
           },
           (decodedText) => {
@@ -258,124 +260,8 @@ const ScannerPage = () => {
               '& canvas': {
                 display: 'none', // Hide canvas overlay
               },
-              // Corner indicators (semi-transparent 30%)
-              '&::before': {
-                content: '""',
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '80%',
-                maxWidth: '300px',
-                height: '60%',
-                maxHeight: '300px',
-                zIndex: 10,
-                pointerEvents: 'none',
-                // Top-left corner
-                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
-                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
-                borderTopLeftRadius: '12px',
-                // Top-right corner
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '40px',
-                  height: '40px',
-                  borderTop: '3px solid rgba(255, 255, 255, 0.3)',
-                  borderRight: '3px solid rgba(255, 255, 255, 0.3)',
-                  borderTopRightRadius: '12px',
-                },
-              },
-              // Corner indicators using pseudo-elements
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '80%',
-                maxWidth: '300px',
-                height: '60%',
-                maxHeight: '300px',
-                zIndex: 10,
-                pointerEvents: 'none',
-                // Bottom corners
-                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
-                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
-                borderBottomRightRadius: '12px',
-              },
             }}
           />
-          {/* Corner indicators overlay */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '80%',
-              maxWidth: '300px',
-              height: '60%',
-              maxHeight: '300px',
-              zIndex: 10,
-              pointerEvents: 'none',
-            }}
-          >
-            {/* Top-left corner */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '40px',
-                height: '40px',
-                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
-                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
-                borderTopLeftRadius: '12px',
-              }}
-            />
-            {/* Top-right corner */}
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                width: '40px',
-                height: '40px',
-                borderTop: '3px solid rgba(255, 255, 255, 0.3)',
-                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
-                borderTopRightRadius: '12px',
-              }}
-            />
-            {/* Bottom-left corner */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: '40px',
-                height: '40px',
-                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
-                borderLeft: '3px solid rgba(255, 255, 255, 0.3)',
-                borderBottomLeftRadius: '12px',
-              }}
-            />
-            {/* Bottom-right corner */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                right: 0,
-                width: '40px',
-                height: '40px',
-                borderBottom: '3px solid rgba(255, 255, 255, 0.3)',
-                borderRight: '3px solid rgba(255, 255, 255, 0.3)',
-                borderBottomRightRadius: '12px',
-              }}
-            />
-          </Box>
         </Box>
       )}
 
