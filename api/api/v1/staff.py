@@ -105,9 +105,11 @@ async def mark_ticket_as_used_staff(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
+    from datetime import datetime
     return TicketMarkUsedResponse(
-        id=ticket.id,
-        status=ticket.status.value,
-        used_at=ticket.used_at,
+        ticket_id=ticket.id,
+        status=ticket.status,
+        used_at=ticket.used_at or datetime.utcnow(),
+        message="Ticket marked as used successfully"
     )
 
