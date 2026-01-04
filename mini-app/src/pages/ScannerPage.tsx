@@ -37,7 +37,6 @@ interface Ticket {
 
 const ScannerPage = () => {
   const { userId } = useTelegramWebApp()
-  const [scanning, setScanning] = useState(false)
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -85,11 +84,7 @@ const ScannerPage = () => {
         },
         {
           fps: 10,
-          // Set qrbox to null to scan entire viewport, but keep visual guide
-          qrbox: function(viewfinderWidth, viewfinderHeight) {
-            // Return null to scan entire viewport
-            return null
-          },
+          // Don't set qrbox to scan entire viewport (html5-qrcode scans whole video stream by default)
           aspectRatio: 1.0,
           disableFlip: false,
         },
@@ -102,10 +97,8 @@ const ScannerPage = () => {
       )
       
       cameraActiveRef.current = true
-      setScanning(true)
     } catch (err: any) {
       setError(err.message || 'Failed to start camera')
-      setScanning(false)
       cameraActiveRef.current = false
     }
   }
