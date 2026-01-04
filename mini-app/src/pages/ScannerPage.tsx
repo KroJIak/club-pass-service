@@ -412,6 +412,39 @@ const ScannerPage = () => {
         </Alert>
       )}
 
+      {/* Debug logs */}
+      <Box
+        sx={{
+          position: 'absolute',
+          bottom: 80,
+          left: 16,
+          right: 16,
+          zIndex: 100,
+          bgcolor: 'rgba(0, 0, 0, 0.8)',
+          borderRadius: 2,
+          p: 2,
+          maxHeight: '200px',
+          overflowY: 'auto',
+        }}
+      >
+        <Typography variant="caption" sx={{ color: 'white', fontFamily: 'monospace', fontSize: '0.7rem', mb: 1, display: 'block' }}>
+          <strong>Debug Logs:</strong>
+        </Typography>
+        <Box
+          component="pre"
+          sx={{
+            color: 'white',
+            fontFamily: 'monospace',
+            fontSize: '0.7rem',
+            margin: 0,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {debugLogs.length > 0 ? debugLogs.slice(-20).join('\n') : 'No logs yet...'}
+        </Box>
+      </Box>
+
       {ticket && (
         <Box
           sx={{
