@@ -208,37 +208,35 @@ const ScannerPage = () => {
         zIndex: 1,
       }}
     >
-      {!ticket && (
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          zIndex: 1,
+        }}
+      >
         <Box
+          id="qr-reader-mobile"
+          ref={scannerContainerRef}
           sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
             width: '100%',
             height: '100%',
-            zIndex: 1,
+            position: 'relative',
+            overflow: 'hidden',
+            '& video': {
+              width: '100% !important',
+              height: '100% !important',
+              objectFit: 'cover',
+            },
+            '& canvas': {
+              display: 'none', // Hide canvas overlay
+            },
           }}
-        >
-          <Box
-            id="qr-reader-mobile"
-            ref={scannerContainerRef}
-            sx={{
-              width: '100%',
-              height: '100%',
-              position: 'relative',
-              overflow: 'hidden',
-              '& video': {
-                width: '100% !important',
-                height: '100% !important',
-                objectFit: 'cover',
-              },
-              '& canvas': {
-                display: 'none', // Hide canvas overlay
-              },
-            }}
-          />
-        </Box>
-      )}
+        />
+      </Box>
 
       {loading && (
         <Box
@@ -281,13 +279,22 @@ const ScannerPage = () => {
             left: 0,
             width: '100%',
             height: '100%',
-            overflowY: 'auto',
-            zIndex: 50,
-            bgcolor: 'background.default',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 100,
+            bgcolor: 'rgba(0, 0, 0, 0.5)',
             p: 2,
           }}
         >
-          <Card>
+          <Card
+            sx={{
+              maxWidth: '90%',
+              maxHeight: '90%',
+              overflowY: 'auto',
+              width: '100%',
+            }}
+          >
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Информация о билете
