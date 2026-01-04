@@ -936,7 +936,8 @@ async def update_ticket(
         logger.info(f"Updated status from {old_status} to {ticket.status}")
         # Set used_at when status changes to USED
         if ticket.status == TicketStatus.USED and not ticket.used_at:
-            ticket.used_at = datetime.utcnow()
+            from api.utils.timezone import get_current_time_in_timezone
+            ticket.used_at = get_current_time_in_timezone(db)
     
     logger.info(f"Ticket state before commit: user_id={ticket.user_id}, event_id={ticket.event_id}, ticket_type_id={ticket.ticket_type_id}, token={ticket.token}, status={ticket.status}")
     db.commit()

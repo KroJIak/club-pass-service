@@ -146,7 +146,9 @@ class TicketRepository:
             return ticket  # Already used
         
         ticket.status = TicketStatus.USED
-        ticket.used_at = datetime.utcnow()
+        # Use timezone-aware time
+        from api.utils.timezone import get_current_time_in_timezone
+        ticket.used_at = get_current_time_in_timezone(db)
         db.commit()
         db.refresh(ticket)
         return ticket

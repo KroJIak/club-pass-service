@@ -18,3 +18,28 @@ body {
   min-height: 100vh;
 }
 
+/* Hide html5-qrcode scanning box border and make it transparent */
+#qr-reader-mobile__dashboard {
+  display: none !important;
+}
+
+#qr-reader-mobile__scan_region {
+  border: none !important;
+}
+
+#qr-reader-mobile__dashboard_section_csr {
+  display: none !important;
+}
+
+/* Make video full screen */
+#qr-reader-mobile video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Hide canvas overlay */
+#qr-reader-mobile canvas {
+  display: none !important;
+}
+

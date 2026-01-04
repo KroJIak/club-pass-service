@@ -106,10 +106,17 @@ async def mark_ticket_as_used_staff(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
+    # Ensure used_at is set with timezone
+    if not ticket.used_at:
+        from api.utils.timezone import get_current_time_in_timezone
+        ticket.used_at = get_current_time_in_timezone(db)
+        db.commit()
+        db.refresh(ticket)
+    
     return TicketMarkUsedResponse(
         ticket_id=ticket.id,
         status=ticket.status,
-        used_at=ticket.used_at or datetime.utcnow(),
+        used_at=ticket.used_at,
         message="Ticket marked as used successfully"
     )
 
