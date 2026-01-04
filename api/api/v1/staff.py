@@ -1,5 +1,6 @@
 """Staff endpoints for QR scanner access."""
 import logging
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -105,7 +106,6 @@ async def mark_ticket_as_used_staff(
             detail=f"Ticket with id {ticket_id} not found"
         )
     
-    from datetime import datetime
     return TicketMarkUsedResponse(
         ticket_id=ticket.id,
         status=ticket.status,
