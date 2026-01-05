@@ -469,6 +469,12 @@ const ClubSettings = () => {
           Manage food and drinks menu photos displayed in the bot. Maximum 10 photos allowed.
         </Typography>
 
+        {menuPhotosError && (
+          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setMenuPhotosError(null)}>
+            {menuPhotosError}
+          </Alert>
+        )}
+
         {loadingPhotos ? (
           <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
             <CircularProgress />
