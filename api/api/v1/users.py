@@ -289,6 +289,10 @@ async def get_club_settings_public(
             timezone = "Europe/Moscow"  # Default timezone
         logger.info(f"Step 10: Timezone: {timezone}")
         
+        # Get additional_info
+        additional_info = getattr(settings, 'additional_info', None)
+        logger.info(f"Step 10.5: Additional info: {additional_info}")
+        
         # Build response dict - return directly without Pydantic validation
         logger.info("Step 11: Building response_data dictionary")
         response_data = {
@@ -296,6 +300,7 @@ async def get_club_settings_public(
             "address": settings.address if settings.address else None,
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
+            "additional_info": additional_info if additional_info else None,
             "auto_deactivate_events": bool(auto_deactivate),
             "timezone": timezone,
             "updated_at": updated_at_str
