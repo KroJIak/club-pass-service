@@ -98,8 +98,16 @@ class MusicSearcher:
             logger.info(f"✅ MusicAPI: Успешно создан трек: {track.artist} - {track.title}")
             return [track]
         
+        except requests.exceptions.ConnectionError as e:
+            error_msg = str(e)
+            if "Failed to resolve" in error_msg or "No address associated with hostname" in error_msg:
+                logger.warning(f"⚠️ MusicAPI: DNS ошибка - домен '{self.music_api_base}' не может быть разрешен. "
+                             f"Возможно, домен недоступен или есть проблемы с DNS в Docker контейнере.")
+            else:
+                logger.error(f"❌ MusicAPI: Ошибка подключения: {e}")
+            return []
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ MusicAPI: Ошибка запроса: {e}", exc_info=True)
+            logger.error(f"❌ MusicAPI: Ошибка запроса: {e}")
             return []
         except Exception as e:
             logger.error(f"❌ MusicAPI: Неожиданная ошибка: {e}", exc_info=True)

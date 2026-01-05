@@ -156,6 +156,10 @@ services:
       MUSIC_API_BASE_URL: ${MUSIC_API_BASE_URL:-https://bhindi1.ddns.net/music/api}
     ports:
       - "8004:8004"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     restart: unless-stopped
 
   cloudpub-init:
