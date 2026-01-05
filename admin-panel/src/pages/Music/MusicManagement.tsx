@@ -65,11 +65,20 @@ const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, on
     opacity: isDragging ? 0.5 : 1,
   }
 
+  const handleClick = (e: React.MouseEvent) => {
+    // Only toggle selection if in selection mode (disableDrag is true)
+    if (disableDrag && onToggleSelection) {
+      e.stopPropagation()
+      onToggleSelection(item.id)
+    }
+  }
+
   return (
     <Paper
       ref={setNodeRef}
       style={style}
       {...(disableDrag ? {} : { ...attributes, ...listeners })}
+      onClick={handleClick}
       sx={{
         p: 2,
         mb: 1,
