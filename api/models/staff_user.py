@@ -1,6 +1,6 @@
 """Staff User ORM model."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Index
+from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Boolean, Index
 from api.core.db import Base
 
 
