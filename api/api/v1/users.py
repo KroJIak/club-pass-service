@@ -470,7 +470,7 @@ async def create_music_request(
             )
         
         # Check if this track already exists in queue
-        from api.repositories.music_queue_repository import MusicQueueRepository
+        from api.models.music_queue import MusicQueue
         existing_queue_item = db.query(MusicQueue).filter(
             MusicQueue.track_title == request_data.track_title,
             MusicQueue.track_artist == (request_data.track_artist or ""),
