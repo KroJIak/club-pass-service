@@ -399,12 +399,17 @@ async def get_menu_photos_public(
         
         result = MenuPhotoListResponse(photos=photo_responses)
         logger.info(f"Step 5: Created MenuPhotoListResponse with {len(result.photos)} photos")
-        logger.info(f"Step 6: Returning response")
+        logger.info(f"Step 6: Converting to dict")
+        result_dict = result.model_dump()
+        logger.info(f"Step 7: Result dict: {result_dict}")
+        logger.info(f"Step 8: Returning response")
         logger.info("=" * 80)
         
-        return result
+        return result_dict
     except Exception as e:
         logger.error(f"CRITICAL ERROR in get_menu_photos_public: {e}", exc_info=True)
         logger.error(f"Exception type: {type(e)}")
         logger.error(f"Exception args: {e.args}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise
