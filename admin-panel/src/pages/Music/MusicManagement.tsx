@@ -353,13 +353,17 @@ const MusicManagement = () => {
         // Optimistic update: immediately remove from queue and add to wishlist
         setQueue(queue.filter((item) => item.id !== queueId))
         // Convert queue item to wishlist item format
-        const wishlistItem = {
+        const wishlistItem: MusicRequest = {
           id: queueItem.id,
+          user_id: 0, // Temporary value for optimistic update
+          event_id: 0, // Temporary value for optimistic update
           track_title: queueItem.track_title,
           track_artist: queueItem.track_artist,
           yandex_music_url: queueItem.yandex_music_url,
           other_source_url: queueItem.other_source_url,
           request_count: queueItem.request_count || 0,
+          created_at: new Date().toISOString(), // Temporary value for optimistic update
+          updated_at: new Date().toISOString(), // Temporary value for optimistic update
         }
         setWishlist([...wishlist, wishlistItem])
       }
@@ -382,7 +386,7 @@ const MusicManagement = () => {
         // Optimistic update: immediately remove from wishlist and add to queue
         setWishlist(wishlist.filter((item) => item.id !== wishlistId))
         // Convert wishlist item to queue item format
-        const queueItem = {
+        const queueItem: MusicQueue = {
           id: wishlistItem.id,
           track_title: wishlistItem.track_title,
           track_artist: wishlistItem.track_artist,
@@ -390,6 +394,8 @@ const MusicManagement = () => {
           other_source_url: wishlistItem.other_source_url,
           queue_order: queue.length,
           request_count: wishlistItem.request_count,
+          created_at: new Date().toISOString(), // Temporary value for optimistic update
+          updated_at: new Date().toISOString(), // Temporary value for optimistic update
         }
         setQueue([...queue, queueItem])
       }
