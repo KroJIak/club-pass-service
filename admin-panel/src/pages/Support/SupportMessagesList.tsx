@@ -37,9 +37,11 @@ import {
   Inbox as InboxIcon,
   Refresh as RefreshIcon,
 } from '@mui/icons-material'
+import { Checkbox } from '@mui/material'
 import api from '../../services/api'
 import { User } from '../../types'
 import dayjs from 'dayjs'
+import { useSelection } from '../../hooks/useSelection'
 
 // Component to load authenticated images
 const AuthenticatedImage: React.FC<{
@@ -239,6 +241,9 @@ const SupportMessagesList: React.FC = () => {
   const [sendMessageText, setSendMessageText] = useState('')
   const [sendMessagePhotos, setSendMessagePhotos] = useState<File[]>([])
   const [sendingMessage, setSendingMessage] = useState(false)
+  
+  const selection = useSelection(messages)
+  const adminSelection = useSelection(adminMessages)
 
   // Fetch users for autocomplete
   useEffect(() => {
@@ -388,6 +393,40 @@ const SupportMessagesList: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to delete admin message:', error)
       alert(error.response?.data?.detail || 'Failed to delete admin message')
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} message(s)? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      for (const id of selection.selectedIds) {
+        await api.delete(`/admin/support-messages/${id}`)
+      }
+      selection.deselectAll()
+      fetchMessages()
+    } catch (error: any) {
+      console.error('Failed to delete messages:', error)
+      alert('Failed to delete some messages')
+    }
+  }
+
+  const handleDeleteSelectedAdmin = async () => {
+    if (!confirm(`Are you sure you want to delete ${adminSelection.selectedCount} message(s)? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      for (const id of adminSelection.selectedIds) {
+        await api.delete(`/admin/admin-messages/${id}`)
+      }
+      adminSelection.deselectAll()
+      fetchAdminMessages()
+    } catch (error: any) {
+      console.error('Failed to delete admin messages:', error)
+      alert('Failed to delete some messages')
     }
   }
 
@@ -774,6 +813,40 @@ const SupportMessagesList: React.FC = () => {
           )}
         </Grid>
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+          {tabValue === 0 && selection.hasSelection && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected
+            </Button>
+          )}
+          {tabValue === 1 && adminSelection.hasSelection && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelectedAdmin}
+            >
+              Delete Selected
+            </Button>
+          )}
+          {tabValue === 0 && (
+            <Checkbox
+              checked={selection.getSelectionState() === 'all'}
+              indeterminate={selection.getSelectionState() === 'some'}
+              onChange={selection.handleSelectAllClick}
+            />
+          )}
+          {tabValue === 1 && (
+            <Checkbox
+              checked={adminSelection.getSelectionState() === 'all'}
+              indeterminate={adminSelection.getSelectionState() === 'some'}
+              onChange={adminSelection.handleSelectAllClick}
+            />
+          )}
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
@@ -798,7 +871,19 @@ const SupportMessagesList: React.FC = () => {
         <Grid container spacing={2}>
           {messages.map((msg) => (
             <Grid item xs={12} key={msg.id}>
-              <Card>
+              <Card
+                sx={{
+                  cursor: selection.hasSelection ? 'pointer' : 'default',
+                  border: selection.isSelected(msg.id) ? '2px solid' : 'none',
+                  borderColor: selection.isSelected(msg.id) ? 'primary.main' : 'transparent',
+                  bgcolor: selection.isSelected(msg.id) ? 'action.selected' : 'background.paper',
+                }}
+                onClick={() => {
+                  if (selection.hasSelection) {
+                    selection.toggleSelection(msg.id)
+                  }
+                }}
+              >
                 <CardContent>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                     <Box>
@@ -826,13 +911,15 @@ const SupportMessagesList: React.FC = () => {
                         color={getStatusColor(msg.status) as any}
                         size="small"
                       />
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(msg.id)}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      {!selection.hasSelection && (
+                        <IconButton
+                          color="error"
+                          onClick={() => handleDelete(msg.id)}
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
                     </Box>
                   </Box>
 
@@ -1005,7 +1092,7 @@ const SupportMessagesList: React.FC = () => {
                             </Button>
                           </Box>
                         </Box>
-                      ) : msg.status !== 'responded' && msg.status !== 'closed' ? (
+                      ) : msg.status !== 'responded' && msg.status !== 'closed' && !selection.hasSelection ? (
                         <Button
                           variant="outlined"
                           startIcon={<SendIcon />}
@@ -1033,7 +1120,19 @@ const SupportMessagesList: React.FC = () => {
             <Grid container spacing={2}>
               {adminMessages.map((msg) => (
                 <Grid item xs={12} key={msg.id}>
-                  <Card>
+                  <Card
+                    sx={{
+                      cursor: adminSelection.hasSelection ? 'pointer' : 'default',
+                      border: adminSelection.isSelected(msg.id) ? '2px solid' : 'none',
+                      borderColor: adminSelection.isSelected(msg.id) ? 'primary.main' : 'transparent',
+                      bgcolor: adminSelection.isSelected(msg.id) ? 'action.selected' : 'background.paper',
+                    }}
+                    onClick={() => {
+                      if (adminSelection.hasSelection) {
+                        adminSelection.toggleSelection(msg.id)
+                      }
+                    }}
+                  >
                     <CardContent>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                         <Box>
@@ -1045,13 +1144,15 @@ const SupportMessagesList: React.FC = () => {
                             From: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
                           </Typography>
                         </Box>
-                        <IconButton
-                          color="error"
-                          onClick={() => handleDeleteAdminMessage(msg.id)}
-                          size="small"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                        {!adminSelection.hasSelection && (
+                          <IconButton
+                            color="error"
+                            onClick={() => handleDeleteAdminMessage(msg.id)}
+                            size="small"
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        )}
                       </Box>
 
                       {msg.message && (

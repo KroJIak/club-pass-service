@@ -9,8 +9,9 @@ import {
   Chip,
   Drawer,
   Switch,
+  Checkbox,
 } from '@mui/material'
-import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, IndeterminateCheckBox as IndeterminateIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Event, TicketType } from '../../types'
 import EventForm from './EventForm'
@@ -18,6 +19,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog'
 import FilterPanel from '../../components/filters/FilterPanel'
 import EventsFilter, { EventsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/EventsFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
+import { useSelection } from '../../hooks/useSelection'
 
 const EventsList = () => {
   const [events, setEvents] = useState<Event[]>([])
@@ -33,6 +35,7 @@ const EventsList = () => {
   })
   const [filterState, setFilterState] = useState<EventsFilterState>(DEFAULT_FILTER_STATE)
   const { setFilterPanel } = useFilterPanel()
+  const selection = useSelection(events)
 
   const fetchEvents = async () => {
     try {
@@ -179,8 +182,29 @@ const EventsList = () => {
     setDeleteDialog({ open: false, eventId: null })
   }
 
+  const handleDeleteSelected = async () => {
+    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} event(s)? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      for (const id of selection.selectedIds) {
+        await api.delete(`/admin/events/${id}`)
+      }
+      selection.deselectAll()
+      fetchEvents()
+    } catch (error) {
+      console.error('Failed to delete events:', error)
+      alert('Failed to delete some events')
+    }
+  }
+
   const handleToggleActive = async (event: Event, e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation()
+    
+    if (selection.hasSelection) {
+      return
+    }
     
     // If trying to activate event, check if end date/time is in the past
     if (e.target.checked && event.end_date && event.end_time) {
@@ -225,6 +249,10 @@ const EventsList = () => {
   }
 
   const toggleExpand = (eventId: number) => {
+    if (selection.hasSelection) {
+      selection.toggleSelection(eventId)
+      return
+    }
     setExpandedEvent(expandedEvent === eventId ? null : eventId)
     if (expandedEvent !== eventId) {
       const event = events.find(e => e.id === eventId)
@@ -240,11 +268,28 @@ const EventsList = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Events</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
-          Create New
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {selection.hasSelection && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected
+            </Button>
+          )}
+          <Checkbox
+            checked={selection.getSelectionState() === 'all'}
+            indeterminate={selection.getSelectionState() === 'some'}
+            onChange={selection.handleSelectAllClick}
+          />
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
+            Create New
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -258,6 +303,9 @@ const EventsList = () => {
                 flexDirection: 'column',
                 cursor: 'pointer',
                 position: 'relative',
+                border: selection.isSelected(event.id) ? '2px solid' : 'none',
+                borderColor: selection.isSelected(event.id) ? 'primary.main' : 'transparent',
+                bgcolor: selection.isSelected(event.id) ? 'action.selected' : 'background.paper',
               }}
               onClick={() => toggleExpand(event.id)}
             >
@@ -280,16 +328,18 @@ const EventsList = () => {
                       color={event.is_active ? 'success' : 'default'}
                       size="small"
                     />
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        toggleExpand(event.id)
-                      }}
-                    >
-                      <EditIcon />
-                    </IconButton>
+                    {!selection.hasSelection && (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          toggleExpand(event.id)
+                        }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    )}
                   </Box>
                 </Box>
                 {event.djs && event.djs.length > 0 && (
@@ -302,18 +352,20 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
-                <Box sx={{ position: 'absolute', bottom: 16, right: 16 }}>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setDeleteDialog({ open: true, eventId: event.id })
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
+                {!selection.hasSelection && (
+                  <Box sx={{ position: 'absolute', bottom: 16, right: 16 }}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDeleteDialog({ open: true, eventId: event.id })
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Box>
+                )}
               </CardContent>
             </Card>
 

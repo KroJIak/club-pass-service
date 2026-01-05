@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Card, CardContent, Grid, Typography, Chip, IconButton, Button, Drawer } from '@mui/material'
+import { Box, Card, CardContent, Grid, Typography, Chip, IconButton, Button, Drawer, Checkbox } from '@mui/material'
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Ticket } from '../../types'
@@ -8,6 +8,7 @@ import TicketForm from './TicketForm'
 import FilterPanel from '../../components/filters/FilterPanel'
 import TicketsFilter, { TicketsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/TicketsFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
+import { useSelection } from '../../hooks/useSelection'
 
 const TicketsList = () => {
   const [tickets, setTickets] = useState<Ticket[]>([])
@@ -22,6 +23,7 @@ const TicketsList = () => {
   })
   const [filterState, setFilterState] = useState<TicketsFilterState>(DEFAULT_FILTER_STATE)
   const { setFilterPanel } = useFilterPanel()
+  const selection = useSelection(tickets)
 
   useEffect(() => {
     fetchTickets()
@@ -102,6 +104,10 @@ const TicketsList = () => {
   }, [allTickets, filterState])
 
   const toggleExpand = (ticketId: number) => {
+    if (selection.hasSelection) {
+      selection.toggleSelection(ticketId)
+      return
+    }
     if (expandedTicket === ticketId) {
       setExpandedTicket(null)
     } else {
@@ -123,6 +129,23 @@ const TicketsList = () => {
     setDeleteDialog({ open: false, ticketId: null })
   }
 
+  const handleDeleteSelected = async () => {
+    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} ticket(s)? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      for (const id of selection.selectedIds) {
+        await api.delete(`/admin/tickets/${id}`)
+      }
+      selection.deselectAll()
+      fetchTickets()
+    } catch (error) {
+      console.error('Failed to delete tickets:', error)
+      alert('Failed to delete some tickets')
+    }
+  }
+
   const handleFormClose = () => {
     setFormOpen(false)
     setEditingTicket(null)
@@ -137,16 +160,33 @@ const TicketsList = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Tickets</Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => {
-            setEditingTicket(null)
-            setFormOpen(true)
-          }}
-        >
-          Create New
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {selection.hasSelection && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected
+            </Button>
+          )}
+          <Checkbox
+            checked={selection.getSelectionState() === 'all'}
+            indeterminate={selection.getSelectionState() === 'some'}
+            onChange={selection.handleSelectAllClick}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setEditingTicket(null)
+              setFormOpen(true)
+            }}
+          >
+            Create New
+          </Button>
+        </Box>
       </Box>
       <Grid container spacing={3}>
         {tickets.map((ticket) => (
@@ -160,6 +200,9 @@ const TicketsList = () => {
                   flexDirection: 'column',
                   cursor: 'pointer',
                   position: 'relative',
+                  border: selection.isSelected(ticket.id) ? '2px solid' : 'none',
+                  borderColor: selection.isSelected(ticket.id) ? 'primary.main' : 'transparent',
+                  bgcolor: selection.isSelected(ticket.id) ? 'action.selected' : 'background.paper',
                 }}
                 onClick={() => toggleExpand(ticket.id)}
               >
@@ -208,28 +251,30 @@ const TicketsList = () => {
                         sx={{ mt: 1, mr: 1 }}
                       />
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          toggleExpand(ticket.id)
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setDeleteDialog({ open: true, ticketId: ticket.id })
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
+                    {!selection.hasSelection && (
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            toggleExpand(ticket.id)
+                          }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDeleteDialog({ open: true, ticketId: ticket.id })
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Box>
+                    )}
                   </Box>
                 </CardContent>
               </Card>

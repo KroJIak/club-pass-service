@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Box, Card, CardContent, Grid, Typography, IconButton } from '@mui/material'
+import { Box, Card, CardContent, Grid, Typography, IconButton, Button, Checkbox } from '@mui/material'
 import { Delete as DeleteIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { Order } from '../../types'
@@ -7,6 +7,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog'
 import FilterPanel from '../../components/filters/FilterPanel'
 import OrdersFilter, { OrdersFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/OrdersFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
+import { useSelection } from '../../hooks/useSelection'
 
 const OrdersList = () => {
   const [orders, setOrders] = useState<Order[]>([])
@@ -18,6 +19,7 @@ const OrdersList = () => {
   })
   const [filterState, setFilterState] = useState<OrdersFilterState>(DEFAULT_FILTER_STATE)
   const { setFilterPanel } = useFilterPanel()
+  const selection = useSelection(orders)
 
   useEffect(() => {
     fetchOrders()
@@ -87,17 +89,64 @@ const OrdersList = () => {
     setDeleteDialog({ open: false, orderId: null })
   }
 
+  const handleDeleteSelected = async () => {
+    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} order(s)? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      for (const id of selection.selectedIds) {
+        await api.delete(`/admin/orders/${id}`)
+      }
+      selection.deselectAll()
+      fetchOrders()
+    } catch (error) {
+      console.error('Failed to delete orders:', error)
+      alert('Failed to delete some orders')
+    }
+  }
+
   if (loading) {
     return <Typography>Loading...</Typography>
   }
 
   return (
     <Box>
-      <Typography variant="h6" sx={{ mb: 3 }}>Orders</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h6">Orders</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {selection.hasSelection && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={handleDeleteSelected}
+            >
+              Delete Selected
+            </Button>
+          )}
+          <Checkbox
+            checked={selection.getSelectionState() === 'all'}
+            indeterminate={selection.getSelectionState() === 'some'}
+            onChange={selection.handleSelectAllClick}
+          />
+        </Box>
+      </Box>
       <Grid container spacing={3}>
         {orders.map((order) => (
           <Grid item xs={12} sm={6} md={4} key={order.id}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card 
+              sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                cursor: 'pointer',
+                border: selection.isSelected(order.id) ? '2px solid' : 'none',
+                borderColor: selection.isSelected(order.id) ? 'primary.main' : 'transparent',
+                bgcolor: selection.isSelected(order.id) ? 'action.selected' : 'background.paper',
+              }}
+              onClick={() => selection.toggleSelection(order.id)}
+            >
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -146,14 +195,19 @@ const OrdersList = () => {
                       }
                     </Typography>
                   </Box>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setDeleteDialog({ open: true, orderId: order.id })}
-                    sx={{ flexShrink: 0 }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
+                  {!selection.hasSelection && (
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setDeleteDialog({ open: true, orderId: order.id })
+                      }}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  )}
                 </Box>
               </CardContent>
             </Card>
