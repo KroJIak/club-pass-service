@@ -84,11 +84,11 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     search_result = await api_service.search_music(song_title)
     
     if not search_result or not search_result.get("tracks"):
-        # Send no results message (temporary) and flush pending user messages
+        # Send no results message (temporary) - DO NOT delete user's message
         no_results_text = t(locale, "messages.music.no_results")
         no_results_msg = await message.answer(no_results_text)
         temporary_messages_middleware.set_last_system_message(user_id, no_results_msg.chat.id, no_results_msg.message_id)
-        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+        # Don't flush pending user messages - keep user's search query visible
         return
     
     tracks = search_result.get("tracks", [])

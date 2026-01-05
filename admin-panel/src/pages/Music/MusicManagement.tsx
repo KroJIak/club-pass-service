@@ -24,6 +24,7 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  useDroppable,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -65,21 +66,20 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
     <Paper
       ref={setNodeRef}
       style={style}
+      onClick={() => onSelect(item.id)}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        border: isSelected ? '2px solid' : 'none',
+        borderColor: isSelected ? 'primary.main' : 'transparent',
+        bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
       }}
     >
-      <Checkbox
-        checked={isSelected}
-        onChange={() => onSelect(item.id)}
-        onClick={(e) => e.stopPropagation()}
-      />
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
+      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} onClick={(e) => e.stopPropagation()} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -89,18 +89,18 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
-            <Link href={item.yandex_music_url} target="_blank" rel="noopener">
+            <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Yandex Music
             </Link>
           )}
           {item.other_source_url && (
-            <Link href={item.other_source_url} target="_blank" rel="noopener">
+            <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Other Source
             </Link>
           )}
         </Box>
       </Box>
-      <IconButton onClick={() => onDelete(item.id)} color="error">
+      <IconButton onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} color="error">
         <DeleteIcon />
       </IconButton>
     </Paper>
@@ -136,21 +136,20 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
     <Paper
       ref={setNodeRef}
       style={style}
+      onClick={() => onSelect(item.id)}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        border: isSelected ? '2px solid' : 'none',
+        borderColor: isSelected ? 'primary.main' : 'transparent',
+        bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
       }}
     >
-      <Checkbox
-        checked={isSelected}
-        onChange={() => onSelect(item.id)}
-        onClick={(e) => e.stopPropagation()}
-      />
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
+      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} onClick={(e) => e.stopPropagation()} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -163,25 +162,37 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
-            <Link href={item.yandex_music_url} target="_blank" rel="noopener">
+            <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Yandex Music
             </Link>
           )}
           {item.other_source_url && (
-            <Link href={item.other_source_url} target="_blank" rel="noopener">
+            <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Other Source
             </Link>
           )}
         </Box>
       </Box>
-      <IconButton onClick={() => onMoveToQueue(item.id)} color="primary">
+      <IconButton onClick={(e) => { e.stopPropagation(); onMoveToQueue(item.id); }} color="primary">
         <PlayArrowIcon />
       </IconButton>
-      <IconButton onClick={() => onDelete(item.id)} color="error">
+      <IconButton onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} color="error">
         <DeleteIcon />
       </IconButton>
     </Paper>
   )
+}
+
+// Droppable zone for Queue
+const QueueDroppable = ({ children }: { children: React.ReactNode }) => {
+  const { setNodeRef } = useDroppable({ id: 'queue-droppable' })
+  return <Box ref={setNodeRef}>{children}</Box>
+}
+
+// Droppable zone for Wishlist
+const WishlistDroppable = ({ children }: { children: React.ReactNode }) => {
+  const { setNodeRef } = useDroppable({ id: 'wishlist-droppable' })
+  return <Box ref={setNodeRef}>{children}</Box>
 }
 
 const MusicManagement = () => {
@@ -252,8 +263,8 @@ const MusicManagement = () => {
     const activeId = String(active.id)
     const overId = String(over.id)
 
-    // Check if dragging from wishlist to queue
-    if (activeId.startsWith('wishlist-') && overId.startsWith('queue-')) {
+    // Check if dragging from wishlist to queue (droppable zone or queue item)
+    if (activeId.startsWith('wishlist-') && (overId === 'queue-droppable' || overId.startsWith('queue-'))) {
       const wishlistId = parseInt(activeId.replace('wishlist-', ''))
       await handleMoveToQueue(wishlistId)
       return
@@ -409,21 +420,23 @@ const MusicManagement = () => {
               {queueLoading ? (
                 <CircularProgress />
               ) : (
-                <SortableContext items={queue.map((item) => `queue-${item.id}`)} strategy={verticalListSortingStrategy}>
-                  {queue.length === 0 ? (
-                    <Typography color="text.secondary">Queue is empty</Typography>
-                  ) : (
-                    queue.map((item) => (
-                      <SortableQueueItem
-                        key={item.id}
-                        item={item}
-                        isSelected={queueSelection.isSelected(item.id)}
-                        onSelect={queueSelection.toggleSelection}
-                        onDelete={handleDeleteQueueItem}
-                      />
-                    ))
-                  )}
-                </SortableContext>
+                <QueueDroppable>
+                  <SortableContext items={queue.map((item) => `queue-${item.id}`)} strategy={verticalListSortingStrategy}>
+                    {queue.length === 0 ? (
+                      <Typography color="text.secondary">Queue is empty</Typography>
+                    ) : (
+                      queue.map((item) => (
+                        <SortableQueueItem
+                          key={item.id}
+                          item={item}
+                          isSelected={queueSelection.isSelected(item.id)}
+                          onSelect={queueSelection.toggleSelection}
+                          onDelete={handleDeleteQueueItem}
+                        />
+                      ))
+                    )}
+                  </SortableContext>
+                </QueueDroppable>
               )}
             </CardContent>
           </Card>
@@ -463,18 +476,20 @@ const MusicManagement = () => {
               ) : wishlist.length === 0 ? (
                 <Typography color="text.secondary">Wishlist is empty</Typography>
               ) : (
-                <SortableContext items={wishlist.map((item) => `wishlist-${item.id}`)} strategy={verticalListSortingStrategy}>
-                  {wishlist.map((item) => (
-                    <SortableWishlistItem
-                      key={item.id}
-                      item={item}
-                      isSelected={wishlistSelection.isSelected(item.id)}
-                      onSelect={wishlistSelection.toggleSelection}
-                      onDelete={handleDeleteWishlistItem}
-                      onMoveToQueue={handleMoveToQueue}
-                    />
-                  ))}
-                </SortableContext>
+                <WishlistDroppable>
+                  <SortableContext items={wishlist.map((item) => `wishlist-${item.id}`)} strategy={verticalListSortingStrategy}>
+                    {wishlist.map((item) => (
+                      <SortableWishlistItem
+                        key={item.id}
+                        item={item}
+                        isSelected={wishlistSelection.isSelected(item.id)}
+                        onSelect={wishlistSelection.toggleSelection}
+                        onDelete={handleDeleteWishlistItem}
+                        onMoveToQueue={handleMoveToQueue}
+                      />
+                    ))}
+                  </SortableContext>
+                </WishlistDroppable>
               )}
             </CardContent>
           </Card>

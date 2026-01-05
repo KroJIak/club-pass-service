@@ -478,38 +478,44 @@ async def create_music_request(
             MusicQueue.is_deleted == False
         ).first()
         
-        # Check if request already exists for this event
+        # Check if this user already requested this track
+        user_existing_request = MusicRequestRepository.get_by_user_title_artist(
+            db, user.id, valid_event.id, request_data.track_title, request_data.track_artist or ""
+        )
+        
+        if user_existing_request:
+            # User already requested this track
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Вы уже выбирали данную песню"
+            )
+        
+        # Check if request already exists for this event (by other users)
         existing_request = MusicRequestRepository.get_by_title_artist(
             db, valid_event.id, request_data.track_title, request_data.track_artist or ""
         )
         
+        if existing_queue_item:
+            # Track is in queue, return message that it's already in queue
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Этот трек уже в очереди и скоро будет включён"
+            )
+        
         if existing_request:
-            # Only increment request count if track is NOT in queue
-            if not existing_queue_item:
-                music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
-            else:
-                # Track is in queue, don't increment count
-                music_request = existing_request
+            # Increment request count (track is not in queue and user hasn't requested it)
+            music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
         else:
-            # Create new request only if track is NOT in queue
-            if not existing_queue_item:
-                music_request = MusicRequestRepository.create(
-                    db,
-                    user_id=user.id,
-                    event_id=valid_event.id,
-                    track_title=request_data.track_title,
-                    track_artist=request_data.track_artist or "",
-                    yandex_music_url=request_data.yandex_music_url,
-                    other_source_url=request_data.other_source_url,
-                )
-            else:
-                # Track is in queue, create request with count=0 (or skip)
-                # Actually, if track is in queue, we should still create the request but with count=0
-                # Or we can skip creating it. Let's skip for now.
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This track is already in the queue"
-                )
+            # Create new request (track is not in queue and no one requested it yet)
+            music_request = MusicRequestRepository.create(
+                db,
+                user_id=user.id,
+                event_id=valid_event.id,
+                track_title=request_data.track_title,
+                track_artist=request_data.track_artist or "",
+                yandex_music_url=request_data.yandex_music_url,
+                other_source_url=request_data.other_source_url,
+            )
         
         # Update last request time
         MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)

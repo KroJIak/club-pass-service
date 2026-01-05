@@ -42,6 +42,23 @@ class MusicRequestRepository:
         ).first()
     
     @staticmethod
+    def get_by_user_title_artist(
+        db: Session,
+        user_id: int,
+        event_id: int,
+        track_title: str,
+        track_artist: str
+    ) -> Optional[MusicRequest]:
+        """Get a music request by user, title and artist for a specific event."""
+        return db.query(MusicRequest).filter(
+            MusicRequest.user_id == user_id,
+            MusicRequest.event_id == event_id,
+            MusicRequest.track_title == track_title,
+            MusicRequest.track_artist == track_artist,
+            MusicRequest.is_deleted == False
+        ).first()
+    
+    @staticmethod
     def create(
         db: Session,
         user_id: int,
