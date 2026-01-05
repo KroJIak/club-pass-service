@@ -46,9 +46,10 @@ interface SortableQueueItemProps {
   isSelected: boolean
   onDelete: (id: number) => void
   disableDrag?: boolean
+  onToggleSelection?: (id: number) => void
 }
 
-const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false }: SortableQueueItemProps) => {
+const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, onToggleSelection }: SortableQueueItemProps) => {
   const {
     attributes,
     listeners,
@@ -122,9 +123,10 @@ interface SortableWishlistItemProps {
   onDelete: (id: number) => void
   onMoveToQueue: (id: number) => void
   disableDrag?: boolean
+  onToggleSelection?: (id: number) => void
 }
 
-const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false }: SortableWishlistItemProps) => {
+const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false, onToggleSelection }: SortableWishlistItemProps) => {
   const {
     attributes,
     listeners,
@@ -521,6 +523,7 @@ const MusicManagement = () => {
                           isSelected={queueSelection.isSelected(item.id)}
                           onDelete={handleDeleteQueueItem}
                           disableDrag={disableDrag}
+                          onToggleSelection={queueSelection.toggleSelection}
                         />
                       ))
                     )}
@@ -575,6 +578,7 @@ const MusicManagement = () => {
                         onDelete={handleDeleteWishlistItem}
                         onMoveToQueue={handleMoveToQueue}
                         disableDrag={disableDrag}
+                        onToggleSelection={wishlistSelection.toggleSelection}
                       />
                     ))}
                   </SortableContext>
