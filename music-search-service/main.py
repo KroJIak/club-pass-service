@@ -5,6 +5,15 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict
 import os
 import sys
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 sys.path.insert(0, os.path.dirname(__file__))
 from services.music_searcher import MusicSearcher
 
@@ -23,10 +32,14 @@ app.add_middleware(
 yandex_token = os.getenv("YANDEX_MUSIC_TOKEN", "")
 music_api_base = os.getenv("MUSIC_API_BASE_URL", "https://bhindi1.ddns.net/music/api")
 
+logger.info(f"🔧 Инициализация MusicSearcher: music_api_base={music_api_base}, yandex_token={'установлен' if yandex_token else 'НЕ УСТАНОВЛЕН'}")
+
 if not yandex_token:
+    logger.error("❌ YANDEX_MUSIC_TOKEN environment variable is required")
     raise ValueError("YANDEX_MUSIC_TOKEN environment variable is required")
 
 searcher = MusicSearcher(yandex_token, music_api_base)
+logger.info("✅ MusicSearcher успешно инициализирован")
 
 
 class MusicSearchRequest(BaseModel):
@@ -74,17 +87,22 @@ async def search_music(request: MusicSearchRequest):
     Returns:
         List of found tracks with links to various platforms
     """
+    logger.info("=" * 80)
+    logger.info(f"🎵 POST /search: song_title='{request.song_title}', artist='{request.artist}'")
     try:
         # Use advanced search to get unique tracks
+        logger.info("🔍 Вызываю searcher.search_advanced...")
         tracks = searcher.search_advanced(
             song_title=request.song_title,
             artist=request.artist,
             min_similarity=0.3
         )
+        logger.info(f"✅ search_advanced вернул {len(tracks)} треков")
         
         # Convert Track objects to TrackResponse
         track_responses = []
-        for track in tracks:
+        for i, track in enumerate(tracks, 1):
+            logger.info(f"📝 Конвертирую трек [{i}]: {track.artist} - {track.title} (источник: {track.source})")
             track_responses.append(TrackResponse(
                 title=track.title,
                 artist=track.artist,
@@ -95,9 +113,12 @@ async def search_music(request: MusicSearchRequest):
                 track_id=track.track_id
             ))
         
+        logger.info(f"✅ Успешно обработано {len(track_responses)} треков")
+        logger.info("=" * 80)
         return MusicSearchResponse(tracks=track_responses)
     
     except Exception as e:
+        logger.error(f"❌ Ошибка в /search: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error searching music: {str(e)}")
 
 
