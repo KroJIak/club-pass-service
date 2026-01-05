@@ -64,6 +64,7 @@
     "support_photo_received": "✅ Photo received. You can send more photos or text message.",
     "club_info_not_configured": "Club information is not configured",
     "menu_title": "🍽️ <b>Menu</b>",
+    "menu_order_text": "To order a drink, please come to the bar counter",
     "menu_empty": "Menu not added yet",
     "purchase": {
       "select_event": "🎉 <b>Select Event</b>",
