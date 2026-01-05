@@ -1,6 +1,7 @@
 """User repository."""
 from typing import Optional, List
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from api.models.user import User
 from api.api.v1.schemas import UserCreate, UserUpdate
@@ -116,10 +117,59 @@ class UserRepository:
     @staticmethod
     def get_or_create(db: Session, user_data: UserCreate) -> User:
         """Get existing user or create a new one."""
+        # First, try to find existing non-deleted user
+        user = db.query(User).filter(
+            User.telegram_user_id == user_data.telegram_user_id,
+            User.is_deleted == False
+        ).first()
+        
+        if user:
+            # Update user info if provided
+            updated = False
+            if user_data.username is not None and user.username != user_data.username:
+                user.username = user_data.username
+                updated = True
+            if user_data.first_name is not None and user.first_name != user_data.first_name:
+                user.first_name = user_data.first_name
+                updated = True
+            if user_data.last_name is not None and user.last_name != user_data.last_name:
+                user.last_name = user_data.last_name
+                updated = True
+            if updated:
+                # Don't manually set updated_at - let SQLAlchemy handle it via onupdate
+                db.commit()
+                db.refresh(user)
+            return user
+        
+        # Check if there's a soft-deleted user with the same telegram_user_id
+        deleted_user = db.query(User).filter(
+            User.telegram_user_id == user_data.telegram_user_id,
+            User.is_deleted == True
+        ).first()
+        
+        if deleted_user:
+            # Restore the deleted user
+            deleted_user.is_deleted = False
+            deleted_user.deleted_at = None
+            deleted_user.username = user_data.username
+            deleted_user.first_name = user_data.first_name
+            deleted_user.last_name = user_data.last_name
+            db.commit()
+            db.refresh(deleted_user)
+            return deleted_user
+        
+        # Try to create new user
         try:
-            # Check for existing user including deleted ones for get_or_create
-            user = db.query(User).filter(User.telegram_user_id == user_data.telegram_user_id).first()
-            if user and not user.is_deleted:
+            return UserRepository.create(db, user_data)
+        except IntegrityError as e:
+            # Handle race condition: user was created by another request
+            db.rollback()
+            # Try to get the user again (it should exist now)
+            user = db.query(User).filter(
+                User.telegram_user_id == user_data.telegram_user_id,
+                User.is_deleted == False
+            ).first()
+            if user:
                 # Update user info if provided
                 updated = False
                 if user_data.username is not None and user.username != user_data.username:
@@ -132,11 +182,8 @@ class UserRepository:
                     user.last_name = user_data.last_name
                     updated = True
                 if updated:
-                    # Don't manually set updated_at - let SQLAlchemy handle it via onupdate
                     db.commit()
                     db.refresh(user)
                 return user
-            return UserRepository.create(db, user_data)
-        except Exception as e:
-            db.rollback()
+            # If still not found, re-raise the exception
             raise
