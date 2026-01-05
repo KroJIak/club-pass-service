@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
+  DragIndicator as DragIndicatorIcon,
   PlayArrow as PlayArrowIcon,
 } from '@mui/icons-material'
 import {
