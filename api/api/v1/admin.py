@@ -2389,17 +2389,12 @@ async def move_music_request_to_queue(
     ).first()
     
     if existing_queue_item:
-        # Track already in queue, update request_count if needed
-        # Sum up request_count from all requests with same title/artist for this event
-        from api.models.music_request import MusicRequest
-        total_requests = db.query(MusicRequest).filter(
-            MusicRequest.track_title == music_request.track_title,
-            MusicRequest.track_artist == music_request.track_artist,
-            MusicRequest.is_deleted == False
-        ).count()
-        
-        # Update request_count in queue item (use max of current and total from requests)
-        existing_queue_item.request_count = max(existing_queue_item.request_count, total_requests)
+        # Track already in queue, update request_count by adding the request_count from the request being moved
+        # This preserves the total request count even after hard delete
+        existing_queue_item.request_count = max(
+            existing_queue_item.request_count,
+            music_request.request_count
+        )
         db.commit()
         db.refresh(existing_queue_item)
         
