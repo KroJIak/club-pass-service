@@ -191,14 +191,40 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
 
 // Droppable zone for Queue
 const QueueDroppable = ({ children }: { children: React.ReactNode }) => {
-  const { setNodeRef } = useDroppable({ id: 'queue-droppable' })
-  return <Box ref={setNodeRef}>{children}</Box>
+  const { setNodeRef, isOver } = useDroppable({ id: 'queue-droppable' })
+  return (
+    <Box
+      ref={setNodeRef}
+      sx={{
+        minHeight: '200px',
+        border: isOver ? '2px dashed' : 'none',
+        borderColor: isOver ? 'primary.main' : 'transparent',
+        borderRadius: 1,
+        p: isOver ? 1 : 0,
+      }}
+    >
+      {children}
+    </Box>
+  )
 }
 
 // Droppable zone for Wishlist
 const WishlistDroppable = ({ children }: { children: React.ReactNode }) => {
-  const { setNodeRef } = useDroppable({ id: 'wishlist-droppable' })
-  return <Box ref={setNodeRef}>{children}</Box>
+  const { setNodeRef, isOver } = useDroppable({ id: 'wishlist-droppable' })
+  return (
+    <Box
+      ref={setNodeRef}
+      sx={{
+        minHeight: '200px',
+        border: isOver ? '2px dashed' : 'none',
+        borderColor: isOver ? 'primary.main' : 'transparent',
+        borderRadius: 1,
+        p: isOver ? 1 : 0,
+      }}
+    >
+      {children}
+    </Box>
+  )
 }
 
 const MusicManagement = () => {
@@ -212,7 +238,11 @@ const MusicManagement = () => {
   const wishlistSelection = useSelection(wishlist)
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
