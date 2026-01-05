@@ -220,7 +220,7 @@ async def handle_menu_food_drinks(callback: CallbackQuery, state: FSMContext):
         media=media_group,
     )
     
-    # Mark all media group messages as temporary (they will be deleted on next flush)
+    # Mark all media group messages as temporary (they will be deleted on next system action)
     for msg in messages:
         temporary_messages_middleware.pending_user_messages[user_id].append(
             (msg.chat.id, msg.message_id)
@@ -243,8 +243,8 @@ async def handle_menu_food_drinks(callback: CallbackQuery, state: FSMContext):
         user_id, new_message.chat.id, new_message.message_id
     )
     
-    # Flush pending temporary user messages (this will delete the media group messages)
-    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+    # Don't flush immediately - let media group stay visible until next system action
+    # Media group will be deleted when user performs next action (e.g., clicks "Main Menu")
     
     # Delete the original message with menu button
     try:
