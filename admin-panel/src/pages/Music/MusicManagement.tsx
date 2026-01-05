@@ -93,14 +93,14 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
             Requests: {item.request_count}
           </Typography>
         )}
-        <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+        <Box sx={{ mt: 1, display: 'flex', gap: 1, pointerEvents: 'auto' }}>
           {item.yandex_music_url && (
-            <Link href={item.yandex_music_url} target="_blank" rel="noopener">
+            <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Yandex Music
             </Link>
           )}
           {item.other_source_url && (
-            <Link href={item.other_source_url} target="_blank" rel="noopener">
+            <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
               Other Source
             </Link>
           )}
@@ -181,10 +181,24 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
           )}
         </Box>
       </Box>
-      <IconButton onClick={(e) => { e.stopPropagation(); onMoveToQueue(item.id); }} color="primary">
+      <IconButton 
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          onMoveToQueue(item.id); 
+        }} 
+        color="primary"
+        sx={{ pointerEvents: 'auto' }}
+      >
         <PlayArrowIcon />
       </IconButton>
-      <IconButton onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} color="error">
+      <IconButton 
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          onDelete(item.id); 
+        }} 
+        color="error"
+        sx={{ pointerEvents: 'auto' }}
+      >
         <DeleteIcon />
       </IconButton>
     </Paper>
