@@ -24,7 +24,9 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
   useDroppable,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -43,9 +45,10 @@ interface SortableQueueItemProps {
   item: MusicQueue
   isSelected: boolean
   onDelete: (id: number) => void
+  disableDrag?: boolean
 }
 
-const SortableQueueItem = ({ item, isSelected, onDelete }: SortableQueueItemProps) => {
+const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false }: SortableQueueItemProps) => {
   const {
     attributes,
     listeners,
@@ -53,21 +56,19 @@ const SortableQueueItem = ({ item, isSelected, onDelete }: SortableQueueItemProp
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `queue-${item.id}` })
+  } = useSortable({ id: `queue-${item.id}`, disabled: disableDrag })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
     <Paper
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(disableDrag ? {} : { ...attributes, ...listeners })}
       sx={{
         p: 2,
         mb: 1,
@@ -120,9 +121,10 @@ interface SortableWishlistItemProps {
   isSelected: boolean
   onDelete: (id: number) => void
   onMoveToQueue: (id: number) => void
+  disableDrag?: boolean
 }
 
-const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue }: SortableWishlistItemProps) => {
+const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false }: SortableWishlistItemProps) => {
   const {
     attributes,
     listeners,
@@ -130,21 +132,19 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue }: Sor
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: `wishlist-${item.id}` })
+  } = useSortable({ id: `wishlist-${item.id}`, disabled: disableDrag })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
     <Paper
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
+      {...(disableDrag ? {} : { ...attributes, ...listeners })}
       sx={{
         p: 2,
         mb: 1,
@@ -555,6 +555,7 @@ const MusicManagement = () => {
                         isSelected={wishlistSelection.isSelected(item.id)}
                         onDelete={handleDeleteWishlistItem}
                         onMoveToQueue={handleMoveToQueue}
+                        disableDrag={disableDrag}
                       />
                     ))}
                   </SortableContext>
