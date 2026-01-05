@@ -348,14 +348,59 @@ const MusicManagement = () => {
     // Check if dragging from queue to wishlist FIRST (before checking within queue)
     if (activeId.startsWith('queue-') && (overId === 'wishlist-droppable' || overId.startsWith('wishlist-'))) {
       const queueId = parseInt(activeId.replace('queue-', ''))
-      await handleMoveToWishlist(queueId)
+      const queueItem = queue.find((item) => item.id === queueId)
+      if (queueItem) {
+        // Optimistic update: immediately remove from queue and add to wishlist
+        setQueue(queue.filter((item) => item.id !== queueId))
+        // Convert queue item to wishlist item format
+        const wishlistItem = {
+          id: queueItem.id,
+          track_title: queueItem.track_title,
+          track_artist: queueItem.track_artist,
+          yandex_music_url: queueItem.yandex_music_url,
+          other_source_url: queueItem.other_source_url,
+          request_count: queueItem.request_count || 0,
+        }
+        setWishlist([...wishlist, wishlistItem])
+      }
+      // Then make API call
+      try {
+        await handleMoveToWishlist(queueId)
+      } catch (error) {
+        // Revert on error
+        fetchQueue()
+        fetchWishlist()
+      }
       return
     }
 
     // Check if dragging from wishlist to queue (droppable zone or queue item)
     if (activeId.startsWith('wishlist-') && (overId === 'queue-droppable' || overId.startsWith('queue-'))) {
       const wishlistId = parseInt(activeId.replace('wishlist-', ''))
-      await handleMoveToQueue(wishlistId)
+      const wishlistItem = wishlist.find((item) => item.id === wishlistId)
+      if (wishlistItem) {
+        // Optimistic update: immediately remove from wishlist and add to queue
+        setWishlist(wishlist.filter((item) => item.id !== wishlistId))
+        // Convert wishlist item to queue item format
+        const queueItem = {
+          id: wishlistItem.id,
+          track_title: wishlistItem.track_title,
+          track_artist: wishlistItem.track_artist,
+          yandex_music_url: wishlistItem.yandex_music_url,
+          other_source_url: wishlistItem.other_source_url,
+          queue_order: queue.length,
+          request_count: wishlistItem.request_count,
+        }
+        setQueue([...queue, queueItem])
+      }
+      // Then make API call
+      try {
+        await handleMoveToQueue(wishlistId)
+      } catch (error) {
+        // Revert on error
+        fetchQueue()
+        fetchWishlist()
+      }
       return
     }
 
@@ -531,20 +576,16 @@ const MusicManagement = () => {
               ) : (
                 <QueueDroppable>
                   <SortableContext items={queue.map((item) => `queue-${item.id}`)} strategy={verticalListSortingStrategy}>
-                    {queue.length === 0 ? (
-                      <Typography color="text.secondary">Queue is empty</Typography>
-                    ) : (
-                      queue.map((item) => (
-                        <SortableQueueItem
-                          key={item.id}
-                          item={item}
-                          isSelected={queueSelection.isSelected(item.id)}
-                          onDelete={handleDeleteQueueItem}
-                          disableDrag={disableDrag}
-                          onToggleSelection={queueSelection.toggleSelection}
-                        />
-                      ))
-                    )}
+                    {queue.map((item) => (
+                      <SortableQueueItem
+                        key={item.id}
+                        item={item}
+                        isSelected={queueSelection.isSelected(item.id)}
+                        onDelete={handleDeleteQueueItem}
+                        disableDrag={disableDrag}
+                        onToggleSelection={queueSelection.toggleSelection}
+                      />
+                    ))}
                   </SortableContext>
                 </QueueDroppable>
               )}
@@ -583,8 +624,6 @@ const MusicManagement = () => {
 
               {wishlistLoading ? (
                 <CircularProgress />
-              ) : wishlist.length === 0 ? (
-                <Typography color="text.secondary">Wishlist is empty</Typography>
               ) : (
                 <WishlistDroppable>
                   <SortableContext items={wishlist.map((item) => `wishlist-${item.id}`)} strategy={verticalListSortingStrategy}>
