@@ -30,15 +30,14 @@ app.add_middleware(
 
 # Initialize music searcher
 yandex_token = os.getenv("YANDEX_MUSIC_TOKEN", "")
-music_api_base = os.getenv("MUSIC_API_BASE_URL", "https://bhindi1.ddns.net/music/api")
 
-logger.info(f"🔧 Инициализация MusicSearcher: music_api_base={music_api_base}, yandex_token={'установлен' if yandex_token else 'НЕ УСТАНОВЛЕН'}")
+logger.info(f"🔧 Инициализация MusicSearcher: yandex_token={'установлен' if yandex_token else 'НЕ УСТАНОВЛЕН'}")
 
 if not yandex_token:
     logger.error("❌ YANDEX_MUSIC_TOKEN environment variable is required")
     raise ValueError("YANDEX_MUSIC_TOKEN environment variable is required")
 
-searcher = MusicSearcher(yandex_token, music_api_base)
+searcher = MusicSearcher(yandex_token)
 logger.info("✅ MusicSearcher успешно инициализирован")
 
 
