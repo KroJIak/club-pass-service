@@ -221,11 +221,22 @@ async def safe_edit_message(
         return False
     
     try:
+        # Get old system message BEFORE editing, so we can delete it if needed
+        old_system = temporary_messages_middleware.get_last_system_message(user_id)
+        old_chat_id = None
+        old_message_id = None
+        if old_system:
+            old_chat_id, old_message_id = old_system
+        
         new_message = await _edit_callback_message(callback, text, reply_markup, parse_mode, photo_input)
         # If photo was sent, new_message contains the new message, otherwise use original
         if new_message:
+            # New message was sent (photo was added), so delete old system message
+            if old_system and not (old_chat_id == new_message.chat.id and old_message_id == new_message.message_id):
+                await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
             await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
         else:
+            # Message was edited in place - update tracking but don't delete (same message)
             await _after_system_action(bot, user_id, chat_id, callback.message.message_id)
         return True
     except TelegramBadRequest as e:
