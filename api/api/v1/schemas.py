@@ -497,6 +497,7 @@ class MusicQueueResponse(BaseModel):
     yandex_music_url: Optional[str] = None
     other_source_url: Optional[str] = None
     queue_order: int
+    request_count: Optional[int] = 0  # Request count from wishlist
     created_at: datetime
     updated_at: datetime
 

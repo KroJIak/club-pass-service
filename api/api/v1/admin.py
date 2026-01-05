@@ -2260,7 +2260,32 @@ async def get_music_queue(
 ):
     """Get music queue (admin only)."""
     queue_items = MusicQueueRepository.get_all(db)
-    return MusicQueueListResponse(queue=[MusicQueueResponse.model_validate(item) for item in queue_items])
+    
+    # For each queue item, find corresponding request in wishlist to get request_count
+    queue_responses = []
+    for item in queue_items:
+        # Find request with same title and artist (search across all events)
+        from api.models.music_request import MusicRequest
+        request = db.query(MusicRequest).filter(
+            MusicRequest.track_title == item.track_title,
+            MusicRequest.track_artist == item.track_artist,
+            MusicRequest.is_deleted == False
+        ).first()
+        
+        queue_dict = {
+            "id": item.id,
+            "track_title": item.track_title,
+            "track_artist": item.track_artist,
+            "yandex_music_url": item.yandex_music_url,
+            "other_source_url": item.other_source_url,
+            "queue_order": item.queue_order,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+            "request_count": request.request_count if request else 0,
+        }
+        queue_responses.append(MusicQueueResponse.model_validate(queue_dict))
+    
+    return MusicQueueListResponse(queue=queue_responses)
 
 
 @router.get("/admin/music-wishlist", response_model=MusicRequestListResponse)

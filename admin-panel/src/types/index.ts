@@ -284,6 +284,7 @@ export interface MusicQueue {
   yandex_music_url: string | null
   other_source_url: string | null
   queue_order: number
+  request_count?: number
   created_at: string
   updated_at: string
 }

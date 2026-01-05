@@ -25,6 +25,7 @@ import {
   useSensors,
   DragEndEvent,
   useDroppable,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -87,6 +88,11 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
         <Typography variant="body2" color="text.secondary">
           {item.track_artist}
         </Typography>
+        {item.request_count !== undefined && item.request_count > 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
+            Requests: {item.request_count}
+          </Typography>
+        )}
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
             <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
@@ -392,7 +398,7 @@ const MusicManagement = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Queue</Typography>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
                   <Checkbox
                     checked={queueSelection.getSelectionState() === 'all'}
                     indeterminate={queueSelection.getSelectionState() === 'some'}
@@ -446,7 +452,7 @@ const MusicManagement = () => {
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Wishlist</Typography>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
                   <Checkbox
                     checked={wishlistSelection.getSelectionState() === 'all'}
                     indeterminate={wishlistSelection.getSelectionState() === 'some'}
