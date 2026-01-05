@@ -2261,16 +2261,16 @@ async def get_music_queue(
     """Get music queue (admin only)."""
     queue_items = MusicQueueRepository.get_all(db)
     
-    # For each queue item, find corresponding request in wishlist to get request_count
+    # For each queue item, find corresponding request to get request_count
+    # Note: We search in soft-deleted requests too, as they might have been moved to queue
     queue_responses = []
     for item in queue_items:
-        # Find request with same title and artist (search across all events)
+        # Find request with same title and artist (search across all events, including soft-deleted)
         from api.models.music_request import MusicRequest
         request = db.query(MusicRequest).filter(
             MusicRequest.track_title == item.track_title,
             MusicRequest.track_artist == item.track_artist,
-            MusicRequest.is_deleted == False
-        ).first()
+        ).order_by(MusicRequest.request_count.desc()).first()
         
         queue_dict = {
             "id": item.id,
