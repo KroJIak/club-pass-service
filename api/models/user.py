@@ -1,6 +1,6 @@
 """User ORM model and Pydantic schemas."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Index
+from sqlalchemy import Column, Integer, BigInteger, String, DateTime, Boolean, Index
 from sqlalchemy.orm import relationship
 from api.core.db import Base
 
@@ -16,6 +16,8 @@ class User(Base):
     last_name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
     
     # Relationships
     tickets = relationship("Ticket", back_populates="user")

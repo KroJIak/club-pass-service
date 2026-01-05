@@ -331,18 +331,19 @@ async def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
 ):
-    """Delete a user."""
+    """Delete a user (soft delete by default, hard delete if hard=true)."""
     try:
-        logger.info(f"Deleting user: id={user_id}")
-        deleted = UserRepository.delete(db, user_id)
+        logger.info(f"Deleting user: id={user_id}, hard={hard}")
+        deleted = UserRepository.delete(db, user_id, hard=hard)
         if not deleted:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"User with id {user_id} not found"
             )
-        logger.info(f"User deleted: id={user_id}")
+        logger.info(f"User deleted: id={user_id}, hard={hard}")
         return None
     except HTTPException:
         raise

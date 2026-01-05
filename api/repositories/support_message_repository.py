@@ -19,7 +19,7 @@ class SupportMessageRepository:
         search: Optional[str] = None,
     ) -> List[SupportMessage]:
         """Get all support messages with optional filters."""
-        query = db.query(SupportMessage)
+        query = db.query(SupportMessage).filter(SupportMessage.is_deleted == False)
         
         if status:
             query = query.filter(SupportMessage.status == status)
@@ -49,7 +49,10 @@ class SupportMessageRepository:
     @staticmethod
     def get_by_id(db: Session, message_id: int) -> Optional[SupportMessage]:
         """Get a support message by ID."""
-        return db.query(SupportMessage).filter(SupportMessage.id == message_id).first()
+        return db.query(SupportMessage).filter(
+            SupportMessage.id == message_id,
+            SupportMessage.is_deleted == False
+        ).first()
     
     @staticmethod
     def create(db: Session, user_id: int, message: str) -> SupportMessage:
@@ -86,8 +89,22 @@ class SupportMessageRepository:
         return support_message
     
     @staticmethod
-    def delete(db: Session, message_id: int) -> bool:
+    def soft_delete(db: Session, message_id: int) -> bool:
+        """Soft delete a support message."""
+        support_message = SupportMessageRepository.get_by_id(db, message_id)
+        if not support_message or support_message.is_deleted:
+            return False
+        support_message.is_deleted = True
+        support_message.deleted_at = datetime.utcnow()
+        db.commit()
+        return True
+    
+    @staticmethod
+    def delete(db: Session, message_id: int, hard: bool = False) -> bool:
         """Delete a support message."""
+        if not hard:
+            return SupportMessageRepository.soft_delete(db, message_id)
+        
         support_message = db.query(SupportMessage).filter(SupportMessage.id == message_id).first()
         if not support_message:
             return False

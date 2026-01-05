@@ -1,6 +1,6 @@
 """Ticket ORM model and Pydantic schemas."""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, TypeDecorator
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, TypeDecorator, Boolean
 from sqlalchemy.orm import relationship
 import enum
 from api.core.db import Base
@@ -54,6 +54,8 @@ class Ticket(Base):
     refunded_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="tickets")

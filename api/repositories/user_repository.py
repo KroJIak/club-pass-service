@@ -12,17 +12,23 @@ class UserRepository:
     @staticmethod
     def get_by_telegram_id(db: Session, telegram_user_id: int) -> Optional[User]:
         """Get user by Telegram user ID."""
-        return db.query(User).filter(User.telegram_user_id == telegram_user_id).first()
+        return db.query(User).filter(
+            User.telegram_user_id == telegram_user_id,
+            User.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_by_id(db: Session, user_id: int) -> Optional[User]:
         """Get user by ID."""
-        return db.query(User).filter(User.id == user_id).first()
+        return db.query(User).filter(
+            User.id == user_id,
+            User.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_all(db: Session) -> List[User]:
         """Get all users."""
-        return db.query(User).order_by(User.created_at.desc()).all()
+        return db.query(User).filter(User.is_deleted == False).order_by(User.created_at.desc()).all()
     
     @staticmethod
     def create(db: Session, user_data: UserCreate) -> User:
@@ -68,12 +74,26 @@ class UserRepository:
         return user
     
     @staticmethod
-    def delete(db: Session, user_id: int) -> bool:
+    def soft_delete(db: Session, user_id: int) -> bool:
+        """Soft delete a user."""
+        user = UserRepository.get_by_id(db, user_id)
+        if not user or user.is_deleted:
+            return False
+        user.is_deleted = True
+        user.deleted_at = datetime.utcnow()
+        db.commit()
+        return True
+    
+    @staticmethod
+    def delete(db: Session, user_id: int, hard: bool = False) -> bool:
         """Delete a user."""
+        if not hard:
+            return UserRepository.soft_delete(db, user_id)
+        
         from api.models.payment import Payment
         from api.models.ticket import Ticket
         
-        user = UserRepository.get_by_id(db, user_id)
+        user = db.query(User).filter(User.id == user_id).first()
         if not user:
             return False
         
@@ -97,8 +117,9 @@ class UserRepository:
     def get_or_create(db: Session, user_data: UserCreate) -> User:
         """Get existing user or create a new one."""
         try:
-            user = UserRepository.get_by_telegram_id(db, user_data.telegram_user_id)
-            if user:
+            # Check for existing user including deleted ones for get_or_create
+            user = db.query(User).filter(User.telegram_user_id == user_data.telegram_user_id).first()
+            if user and not user.is_deleted:
                 # Update user info if provided
                 updated = False
                 if user_data.username is not None and user.username != user_data.username:

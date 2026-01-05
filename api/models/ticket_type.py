@@ -1,5 +1,6 @@
 """TicketType ORM model and Pydantic schemas."""
-from sqlalchemy import Column, Integer, String, Boolean, Numeric, ForeignKey
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Boolean, Numeric, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from api.core.db import Base
 
@@ -15,6 +16,8 @@ class TicketType(Base):
     available_quantity = Column(Integer, default=0, nullable=False)
     total_quantity = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
     
     # Relationships
     event = relationship("Event", back_populates="ticket_types")

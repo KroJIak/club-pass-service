@@ -36,13 +36,17 @@ class AdminMessagePhotoRepository:
     ) -> List[AdminMessagePhoto]:
         """Get all photos for an admin message."""
         return db.query(AdminMessagePhoto).filter(
-            AdminMessagePhoto.admin_message_id == admin_message_id
+            AdminMessagePhoto.admin_message_id == admin_message_id,
+            AdminMessagePhoto.is_deleted == False
         ).order_by(AdminMessagePhoto.created_at.asc()).all()
     
     @staticmethod
     def get_by_id(db: Session, photo_id: int) -> Optional[AdminMessagePhoto]:
         """Get a photo by ID."""
-        return db.query(AdminMessagePhoto).filter(AdminMessagePhoto.id == photo_id).first()
+        return db.query(AdminMessagePhoto).filter(
+            AdminMessagePhoto.id == photo_id,
+            AdminMessagePhoto.is_deleted == False
+        ).first()
     
     @staticmethod
     def delete(db: Session, photo_id: int) -> bool:

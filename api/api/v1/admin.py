@@ -451,34 +451,43 @@ async def update_event(
 @router.delete("/admin/events/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event(
     event_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete an event (hard delete)."""
-    from api.models.order import Order
-    from api.models.ticket import Ticket
-    
-    event = EventRepository.get_by_id(db, event_id)
-    if not event:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Event with id {event_id} not found"
-        )
-    
-    # Explicitly delete related orders first to avoid constraint violations
-    # Orders have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
-    orders = db.query(Order).filter(Order.event_id == event_id).all()
-    for order in orders:
-        db.delete(order)
-    
-    # Explicitly delete related tickets first to avoid constraint violations
-    # Tickets have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
-    tickets = db.query(Ticket).filter(Ticket.event_id == event_id).all()
-    for ticket in tickets:
-        db.delete(ticket)
-    
-    db.delete(event)
-    db.commit()
+    """Delete an event (soft delete by default, hard delete if hard=true)."""
+    if hard:
+        from api.models.order import Order
+        from api.models.ticket import Ticket
+        
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Event with id {event_id} not found"
+            )
+        
+        # Explicitly delete related orders first to avoid constraint violations
+        # Orders have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
+        orders = db.query(Order).filter(Order.event_id == event_id).all()
+        for order in orders:
+            db.delete(order)
+        
+        # Explicitly delete related tickets first to avoid constraint violations
+        # Tickets have CASCADE, but SQLAlchemy may try to set event_id to NULL which violates NOT NULL
+        tickets = db.query(Ticket).filter(Ticket.event_id == event_id).all()
+        for ticket in tickets:
+            db.delete(ticket)
+        
+        db.delete(event)
+        db.commit()
+    else:
+        success = EventRepository.delete(db, event_id, hard=False)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Event with id {event_id} not found"
+            )
     return None
 
 
@@ -572,34 +581,43 @@ async def update_ticket_type(
 @router.delete("/admin/ticket-types/{ticket_type_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket_type(
     ticket_type_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a ticket type (hard delete)."""
-    from api.models.order import Order
-    from api.models.ticket import Ticket
-    
-    ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
-    if not ticket_type:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Ticket type with id {ticket_type_id} not found"
-        )
-    
-    # Explicitly delete related orders first to avoid constraint violations
-    # Orders have RESTRICT, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
-    orders = db.query(Order).filter(Order.ticket_type_id == ticket_type_id).all()
-    for order in orders:
-        db.delete(order)
-    
-    # Explicitly delete related tickets first to avoid constraint violations
-    # Tickets have CASCADE, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
-    tickets = db.query(Ticket).filter(Ticket.ticket_type_id == ticket_type_id).all()
-    for ticket in tickets:
-        db.delete(ticket)
-    
-    db.delete(ticket_type)
-    db.commit()
+    """Delete a ticket type (soft delete by default, hard delete if hard=true)."""
+    if hard:
+        from api.models.order import Order
+        from api.models.ticket import Ticket
+        
+        ticket_type = db.query(TicketType).filter(TicketType.id == ticket_type_id).first()
+        if not ticket_type:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket type with id {ticket_type_id} not found"
+            )
+        
+        # Explicitly delete related orders first to avoid constraint violations
+        # Orders have RESTRICT, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
+        orders = db.query(Order).filter(Order.ticket_type_id == ticket_type_id).all()
+        for order in orders:
+            db.delete(order)
+        
+        # Explicitly delete related tickets first to avoid constraint violations
+        # Tickets have CASCADE, but SQLAlchemy may try to set ticket_type_id to NULL which violates NOT NULL
+        tickets = db.query(Ticket).filter(Ticket.ticket_type_id == ticket_type_id).all()
+        for ticket in tickets:
+            db.delete(ticket)
+        
+        db.delete(ticket_type)
+        db.commit()
+    else:
+        success = TicketTypeRepository.delete(db, ticket_type_id, hard=False)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket type with id {ticket_type_id} not found"
+            )
     return None
 
 
@@ -634,11 +652,12 @@ async def create_ticket_type_template(
 @router.delete("/admin/ticket-type-templates/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_ticket_type_template(
     template_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a ticket type template."""
-    if not TicketTypeTemplateRepository.delete(db, template_id):
+    """Delete a ticket type template (soft delete by default, hard delete if hard=true)."""
+    if not TicketTypeTemplateRepository.delete(db, template_id, hard=hard):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Template with id {template_id} not found"
@@ -712,11 +731,12 @@ async def update_user(
 @router.delete("/admin/users/{user_id}")
 async def delete_user(
     user_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a user."""
-    success = UserRepository.delete(db, user_id)
+    """Delete a user (soft delete by default, hard delete if hard=true)."""
+    success = UserRepository.delete(db, user_id, hard=hard)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1012,23 +1032,43 @@ async def mark_ticket_as_used_admin(
 @router.delete("/admin/tickets/{ticket_id}")
 async def delete_ticket(
     ticket_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a ticket."""
-    ticket = TicketRepository.get_by_id(db, ticket_id)
-    if not ticket:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Ticket with id {ticket_id} not found"
-        )
-    
-    # If ticket was active, increase total_quantity
-    if ticket.status == TicketStatus.ACTIVE:
-        TicketTypeRepository.increase_total_quantity(db, ticket.ticket_type_id, 1)
-    
-    db.delete(ticket)
-    db.commit()
+    """Delete a ticket (soft delete by default, hard delete if hard=true)."""
+    if hard:
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket with id {ticket_id} not found"
+            )
+        
+        # If ticket was active, increase total_quantity
+        if ticket.status == TicketStatus.ACTIVE:
+            TicketTypeRepository.increase_total_quantity(db, ticket.ticket_type_id, 1)
+        
+        db.delete(ticket)
+        db.commit()
+    else:
+        ticket = TicketRepository.get_by_id(db, ticket_id)
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket with id {ticket_id} not found"
+            )
+        
+        # If ticket was active, increase total_quantity
+        if ticket.status == TicketStatus.ACTIVE:
+            TicketTypeRepository.increase_total_quantity(db, ticket.ticket_type_id, 1)
+        
+        success = TicketRepository.delete(db, ticket_id, hard=False)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Ticket with id {ticket_id} not found"
+            )
     return {"message": f"Ticket {ticket_id} deleted successfully"}
 
 
@@ -1159,11 +1199,12 @@ async def get_order(
 @router.delete("/admin/orders/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_order(
     order_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete an order (admin only)."""
-    success = OrderRepository.delete(db, order_id)
+    """Delete an order (soft delete by default, hard delete if hard=true)."""
+    success = OrderRepository.delete(db, order_id, hard=hard)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1793,13 +1834,11 @@ async def send_message_to_user(
 @router.delete("/admin/support-messages/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_support_message(
     message_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a support message (admin only)."""
-    from api.services.file_storage_service import delete_support_photo
-    import os
-    
+    """Delete a support message (soft delete by default, hard delete if hard=true)."""
     message = SupportMessageRepository.get_by_id(db, message_id)
     if not message:
         raise HTTPException(
@@ -1807,12 +1846,14 @@ async def delete_support_message(
             detail=f"Support message with id {message_id} not found"
         )
     
-    # Delete all photos associated with this message
-    photos = SupportMessagePhotoRepository.get_by_support_message_id(db, message_id)
-    for photo in photos:
-        delete_support_photo(photo.file_path)
+    if hard:
+        from api.services.file_storage_service import delete_support_photo
+        # Delete all photos associated with this message
+        photos = SupportMessagePhotoRepository.get_by_support_message_id(db, message_id)
+        for photo in photos:
+            delete_support_photo(photo.file_path)
     
-    if not SupportMessageRepository.delete(db, message_id):
+    if not SupportMessageRepository.delete(db, message_id, hard=hard):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Support message with id {message_id} not found"
@@ -1886,13 +1927,11 @@ async def get_admin_messages(
 @router.delete("/admin/admin-messages/{message_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_admin_message(
     message_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete an admin message (admin only)."""
-    from api.services.file_storage_service import delete_support_photo
-    from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
-    
+    """Delete an admin message (soft delete by default, hard delete if hard=true)."""
     message = AdminMessageRepository.get_by_id(db, message_id)
     if not message:
         raise HTTPException(
@@ -1900,12 +1939,15 @@ async def delete_admin_message(
             detail=f"Admin message with id {message_id} not found"
         )
     
-    # Delete all photos associated with this message
-    photos = AdminMessagePhotoRepository.get_by_admin_message_id(db, message_id)
-    for photo in photos:
-        delete_support_photo(photo.file_path)
+    if hard:
+        from api.services.file_storage_service import delete_support_photo
+        from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
+        # Delete all photos associated with this message
+        photos = AdminMessagePhotoRepository.get_by_admin_message_id(db, message_id)
+        for photo in photos:
+            delete_support_photo(photo.file_path)
     
-    if not AdminMessageRepository.delete(db, message_id):
+    if not AdminMessageRepository.delete(db, message_id, hard=hard):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Admin message with id {message_id} not found"
@@ -2017,11 +2059,12 @@ async def update_staff_user(
 @router.delete("/admin/staff-users/{staff_user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_staff_user(
     staff_user_id: int,
+    hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete a staff user (admin only)."""
-    if not StaffUserRepository.delete(db, staff_user_id):
+    """Delete a staff user (soft delete by default, hard delete if hard=true)."""
+    if not StaffUserRepository.delete(db, staff_user_id, hard=hard):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Staff user with id {staff_user_id} not found"

@@ -14,6 +14,8 @@ class StaffUser(Base):
     last_name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    is_deleted = Column(Boolean, default=False, nullable=False, index=True)
+    deleted_at = Column(DateTime, nullable=True)
     
     __table_args__ = (
         Index("idx_staff_users_telegram_user_id", "telegram_user_id"),

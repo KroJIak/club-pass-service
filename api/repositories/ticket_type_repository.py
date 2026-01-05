@@ -10,7 +10,10 @@ class TicketTypeRepository:
     @staticmethod
     def get_by_event_id(db: Session, event_id: int, active_only: bool = True) -> List[TicketType]:
         """Get ticket types for an event."""
-        query = db.query(TicketType).filter(TicketType.event_id == event_id)
+        query = db.query(TicketType).filter(
+            TicketType.event_id == event_id,
+            TicketType.is_deleted == False
+        )
         if active_only:
             query = query.filter(TicketType.is_active == True)
         return query.order_by(TicketType.price).all()
@@ -18,14 +21,18 @@ class TicketTypeRepository:
     @staticmethod
     def get_by_id(db: Session, ticket_type_id: int) -> Optional[TicketType]:
         """Get ticket type by ID."""
-        return db.query(TicketType).filter(TicketType.id == ticket_type_id).first()
+        return db.query(TicketType).filter(
+            TicketType.id == ticket_type_id,
+            TicketType.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_active_by_id(db: Session, ticket_type_id: int) -> Optional[TicketType]:
         """Get active ticket type by ID."""
         return db.query(TicketType).filter(
             TicketType.id == ticket_type_id,
-            TicketType.is_active == True
+            TicketType.is_active == True,
+            TicketType.is_deleted == False
         ).first()
     
     @staticmethod
@@ -71,5 +78,30 @@ class TicketTypeRepository:
     @staticmethod
     def get_all(db: Session) -> List[TicketType]:
         """Get all ticket types (including inactive)."""
-        return db.query(TicketType).order_by(TicketType.id.desc()).all()
+        return db.query(TicketType).filter(TicketType.is_deleted == False).order_by(TicketType.id.desc()).all()
+    
+    @staticmethod
+    def soft_delete(db: Session, ticket_type_id: int) -> bool:
+        """Soft delete a ticket type."""
+        from datetime import datetime
+        ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
+        if not ticket_type or ticket_type.is_deleted:
+            return False
+        ticket_type.is_deleted = True
+        ticket_type.deleted_at = datetime.utcnow()
+        db.commit()
+        return True
+    
+    @staticmethod
+    def delete(db: Session, ticket_type_id: int, hard: bool = False) -> bool:
+        """Delete a ticket type."""
+        if not hard:
+            return TicketTypeRepository.soft_delete(db, ticket_type_id)
+        
+        ticket_type = db.query(TicketType).filter(TicketType.id == ticket_type_id).first()
+        if not ticket_type:
+            return False
+        db.delete(ticket_type)
+        db.commit()
+        return True
 

@@ -39,7 +39,8 @@ class SupportMessagePhotoRepository:
     ) -> List[SupportMessagePhoto]:
         """Get all photos for a support message."""
         query = db.query(SupportMessagePhoto).filter(
-            SupportMessagePhoto.support_message_id == support_message_id
+            SupportMessagePhoto.support_message_id == support_message_id,
+            SupportMessagePhoto.is_deleted == False
         )
         
         if is_admin_photo is not None:
@@ -50,7 +51,10 @@ class SupportMessagePhotoRepository:
     @staticmethod
     def get_by_id(db: Session, photo_id: int) -> Optional[SupportMessagePhoto]:
         """Get a photo by ID."""
-        return db.query(SupportMessagePhoto).filter(SupportMessagePhoto.id == photo_id).first()
+        return db.query(SupportMessagePhoto).filter(
+            SupportMessagePhoto.id == photo_id,
+            SupportMessagePhoto.is_deleted == False
+        ).first()
     
     @staticmethod
     def delete(db: Session, photo_id: int) -> bool:

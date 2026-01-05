@@ -20,7 +20,7 @@ class AdminMessageRepository:
         offset: Optional[int] = None,
     ) -> List[AdminMessage]:
         """Get all admin messages with optional filters."""
-        query = db.query(AdminMessage)
+        query = db.query(AdminMessage).filter(AdminMessage.is_deleted == False)
         
         if user_id:
             query = query.filter(AdminMessage.user_id == user_id)
@@ -55,7 +55,7 @@ class AdminMessageRepository:
         date_to: Optional[datetime] = None,
     ) -> int:
         """Count admin messages with optional filters."""
-        query = db.query(AdminMessage)
+        query = db.query(AdminMessage).filter(AdminMessage.is_deleted == False)
         
         if user_id:
             query = query.filter(AdminMessage.user_id == user_id)
@@ -75,7 +75,10 @@ class AdminMessageRepository:
     @staticmethod
     def get_by_id(db: Session, message_id: int) -> Optional[AdminMessage]:
         """Get an admin message by ID."""
-        return db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
+        return db.query(AdminMessage).filter(
+            AdminMessage.id == message_id,
+            AdminMessage.is_deleted == False
+        ).first()
     
     @staticmethod
     def create(
@@ -96,8 +99,22 @@ class AdminMessageRepository:
         return admin_message
     
     @staticmethod
-    def delete(db: Session, message_id: int) -> bool:
+    def soft_delete(db: Session, message_id: int) -> bool:
+        """Soft delete an admin message."""
+        admin_message = AdminMessageRepository.get_by_id(db, message_id)
+        if not admin_message or admin_message.is_deleted:
+            return False
+        admin_message.is_deleted = True
+        admin_message.deleted_at = datetime.utcnow()
+        db.commit()
+        return True
+    
+    @staticmethod
+    def delete(db: Session, message_id: int, hard: bool = False) -> bool:
         """Delete an admin message."""
+        if not hard:
+            return AdminMessageRepository.soft_delete(db, message_id)
+        
         admin_message = db.query(AdminMessage).filter(AdminMessage.id == message_id).first()
         if not admin_message:
             return False

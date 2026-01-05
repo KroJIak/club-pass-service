@@ -37,22 +37,31 @@ class PaymentRepository:
         from sqlalchemy.orm import joinedload
         return db.query(Payment).options(
             joinedload(Payment.user)
-        ).order_by(Payment.created_at.desc()).all()
+        ).filter(Payment.is_deleted == False).order_by(Payment.created_at.desc()).all()
     
     @staticmethod
     def get_by_id(db: Session, payment_id: int) -> Optional[Payment]:
         """Get payment by ID."""
-        return db.query(Payment).filter(Payment.id == payment_id).first()
+        return db.query(Payment).filter(
+            Payment.id == payment_id,
+            Payment.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_by_order_id(db: Session, order_id: str) -> Optional[Payment]:
         """Get payment by order ID."""
-        return db.query(Payment).filter(Payment.order_id == order_id).first()
+        return db.query(Payment).filter(
+            Payment.order_id == order_id,
+            Payment.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_by_yookassa_payment_id(db: Session, yookassa_payment_id: str) -> Optional[Payment]:
         """Get payment by YooKassa payment ID."""
-        return db.query(Payment).filter(Payment.yookassa_payment_id == yookassa_payment_id).first()
+        return db.query(Payment).filter(
+            Payment.yookassa_payment_id == yookassa_payment_id,
+            Payment.is_deleted == False
+        ).first()
     
     @staticmethod
     def update_status(

@@ -10,22 +10,54 @@ class EventRepository:
     @staticmethod
     def get_all_active(db: Session) -> List[Event]:
         """Get all active events."""
-        return db.query(Event).filter(Event.is_active == True).order_by(Event.start_date, Event.start_time).all()
+        return db.query(Event).filter(
+            Event.is_active == True,
+            Event.is_deleted == False
+        ).order_by(Event.start_date, Event.start_time).all()
     
     @staticmethod
     def get_by_id(db: Session, event_id: int) -> Optional[Event]:
         """Get event by ID."""
-        return db.query(Event).filter(Event.id == event_id).first()
+        return db.query(Event).filter(
+            Event.id == event_id,
+            Event.is_deleted == False
+        ).first()
     
     @staticmethod
     def get_active_by_id(db: Session, event_id: int) -> Optional[Event]:
         """Get active event by ID."""
         return db.query(Event).filter(
             Event.id == event_id,
-            Event.is_active == True
+            Event.is_active == True,
+            Event.is_deleted == False
         ).first()
     
     @staticmethod
     def get_all(db: Session) -> List[Event]:
         """Get all events (including inactive)."""
-        return db.query(Event).order_by(Event.created_at.desc()).all()
+        return db.query(Event).filter(Event.is_deleted == False).order_by(Event.created_at.desc()).all()
+    
+    @staticmethod
+    def soft_delete(db: Session, event_id: int) -> bool:
+        """Soft delete an event."""
+        from datetime import datetime
+        event = EventRepository.get_by_id(db, event_id)
+        if not event or event.is_deleted:
+            return False
+        event.is_deleted = True
+        event.deleted_at = datetime.utcnow()
+        db.commit()
+        return True
+    
+    @staticmethod
+    def delete(db: Session, event_id: int, hard: bool = False) -> bool:
+        """Delete an event."""
+        if not hard:
+            return EventRepository.soft_delete(db, event_id)
+        
+        event = db.query(Event).filter(Event.id == event_id).first()
+        if not event:
+            return False
+        db.delete(event)
+        db.commit()
+        return True
