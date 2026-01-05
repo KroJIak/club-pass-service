@@ -2447,12 +2447,13 @@ async def move_music_queue_to_wishlist(
     # But we don't have user_id and event_id, so we'll use a default event
     # This is a fallback - ideally we should preserve the original request
     from api.repositories.event_repository import EventRepository
-    active_event = EventRepository.get_active(db)
-    if not active_event:
+    active_events = EventRepository.get_all_active(db)
+    if not active_events:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No active event found. Cannot move track to wishlist without an event."
         )
+    active_event = active_events[0]  # Use first active event
     
     # Create a new request (we'll use a system user or the first user)
     from api.repositories.user_repository import UserRepository
