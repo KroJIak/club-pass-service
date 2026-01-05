@@ -101,7 +101,7 @@
     },
     "music": {
       "not_in_club": "You need to be in the club to add music requests",
-      "enter_title": "Enter song title:",
+      "enter_title": "Enter song title",
       "search_results": "Found tracks:",
       "request_success": "✅ Your request has been added!",
       "too_soon": "You can add songs once every 5 minutes",
