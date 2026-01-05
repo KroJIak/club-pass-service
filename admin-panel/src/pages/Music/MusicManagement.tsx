@@ -339,8 +339,8 @@ const MusicManagement = () => {
               <Typography variant="h6">Очередь</Typography>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Checkbox
-                  checked={queueSelection.allSelected}
-                  indeterminate={queueSelection.someSelected}
+                  checked={queueSelection.getSelectionState() === 'all'}
+                  indeterminate={queueSelection.getSelectionState() === 'some'}
                   onChange={(e) => {
                     if (e.target.checked) {
                       queueSelection.selectAll()
@@ -379,7 +379,7 @@ const MusicManagement = () => {
                         key={item.id}
                         item={item}
                         isSelected={queueSelection.isSelected(item.id)}
-                        onSelect={queueSelection.toggle}
+                        onSelect={queueSelection.toggleSelection}
                         onDelete={handleDeleteQueueItem}
                       />
                     ))
@@ -397,8 +397,8 @@ const MusicManagement = () => {
               <Typography variant="h6">Список желаемого</Typography>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <Checkbox
-                  checked={wishlistSelection.allSelected}
-                  indeterminate={wishlistSelection.someSelected}
+                  checked={wishlistSelection.getSelectionState() === 'all'}
+                  indeterminate={wishlistSelection.getSelectionState() === 'some'}
                   onChange={(e) => {
                     if (e.target.checked) {
                       wishlistSelection.selectAll()
@@ -430,7 +430,7 @@ const MusicManagement = () => {
                   key={item.id}
                   item={item}
                   isSelected={wishlistSelection.isSelected(item.id)}
-                  onSelect={wishlistSelection.toggle}
+                  onSelect={wishlistSelection.toggleSelection}
                   onDelete={handleDeleteWishlistItem}
                   onMoveToQueue={handleMoveToQueue}
                 />
