@@ -66,19 +66,24 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
     <Paper
       ref={setNodeRef}
       style={style}
-      onClick={() => onSelect(item.id)}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'pointer',
+        cursor: isDragging ? 'grabbing' : 'default',
         border: isSelected ? '2px solid' : 'none',
         borderColor: isSelected ? 'primary.main' : 'transparent',
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
       }}
     >
+      <Checkbox
+        checked={isSelected}
+        onChange={() => onSelect(item.id)}
+        onClick={(e) => e.stopPropagation()}
+        sx={{ cursor: 'pointer' }}
+      />
       <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
@@ -141,20 +146,25 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
     <Paper
       ref={setNodeRef}
       style={style}
-      onClick={() => onSelect(item.id)}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'pointer',
+        cursor: isDragging ? 'grabbing' : 'default',
         border: isSelected ? '2px solid' : 'none',
         borderColor: isSelected ? 'primary.main' : 'transparent',
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
       }}
     >
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} onClick={(e) => e.stopPropagation()} />
+      <Checkbox
+        checked={isSelected}
+        onChange={() => onSelect(item.id)}
+        onClick={(e) => e.stopPropagation()}
+        sx={{ cursor: 'pointer' }}
+      />
+      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
