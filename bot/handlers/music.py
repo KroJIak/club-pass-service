@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 @router.callback_query(F.data == "menu_add_music")
 async def handle_add_music(callback: CallbackQuery, state: FSMContext):
-    """Handle 'Add music' button - check ticket and request song title."""
+    """Handle 'Add music' button - check ticket, rate limit and request song title."""
     locale = get_user_locale(callback.from_user.language_code)
     bot = callback.bot
     user_id = callback.from_user.id
@@ -37,9 +37,19 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
         )
         return
     
-    # Check if there's an active event that hasn't ended
-    # This check will be done on the API side, but we can do a basic check here
-    # For now, just proceed - API will validate
+    # Check rate limit (5 minutes) - this should be done BEFORE requesting song title
+    try:
+        limit_check = await api_service.check_music_request_limit(telegram_user_id)
+        if not limit_check or not limit_check.get("can_make_request", True):
+            error_msg = limit_check.get("message", t(locale, "messages.music.too_soon"))
+            # Translate error message if needed
+            if locale == "ru_ru" and "You can add music requests once every 5 minutes" in error_msg:
+                error_msg = t(locale, "messages.music.too_soon")
+            await callback.answer(error_msg, show_alert=True)
+            return
+    except Exception as e:
+        logger.error(f"Error checking music request limit: {e}")
+        # Continue anyway - API will check again when creating request
     
     # Request song title (without quote format)
     text = t(locale, "messages.music.enter_title")
@@ -73,8 +83,9 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     search_result = await api_service.search_music(song_title)
     
     if not search_result or not search_result.get("tracks"):
-        # Send no results message and flush pending user messages
-        no_results_msg = await message.answer(t(locale, "messages.music.no_results"))
+        # Send no results message (temporary) and flush pending user messages
+        no_results_text = t(locale, "messages.music.no_results")
+        no_results_msg = await message.answer(no_results_text)
         temporary_messages_middleware.set_last_system_message(user_id, no_results_msg.chat.id, no_results_msg.message_id)
         await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return
@@ -107,7 +118,7 @@ async def handle_music_title_input(message: Message, state: FSMContext):
         builder = InlineKeyboardBuilder()
         builder.add(InlineKeyboardButton(text=t(locale, "buttons.next"), callback_data="select_track_1"))
         builder.row(InlineKeyboardButton(
-            text=t(locale, "buttons.back_to_menu"),
+            text=t(locale, "buttons.back"),
             callback_data="back_to_menu"
         ))
     else:
@@ -135,7 +146,7 @@ async def handle_music_title_input(message: Message, state: FSMContext):
             builder.add(InlineKeyboardButton(text=str(i), callback_data=f"select_track_{i}"))
         builder.adjust(4)  # 4 buttons per row
         builder.row(InlineKeyboardButton(
-            text=t(locale, "buttons.back_to_menu"),
+            text=t(locale, "buttons.back"),
             callback_data="back_to_menu"
         ))
     
@@ -211,20 +222,20 @@ async def handle_track_selected(callback: CallbackQuery, state: FSMContext):
         await callback.answer(error_msg, show_alert=True)
         return
     
-    # Success
-    await callback.answer(t(locale, "messages.music.request_success"), show_alert=True)
+    # Success - only show alert, then return to main menu
+    await callback.answer(t(locale, "messages.music.request_success_message"), show_alert=True)
     
-    # Clear state and return to menu
+    # Clear state
     await state.clear()
     
-    # Update message to show success and return to menu
+    # Return to main menu immediately (without success message text)
     from bot.core.keyboards import get_main_menu_keyboard
     menu_photos = await api_service.get_menu_photos()
     has_menu_photos = len(menu_photos) > 0
     
     await safe_edit_message(
         callback,
-        t(locale, "messages.music.request_success"),
+        "",  # Empty text for main menu
         reply_markup=get_main_menu_keyboard(locale, has_menu_photos=has_menu_photos),
         locale=locale,
         screen_key="main_menu"

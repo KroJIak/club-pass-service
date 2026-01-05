@@ -53,7 +53,7 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: item.id })
+  } = useSortable({ id: `queue-${item.id}` })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -90,12 +90,12 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
             <Link href={item.yandex_music_url} target="_blank" rel="noopener">
-              Яндекс.Музыка
+              Yandex Music
             </Link>
           )}
           {item.other_source_url && (
             <Link href={item.other_source_url} target="_blank" rel="noopener">
-              Другой источник
+              Other Source
             </Link>
           )}
         </Box>
@@ -107,8 +107,8 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
   )
 }
 
-// Wishlist Item Component
-interface WishlistItemProps {
+// Sortable Wishlist Item Component
+interface SortableWishlistItemProps {
   item: MusicRequest
   isSelected: boolean
   onSelect: (id: number) => void
@@ -116,15 +116,33 @@ interface WishlistItemProps {
   onMoveToQueue: (id: number) => void
 }
 
-const WishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQueue }: WishlistItemProps) => {
+const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQueue }: SortableWishlistItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `wishlist-${item.id}` })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
   return (
     <Paper
+      ref={setNodeRef}
+      style={style}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
+        cursor: isDragging ? 'grabbing' : 'grab',
       }}
     >
       <Checkbox
@@ -132,6 +150,7 @@ const WishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQueue }: W
         onChange={() => onSelect(item.id)}
         onClick={(e) => e.stopPropagation()}
       />
+      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -139,18 +158,18 @@ const WishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQueue }: W
         <Typography variant="body2" color="text.secondary">
           {item.track_artist}
         </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-          Запросов: {item.request_count}
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
+          Requests: {item.request_count}
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
             <Link href={item.yandex_music_url} target="_blank" rel="noopener">
-              Яндекс.Музыка
+              Yandex Music
             </Link>
           )}
           {item.other_source_url && (
             <Link href={item.other_source_url} target="_blank" rel="noopener">
-              Другой источник
+              Other Source
             </Link>
           )}
         </Box>
@@ -223,56 +242,76 @@ const MusicManagement = () => {
     return () => clearInterval(interval)
   }, [fetchQueue, fetchWishlist])
 
-  const handleQueueDragEnd = async (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
-    if (!over || active.id === over.id) {
+    if (!over) {
       return
     }
 
-    const oldIndex = queue.findIndex((item) => item.id === active.id)
-    const newIndex = queue.findIndex((item) => item.id === over.id)
+    const activeId = String(active.id)
+    const overId = String(over.id)
 
-    const newQueue = arrayMove(queue, oldIndex, newIndex)
-    setQueue(newQueue)
+    // Check if dragging from wishlist to queue
+    if (activeId.startsWith('wishlist-') && overId.startsWith('queue-')) {
+      const wishlistId = parseInt(activeId.replace('wishlist-', ''))
+      await handleMoveToQueue(wishlistId)
+      return
+    }
 
-    // Update queue_order in backend
-    try {
-      const reorderRequest: MusicQueueReorderRequest = {
-        items: newQueue.map((item, index) => ({
-          id: item.id,
-          queue_order: index,
-        })),
+    // Check if dragging within queue
+    if (activeId.startsWith('queue-') && overId.startsWith('queue-')) {
+      const activeQueueId = parseInt(activeId.replace('queue-', ''))
+      const overQueueId = parseInt(overId.replace('queue-', ''))
+
+      const oldIndex = queue.findIndex((item) => item.id === activeQueueId)
+      const newIndex = queue.findIndex((item) => item.id === overQueueId)
+
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) {
+        return
       }
-      await api.put('/admin/music-queue/reorder', reorderRequest)
-    } catch (error) {
-      console.error('Failed to reorder queue:', error)
-      // Revert on error
-      fetchQueue()
+
+      const newQueue = arrayMove(queue, oldIndex, newIndex)
+      setQueue(newQueue)
+
+      // Update queue_order in backend
+      try {
+        const reorderRequest: MusicQueueReorderRequest = {
+          items: newQueue.map((item, index) => ({
+            id: item.id,
+            queue_order: index,
+          })),
+        }
+        await api.put('/admin/music-queue/reorder', reorderRequest)
+      } catch (error) {
+        console.error('Failed to reorder queue:', error)
+        // Revert on error
+        fetchQueue()
+      }
     }
   }
 
   const handleDeleteQueueItem = async (id: number) => {
-    if (!confirm('Удалить трек из очереди?')) return
+    if (!confirm('Delete track from queue?')) return
 
     try {
       await api.delete(`/admin/music-queue/${id}`)
       fetchQueue()
     } catch (error) {
       console.error('Failed to delete queue item:', error)
-      alert('Ошибка при удалении')
+      alert('Error deleting')
     }
   }
 
   const handleDeleteWishlistItem = async (id: number) => {
-    if (!confirm('Удалить трек из списка желаемого?')) return
+    if (!confirm('Delete track from wishlist?')) return
 
     try {
       await api.delete(`/admin/music-wishlist/${id}`)
       fetchWishlist()
     } catch (error) {
       console.error('Failed to delete wishlist item:', error)
-      alert('Ошибка при удалении')
+      alert('Error deleting')
     }
   }
 
@@ -283,12 +322,12 @@ const MusicManagement = () => {
       fetchWishlist()
     } catch (error) {
       console.error('Failed to move to queue:', error)
-      alert('Ошибка при переносе в очередь')
+      alert('Error moving to queue')
     }
   }
 
   const handleDeleteSelectedQueue = async () => {
-    if (!confirm(`Удалить ${queueSelection.selectedCount} треков из очереди?`)) return
+    if (!confirm(`Delete ${queueSelection.selectedCount} tracks from queue?`)) return
 
     try {
       await api.delete('/admin/music-queue/batch', {
@@ -298,12 +337,12 @@ const MusicManagement = () => {
       fetchQueue()
     } catch (error) {
       console.error('Failed to delete selected queue items:', error)
-      alert('Ошибка при удалении')
+      alert('Error deleting')
     }
   }
 
   const handleDeleteSelectedWishlist = async () => {
-    if (!confirm(`Удалить ${wishlistSelection.selectedCount} треков из списка желаемого?`)) return
+    if (!confirm(`Delete ${wishlistSelection.selectedCount} tracks from wishlist?`)) return
 
     try {
       await api.delete('/admin/music-wishlist/batch', {
@@ -313,7 +352,7 @@ const MusicManagement = () => {
       fetchWishlist()
     } catch (error) {
       console.error('Failed to delete selected wishlist items:', error)
-      alert('Ошибка при удалении')
+      alert('Error deleting')
     }
   }
 
@@ -326,53 +365,53 @@ const MusicManagement = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Управление музыкой
-      </Typography>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <Box sx={{ p: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Music Management
+        </Typography>
 
-      <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
-        {/* Queue Block */}
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Очередь</Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Checkbox
-                  checked={queueSelection.getSelectionState() === 'all'}
-                  indeterminate={queueSelection.getSelectionState() === 'some'}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      queueSelection.selectAll()
-                    } else {
-                      queueSelection.deselectAll()
-                    }
-                  }}
-                />
-                {queueSelection.hasSelection && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    onClick={handleDeleteSelectedQueue}
-                  >
-                    Удалить выбранные
-                  </Button>
-                )}
+        <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
+          {/* Queue Block */}
+          <Card sx={{ flex: 1 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Queue</Typography>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Checkbox
+                    checked={queueSelection.getSelectionState() === 'all'}
+                    indeterminate={queueSelection.getSelectionState() === 'some'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        queueSelection.selectAll()
+                      } else {
+                        queueSelection.deselectAll()
+                      }
+                    }}
+                  />
+                  {queueSelection.hasSelection && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={handleDeleteSelectedQueue}
+                    >
+                      Delete Selected
+                    </Button>
+                  )}
+                </Box>
               </Box>
-            </Box>
 
-            {queueLoading ? (
-              <CircularProgress />
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleQueueDragEnd}
-              >
-                <SortableContext items={queue.map((item) => item.id)} strategy={verticalListSortingStrategy}>
+              {queueLoading ? (
+                <CircularProgress />
+              ) : (
+                <SortableContext items={queue.map((item) => `queue-${item.id}`)} strategy={verticalListSortingStrategy}>
                   {queue.length === 0 ? (
-                    <Typography color="text.secondary">Очередь пуста</Typography>
+                    <Typography color="text.secondary">Queue is empty</Typography>
                   ) : (
                     queue.map((item) => (
                       <SortableQueueItem
@@ -385,61 +424,63 @@ const MusicManagement = () => {
                     ))
                   )}
                 </SortableContext>
-              </DndContext>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Wishlist Block */}
-        <Card sx={{ flex: 1 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Список желаемого</Typography>
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Checkbox
-                  checked={wishlistSelection.getSelectionState() === 'all'}
-                  indeterminate={wishlistSelection.getSelectionState() === 'some'}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      wishlistSelection.selectAll()
-                    } else {
-                      wishlistSelection.deselectAll()
-                    }
-                  }}
-                />
-                {wishlistSelection.hasSelection && (
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    onClick={handleDeleteSelectedWishlist}
-                  >
-                    Удалить выбранные
-                  </Button>
-                )}
+          {/* Wishlist Block */}
+          <Card sx={{ flex: 1 }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h6">Wishlist</Typography>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Checkbox
+                    checked={wishlistSelection.getSelectionState() === 'all'}
+                    indeterminate={wishlistSelection.getSelectionState() === 'some'}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        wishlistSelection.selectAll()
+                      } else {
+                        wishlistSelection.deselectAll()
+                      }
+                    }}
+                  />
+                  {wishlistSelection.hasSelection && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={handleDeleteSelectedWishlist}
+                    >
+                      Delete Selected
+                    </Button>
+                  )}
+                </Box>
               </Box>
-            </Box>
 
-            {wishlistLoading ? (
-              <CircularProgress />
-            ) : wishlist.length === 0 ? (
-              <Typography color="text.secondary">Список желаемого пуст</Typography>
-            ) : (
-              wishlist.map((item) => (
-                <WishlistItem
-                  key={item.id}
-                  item={item}
-                  isSelected={wishlistSelection.isSelected(item.id)}
-                  onSelect={wishlistSelection.toggleSelection}
-                  onDelete={handleDeleteWishlistItem}
-                  onMoveToQueue={handleMoveToQueue}
-                />
-              ))
-            )}
-          </CardContent>
-        </Card>
+              {wishlistLoading ? (
+                <CircularProgress />
+              ) : wishlist.length === 0 ? (
+                <Typography color="text.secondary">Wishlist is empty</Typography>
+              ) : (
+                <SortableContext items={wishlist.map((item) => `wishlist-${item.id}`)} strategy={verticalListSortingStrategy}>
+                  {wishlist.map((item) => (
+                    <SortableWishlistItem
+                      key={item.id}
+                      item={item}
+                      isSelected={wishlistSelection.isSelected(item.id)}
+                      onSelect={wishlistSelection.toggleSelection}
+                      onDelete={handleDeleteWishlistItem}
+                      onMoveToQueue={handleMoveToQueue}
+                    />
+                  ))}
+                </SortableContext>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
       </Box>
-    </Box>
+    </DndContext>
   )
 }
 

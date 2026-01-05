@@ -361,6 +361,90 @@ async def get_club_settings_public(
         )
 
 
+def _get_valid_event_for_user(db: Session, user_id: int) -> Optional[object]:
+    """Helper function to get valid active event for user."""
+    # Get all used tickets for the user
+    tickets = TicketRepository.get_by_user_id(db, user_id, active_only=False)
+    used_tickets = [t for t in tickets if t.status == TicketStatus.USED]
+    
+    if not used_tickets:
+        return None
+    
+    # Find an active event that hasn't ended
+    valid_event = None
+    current_time = datetime.utcnow()
+    
+    # Get timezone from club settings
+    from api.utils.timezone import get_current_time_in_timezone
+    current_time_tz = get_current_time_in_timezone(db)
+    
+    # Get timezone string
+    settings = ClubSettingsRepository.get_settings(db)
+    timezone_str = settings.timezone or "Europe/Moscow"
+    tz = pytz.timezone(timezone_str)
+    current_time_aware = tz.localize(current_time_tz)
+    
+    for ticket in used_tickets:
+        event = ticket.event
+        if not event or not event.is_active:
+            continue
+        
+        # Parse end_date and end_time
+        try:
+            end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
+            end_dt_aware = tz.localize(end_dt)
+            
+            # Check if event hasn't ended
+            if end_dt_aware > current_time_aware:
+                valid_event = event
+                break
+        except Exception as e:
+            logger.warning(f"Error parsing event end date/time: {e}")
+            continue
+    
+    return valid_event
+
+
+@router.get("/music-requests/check-limit")
+async def check_music_request_limit(
+    telegram_user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Check if user can make a music request (rate limit check)."""
+    try:
+        # Get user by telegram_user_id
+        user = UserRepository.get_by_telegram_id(db, telegram_user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Get valid event
+        valid_event = _get_valid_event_for_user(db, user.id)
+        if not valid_event:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No active event found. You need to be in the club to add music requests."
+            )
+        
+        # Check rate limit (5 minutes)
+        can_make = MusicRequestLimitRepository.can_make_request(db, user.id, valid_event.id, cooldown_minutes=5)
+        
+        return {
+            "can_make_request": can_make,
+            "message": "You can add music requests once every 5 minutes" if not can_make else None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking music request limit: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error checking music request limit: {str(e)}"
+        )
+
+
 @router.post("/music-requests", response_model=MusicRequestResponse)
 async def create_music_request(
     request_data: MusicRequestCreate,
@@ -377,60 +461,21 @@ async def create_music_request(
                 detail="User not found"
             )
         
-        # Get all used tickets for the user
-        tickets = TicketRepository.get_by_user_id(db, user.id, active_only=False)
-        used_tickets = [t for t in tickets if t.status == TicketStatus.USED]
-        
-        if not used_tickets:
+        # Get valid event
+        valid_event = _get_valid_event_for_user(db, user.id)
+        if not valid_event:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You need to be in the club to add music requests"
             )
         
-        # Find an active event that hasn't ended
-        valid_event = None
-        current_time = datetime.utcnow()
-        
-        # Get timezone from club settings
-        from api.utils.timezone import get_current_time_in_timezone
-        current_time_tz = get_current_time_in_timezone(db)
-        
-        # Get timezone string
-        settings = ClubSettingsRepository.get_settings(db)
-        timezone_str = settings.timezone or "Europe/Moscow"
-        tz = pytz.timezone(timezone_str)
-        current_time_aware = tz.localize(current_time_tz)
-        
-        for ticket in used_tickets:
-            event = ticket.event
-            if not event or not event.is_active:
-                continue
-            
-            # Parse end_date and end_time
-            try:
-                end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
-                end_dt_aware = tz.localize(end_dt)
-                
-                # Check if event hasn't ended
-                if end_dt_aware > current_time_aware:
-                    valid_event = event
-                    break
-            except Exception as e:
-                logger.warning(f"Error parsing event end date/time: {e}")
-                continue
-        
-        if not valid_event:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No active event found. The event may have ended."
-            )
-        
-        # Check rate limit (5 minutes)
-        if not MusicRequestLimitRepository.can_make_request(db, user.id, valid_event.id, cooldown_minutes=5):
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="You can add music requests once every 5 minutes"
-            )
+        # Check if this track already exists in queue
+        from api.repositories.music_queue_repository import MusicQueueRepository
+        existing_queue_item = db.query(MusicQueue).filter(
+            MusicQueue.track_title == request_data.track_title,
+            MusicQueue.track_artist == (request_data.track_artist or ""),
+            MusicQueue.is_deleted == False
+        ).first()
         
         # Check if request already exists for this event
         existing_request = MusicRequestRepository.get_by_title_artist(
@@ -438,19 +483,32 @@ async def create_music_request(
         )
         
         if existing_request:
-            # Increment request count
-            music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
+            # Only increment request count if track is NOT in queue
+            if not existing_queue_item:
+                music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
+            else:
+                # Track is in queue, don't increment count
+                music_request = existing_request
         else:
-            # Create new request
-            music_request = MusicRequestRepository.create(
-                db,
-                user_id=user.id,
-                event_id=valid_event.id,
-                track_title=request_data.track_title,
-                track_artist=request_data.track_artist or "",
-                yandex_music_url=request_data.yandex_music_url,
-                other_source_url=request_data.other_source_url,
-            )
+            # Create new request only if track is NOT in queue
+            if not existing_queue_item:
+                music_request = MusicRequestRepository.create(
+                    db,
+                    user_id=user.id,
+                    event_id=valid_event.id,
+                    track_title=request_data.track_title,
+                    track_artist=request_data.track_artist or "",
+                    yandex_music_url=request_data.yandex_music_url,
+                    other_source_url=request_data.other_source_url,
+                )
+            else:
+                # Track is in queue, create request with count=0 (or skip)
+                # Actually, if track is in queue, we should still create the request but with count=0
+                # Or we can skip creating it. Let's skip for now.
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="This track is already in the queue"
+                )
         
         # Update last request time
         MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)

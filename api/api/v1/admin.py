@@ -2363,6 +2363,20 @@ async def move_music_request_to_queue(
             detail=f"Music request with id {request_id} not found"
         )
     
+    # Check if track already exists in queue
+    from api.models.music_queue import MusicQueue
+    existing_queue_item = db.query(MusicQueue).filter(
+        MusicQueue.track_title == music_request.track_title,
+        MusicQueue.track_artist == music_request.track_artist,
+        MusicQueue.is_deleted == False
+    ).first()
+    
+    if existing_queue_item:
+        # Track already in queue, just delete the request from wishlist
+        MusicRequestRepository.delete(db, request_id, hard=False)
+        return MusicQueueResponse.model_validate(existing_queue_item)
+    
+    # Create queue item
     queue_item = MusicQueueRepository.create(
         db,
         track_title=music_request.track_title,
@@ -2370,6 +2384,9 @@ async def move_music_request_to_queue(
         yandex_music_url=music_request.yandex_music_url,
         other_source_url=music_request.other_source_url,
     )
+    
+    # Delete the request from wishlist (soft delete)
+    MusicRequestRepository.delete(db, request_id, hard=False)
     
     return MusicQueueResponse.model_validate(queue_item)
 

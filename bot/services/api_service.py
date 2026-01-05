@@ -260,6 +260,28 @@ class APIService:
             logger.error(f"Error searching music: {e}")
             return None
     
+    async def check_music_request_limit(self, telegram_user_id: int) -> Optional[Dict[str, Any]]:
+        """Check if user can make a music request (rate limit check)."""
+        try:
+            response = await self.client.get(
+                f"{self.base_url}/v1/users/music-requests/check-limit",
+                params={"telegram_user_id": telegram_user_id}
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error checking music request limit: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json().get("detail", str(e))
+                    logger.error(f"Error detail: {error_detail}")
+                    return {"error": error_detail, "can_make_request": False}
+                except:
+                    pass
+            return {"can_make_request": False}
+    
     async def create_music_request(
         self,
         telegram_user_id: int,
