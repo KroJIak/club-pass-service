@@ -13,7 +13,6 @@ import {
 } from '@mui/material'
 import {
   Delete as DeleteIcon,
-  DragIndicator as DragIndicatorIcon,
   PlayArrow as PlayArrowIcon,
 } from '@mui/icons-material'
 import {
@@ -60,31 +59,28 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
     <Paper
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'default',
+        cursor: isDragging ? 'grabbing' : 'grab',
         border: isSelected ? '2px solid' : 'none',
         borderColor: isSelected ? 'primary.main' : 'transparent',
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+        position: 'relative',
       }}
     >
-      <Checkbox
-        checked={isSelected}
-        onChange={() => onSelect(item.id)}
-        onClick={(e) => e.stopPropagation()}
-        sx={{ cursor: 'pointer' }}
-      />
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -140,31 +136,28 @@ const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQu
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
   }
 
   return (
     <Paper
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       sx={{
         p: 2,
         mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'default',
+        cursor: isDragging ? 'grabbing' : 'grab',
         border: isSelected ? '2px solid' : 'none',
         borderColor: isSelected ? 'primary.main' : 'transparent',
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+        position: 'relative',
       }}
     >
-      <Checkbox
-        checked={isSelected}
-        onChange={() => onSelect(item.id)}
-        onClick={(e) => e.stopPropagation()}
-        sx={{ cursor: 'pointer' }}
-      />
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -315,6 +308,13 @@ const MusicManagement = () => {
       return
     }
 
+    // Check if dragging from queue to wishlist (droppable zone or wishlist item)
+    if (activeId.startsWith('queue-') && (overId === 'wishlist-droppable' || overId.startsWith('wishlist-'))) {
+      const queueId = parseInt(activeId.replace('queue-', ''))
+      await handleMoveToWishlist(queueId)
+      return
+    }
+
     // Check if dragging within queue
     if (activeId.startsWith('queue-') && overId.startsWith('queue-')) {
       const activeQueueId = parseInt(activeId.replace('queue-', ''))
@@ -379,6 +379,17 @@ const MusicManagement = () => {
     } catch (error) {
       console.error('Failed to move to queue:', error)
       alert('Error moving to queue')
+    }
+  }
+
+  const handleMoveToWishlist = async (id: number) => {
+    try {
+      await api.post(`/admin/music-queue/${id}/move-to-wishlist`)
+      fetchQueue()
+      fetchWishlist()
+    } catch (error) {
+      console.error('Failed to move to wishlist:', error)
+      alert('Error moving to wishlist')
     }
   }
 

@@ -2416,6 +2416,77 @@ async def move_music_request_to_queue(
     return MusicQueueResponse.model_validate(queue_item)
 
 
+@router.post("/admin/music-queue/{queue_id}/move-to-wishlist", response_model=MusicRequestResponse, status_code=status.HTTP_201_CREATED)
+async def move_music_queue_to_wishlist(
+    queue_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Move a music queue item back to wishlist (admin only)."""
+    queue_item = MusicQueueRepository.get_by_id(db, queue_id)
+    if not queue_item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Music queue item with id {queue_id} not found"
+        )
+    
+    # Find soft-deleted request with same title and artist to restore it
+    from api.models.music_request import MusicRequest
+    existing_request = db.query(MusicRequest).filter(
+        MusicRequest.track_title == queue_item.track_title,
+        MusicRequest.track_artist == queue_item.track_artist,
+        MusicRequest.is_deleted == True
+    ).first()
+    
+    if existing_request:
+        # Restore the soft-deleted request
+        existing_request.is_deleted = False
+        existing_request.deleted_at = None
+        db.commit()
+        db.refresh(existing_request)
+        
+        # Delete queue item
+        MusicQueueRepository.delete(db, queue_id, hard=False)
+        
+        return MusicRequestResponse.model_validate(existing_request)
+    
+    # If no existing request found, we need to create a new one
+    # But we don't have user_id and event_id, so we'll use a default event
+    # This is a fallback - ideally we should preserve the original request
+    from api.repositories.event_repository import EventRepository
+    active_event = EventRepository.get_active(db)
+    if not active_event:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No active event found. Cannot move track to wishlist without an event."
+        )
+    
+    # Create a new request (we'll use a system user or the first user)
+    from api.repositories.user_repository import UserRepository
+    users = UserRepository.get_all(db)
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No users found. Cannot create music request."
+        )
+    
+    # Create new request
+    music_request = MusicRequestRepository.create(
+        db,
+        user_id=users[0].id,  # Use first user as fallback
+        event_id=active_event.id,
+        track_title=queue_item.track_title,
+        track_artist=queue_item.track_artist,
+        yandex_music_url=queue_item.yandex_music_url,
+        other_source_url=queue_item.other_source_url,
+    )
+    
+    # Delete queue item
+    MusicQueueRepository.delete(db, queue_id, hard=False)
+    
+    return MusicRequestResponse.model_validate(music_request)
+
+
 @router.delete("/admin/music-queue/batch", status_code=status.HTTP_200_OK)
 async def delete_music_queue_batch(
     queue_ids: List[int] = Body(...),
