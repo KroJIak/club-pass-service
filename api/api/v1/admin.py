@@ -2410,8 +2410,8 @@ async def move_music_request_to_queue(
         other_source_url=music_request.other_source_url,
     )
     
-    # DO NOT delete the request from wishlist - keep it to preserve request_count
-    # The request will still be visible in wishlist with its request_count
+    # Delete the request from wishlist (soft delete) - track is now in queue
+    MusicRequestRepository.delete(db, request_id, hard=False)
     
     return MusicQueueResponse.model_validate(queue_item)
 
