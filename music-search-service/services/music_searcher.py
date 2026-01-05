@@ -142,28 +142,28 @@ class MusicSearcher:
             for track in results1:
                 # Проверяем схожесть с названием
                 similarity_title = self._match_similarity(query1, track.title, "")
-                # Проверяем схожесть с автором
-                similarity_artist = self._match_similarity(query1, "", track.artist)
-                # Берем максимальную схожесть
-                similarity = max(similarity_title, similarity_artist)
+                # Проверяем схожесть с автором (с большим приоритетом)
+                similarity_artist = self._match_similarity(query1, "", track.artist) * 1.5  # Увеличиваем вес автора
+                # Берем максимальную схожесть, но приоритет у автора
+                similarity = max(similarity_artist, similarity_title)
                 logger.info(f"📊 '{track.artist} - {track.title}' - схожесть (название): {similarity_title:.2f}, схожесть (автор): {similarity_artist:.2f}, макс: {similarity:.2f}")
                 if similarity >= min_similarity:
                     all_tracks.append((track, similarity))
             
-            # Поиск 2: song_title как автор
+            # Поиск 2: song_title как автор (приоритетный поиск)
             query2 = song_title
-            logger.info(f"📡 Поиск 2: '{query2}' как автор")
+            logger.info(f"📡 Поиск 2: '{query2}' как автор (приоритетный)")
             results2 = self.search_yandex_music(query2)
             logger.info(f"📡 Найдено треков (как автор): {len(results2)}")
             
             for track in results2:
-                # Проверяем схожесть с автором (приоритет)
-                similarity_artist = self._match_similarity(query2, "", track.artist)
+                # Проверяем схожесть с автором (высокий приоритет)
+                similarity_artist = self._match_similarity(query2, "", track.artist) * 2.0  # Еще больше увеличиваем вес автора
                 # Проверяем схожесть с названием
                 similarity_title = self._match_similarity(query2, track.title, "")
                 # Берем максимальную схожесть, но приоритет у автора
-                similarity = max(similarity_artist * 1.2, similarity_title)  # Увеличиваем вес совпадения с автором
-                logger.info(f"📊 '{track.artist} - {track.title}' - схожесть (автор): {similarity_artist:.2f}, схожесть (название): {similarity_title:.2f}, взвешенная: {similarity:.2f}")
+                similarity = max(similarity_artist, similarity_title)
+                logger.info(f"📊 '{track.artist} - {track.title}' - схожесть (автор): {similarity_artist:.2f}, схожесть (название): {similarity_title:.2f}, макс: {similarity:.2f}")
                 if similarity >= min_similarity:
                     # Проверяем, не добавлен ли уже этот трек
                     if not any(t[0].title.lower() == track.title.lower() and t[0].artist.lower() == track.artist.lower() for t in all_tracks):
