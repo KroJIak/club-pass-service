@@ -41,8 +41,8 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
     # This check will be done on the API side, but we can do a basic check here
     # For now, just proceed - API will validate
     
-    # Request song title in quote format
-    text = f"<blockquote>{t(locale, 'messages.music.enter_title')}</blockquote>"
+    # Request song title (without quote format)
+    text = t(locale, "messages.music.enter_title")
     await safe_edit_message(
         callback,
         text,
@@ -63,8 +63,8 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     song_title = message.text.strip()
     
     if not song_title:
-        enter_title_text = f"<blockquote>{t(locale, 'messages.music.enter_title')}</blockquote>"
-        enter_msg = await message.answer(enter_title_text, parse_mode="HTML")
+        enter_title_text = t(locale, "messages.music.enter_title")
+        enter_msg = await message.answer(enter_title_text)
         temporary_messages_middleware.set_last_system_message(user_id, enter_msg.chat.id, enter_msg.message_id)
         await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return
@@ -84,36 +84,60 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     # Limit to 4 tracks as per plan
     tracks = tracks[:4]
     
+    # Save tracks in state BEFORE sending results (so they're available when user selects)
+    await state.update_data(tracks=tracks, song_title=song_title)
+    
     # Format results as quote with hyperlinks
-    result_lines = []
-    for i, track in enumerate(tracks, 1):
+    if len(tracks) == 1:
+        # Single track: no numbering, just name with hyperlink
+        track = tracks[0]
         title = track.get("title", "Unknown")
         artist = track.get("artist", "Unknown")
-        
-        # Get Yandex Music link
         links = track.get("links", {})
         yandex_url = links.get("yandex_music")
         
         if yandex_url:
-            result_lines.append(f"{i}. <a href=\"{yandex_url}\">{artist} - {title}</a>")
+            result_text = f"<a href=\"{yandex_url}\">{artist} - {title}</a>"
         else:
-            result_lines.append(f"{i}. {artist} - {title}")
-    
-    result_text = "\n".join(result_lines)
-    quote_text = f"<blockquote>{result_text}</blockquote>"
-    
-    # Create inline keyboard with track numbers (1-4)
-    builder = InlineKeyboardBuilder()
-    for i in range(1, len(tracks) + 1):
-        builder.add(InlineKeyboardButton(text=str(i), callback_data=f"select_track_{i}"))
-    builder.adjust(4)  # 4 buttons per row
-    builder.row(InlineKeyboardButton(
-        text=t(locale, "buttons.back_to_menu"),
-        callback_data="back_to_menu"
-    ))
-    
-    # Save tracks in state
-    await state.update_data(tracks=tracks, song_title=song_title)
+            result_text = f"{artist} - {title}"
+        
+        quote_text = f"<blockquote>{result_text}</blockquote>"
+        
+        # Create inline keyboard with "Далее" button
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text=t(locale, "buttons.next"), callback_data="select_track_1"))
+        builder.row(InlineKeyboardButton(
+            text=t(locale, "buttons.back_to_menu"),
+            callback_data="back_to_menu"
+        ))
+    else:
+        # Multiple tracks: with numbering
+        result_lines = []
+        for i, track in enumerate(tracks, 1):
+            title = track.get("title", "Unknown")
+            artist = track.get("artist", "Unknown")
+            
+            # Get Yandex Music link
+            links = track.get("links", {})
+            yandex_url = links.get("yandex_music")
+            
+            if yandex_url:
+                result_lines.append(f"{i}. <a href=\"{yandex_url}\">{artist} - {title}</a>")
+            else:
+                result_lines.append(f"{i}. {artist} - {title}")
+        
+        result_text = "\n".join(result_lines)
+        quote_text = f"<blockquote>{result_text}</blockquote>"
+        
+        # Create inline keyboard with track numbers (1-4)
+        builder = InlineKeyboardBuilder()
+        for i in range(1, len(tracks) + 1):
+            builder.add(InlineKeyboardButton(text=str(i), callback_data=f"select_track_{i}"))
+        builder.adjust(4)  # 4 buttons per row
+        builder.row(InlineKeyboardButton(
+            text=t(locale, "buttons.back_to_menu"),
+            callback_data="back_to_menu"
+        ))
     
     # Send results
     results_msg = await message.answer(
@@ -126,8 +150,7 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     temporary_messages_middleware.set_last_system_message(user_id, results_msg.chat.id, results_msg.message_id)
     await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
     
-    # Clear state
-    await state.clear()
+    # DO NOT clear state here - we need tracks in state for track selection
 
 
 @router.callback_query(F.data.startswith("select_track_"))
