@@ -139,6 +139,16 @@ async def handle_music_title_input(message: Message, state: FSMContext):
             callback_data="back_to_menu"
         ))
     
+    # Delete the "enter title" message if it exists (get from last system message)
+    last_system = temporary_messages_middleware.get_last_system_message(user_id)
+    if last_system:
+        old_chat_id, old_message_id = last_system
+        try:
+            await bot.delete_message(chat_id=old_chat_id, message_id=old_message_id)
+            logger.debug(f"Deleted old 'enter title' message for user {user_id}")
+        except Exception as e:
+            logger.warning(f"Failed to delete old message: {e}")
+    
     # Send results
     results_msg = await message.answer(
         quote_text,
