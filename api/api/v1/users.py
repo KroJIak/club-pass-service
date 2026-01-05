@@ -356,7 +356,7 @@ async def delete_user(
         )
 
 
-@router.get("/menu-photos", response_model=MenuPhotoListResponse)
+@router.get("/menu-photos")
 async def get_menu_photos_public(
     db: Session = Depends(get_db),
 ):
