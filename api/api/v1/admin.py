@@ -2397,8 +2397,8 @@ async def move_music_request_to_queue(
     ).first()
     
     if existing_queue_item:
-        # Track already in queue, just delete the request from wishlist
-        MusicRequestRepository.delete(db, request_id, hard=False)
+        # Track already in queue, just delete the request from wishlist (hard delete - moving between columns)
+        MusicRequestRepository.delete(db, request_id, hard=True)
         return MusicQueueResponse.model_validate(existing_queue_item)
     
     # Create queue item
@@ -2410,8 +2410,8 @@ async def move_music_request_to_queue(
         other_source_url=music_request.other_source_url,
     )
     
-    # Delete the request from wishlist (soft delete) - track is now in queue
-    MusicRequestRepository.delete(db, request_id, hard=False)
+    # Delete the request from wishlist (hard delete - moving between columns)
+    MusicRequestRepository.delete(db, request_id, hard=True)
     
     return MusicQueueResponse.model_validate(queue_item)
 
@@ -2430,24 +2430,17 @@ async def move_music_queue_to_wishlist(
             detail=f"Music queue item with id {queue_id} not found"
         )
     
-    # Find soft-deleted request with same title and artist to restore it
+    # Find active request with same title and artist (if exists)
     from api.models.music_request import MusicRequest
     existing_request = db.query(MusicRequest).filter(
         MusicRequest.track_title == queue_item.track_title,
         MusicRequest.track_artist == queue_item.track_artist,
-        MusicRequest.is_deleted == True
+        MusicRequest.is_deleted == False
     ).first()
     
     if existing_request:
-        # Restore the soft-deleted request
-        existing_request.is_deleted = False
-        existing_request.deleted_at = None
-        db.commit()
-        db.refresh(existing_request)
-        
-        # Delete queue item
-        MusicQueueRepository.delete(db, queue_id, hard=False)
-        
+        # Request already exists in wishlist, just delete queue item (hard delete - moving between columns)
+        MusicQueueRepository.delete(db, queue_id, hard=True)
         return MusicRequestResponse.model_validate(existing_request)
     
     # If no existing request found, we need to create a new one
@@ -2481,8 +2474,8 @@ async def move_music_queue_to_wishlist(
         other_source_url=queue_item.other_source_url,
     )
     
-    # Delete queue item
-    MusicQueueRepository.delete(db, queue_id, hard=False)
+    # Delete queue item (hard delete - moving between columns)
+    MusicQueueRepository.delete(db, queue_id, hard=True)
     
     return MusicRequestResponse.model_validate(music_request)
 
