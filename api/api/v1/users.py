@@ -478,23 +478,6 @@ async def create_music_request(
             MusicQueue.is_deleted == False
         ).first()
         
-        # Check if this user already requested this track
-        user_existing_request = MusicRequestRepository.get_by_user_title_artist(
-            db, user.id, valid_event.id, request_data.track_title, request_data.track_artist or ""
-        )
-        
-        if user_existing_request:
-            # User already requested this track
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Вы уже выбирали данную песню"
-            )
-        
-        # Check if request already exists for this event (by other users)
-        existing_request = MusicRequestRepository.get_by_title_artist(
-            db, valid_event.id, request_data.track_title, request_data.track_artist or ""
-        )
-        
         if existing_queue_item:
             # Track is in queue, return message that it's already in queue
             raise HTTPException(
@@ -502,20 +485,29 @@ async def create_music_request(
                 detail="Этот трек уже в очереди и скоро будет включён"
             )
         
+        # Check if request already exists for this event (in wishlist)
+        existing_request = MusicRequestRepository.get_by_title_artist(
+            db, valid_event.id, request_data.track_title, request_data.track_artist or ""
+        )
+        
         if existing_request:
-            # Increment request count (track is not in queue and user hasn't requested it)
-            music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
-        else:
-            # Create new request (track is not in queue and no one requested it yet)
-            music_request = MusicRequestRepository.create(
-                db,
-                user_id=user.id,
-                event_id=valid_event.id,
-                track_title=request_data.track_title,
-                track_artist=request_data.track_artist or "",
-                yandex_music_url=request_data.yandex_music_url,
-                other_source_url=request_data.other_source_url,
+            # Track is in wishlist, user cannot add it again
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Вы уже выбирали данную песню"
             )
+        
+        # Track is not in queue and not in wishlist - user can add it
+        # Create new request
+        music_request = MusicRequestRepository.create(
+            db,
+            user_id=user.id,
+            event_id=valid_event.id,
+            track_title=request_data.track_title,
+            track_artist=request_data.track_artist or "",
+            yandex_music_url=request_data.yandex_music_url,
+            other_source_url=request_data.other_source_url,
+        )
         
         # Update last request time
         MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)
