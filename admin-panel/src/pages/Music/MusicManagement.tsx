@@ -41,11 +41,10 @@ import { useSelection } from '../../hooks/useSelection'
 interface SortableQueueItemProps {
   item: MusicQueue
   isSelected: boolean
-  onSelect: (id: number) => void
   onDelete: (id: number) => void
 }
 
-const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQueueItemProps) => {
+const SortableQueueItem = ({ item, isSelected, onDelete }: SortableQueueItemProps) => {
   const {
     attributes,
     listeners,
@@ -117,12 +116,11 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
 interface SortableWishlistItemProps {
   item: MusicRequest
   isSelected: boolean
-  onSelect: (id: number) => void
   onDelete: (id: number) => void
   onMoveToQueue: (id: number) => void
 }
 
-const SortableWishlistItem = ({ item, isSelected, onSelect, onDelete, onMoveToQueue }: SortableWishlistItemProps) => {
+const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue }: SortableWishlistItemProps) => {
   const {
     attributes,
     listeners,
@@ -500,7 +498,6 @@ const MusicManagement = () => {
                           key={item.id}
                           item={item}
                           isSelected={queueSelection.isSelected(item.id)}
-                          onSelect={queueSelection.toggleSelection}
                           onDelete={handleDeleteQueueItem}
                         />
                       ))
@@ -553,7 +550,6 @@ const MusicManagement = () => {
                         key={item.id}
                         item={item}
                         isSelected={wishlistSelection.isSelected(item.id)}
-                        onSelect={wishlistSelection.toggleSelection}
                         onDelete={handleDeleteWishlistItem}
                         onMoveToQueue={handleMoveToQueue}
                       />
