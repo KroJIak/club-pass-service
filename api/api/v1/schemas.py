@@ -288,6 +288,38 @@ class ClubSettingsUpdate(BaseModel):
     timezone: str | None = None
 
 
+# MenuPhoto schemas
+class MenuPhotoResponse(BaseModel):
+    """Schema for menu photo response."""
+    id: int
+    file_path: str
+    file_name: str
+    file_size: int
+    mime_type: str
+    display_order: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MenuPhotoListResponse(BaseModel):
+    """Schema for menu photos list response."""
+    photos: List[MenuPhotoResponse]
+
+
+class MenuPhotoReorderItem(BaseModel):
+    """Schema for menu photo reorder item."""
+    id: int
+    display_order: int
+
+
+class MenuPhotoReorderRequest(BaseModel):
+    """Schema for menu photo reorder request."""
+    photos: List[MenuPhotoReorderItem]
+
+
 # SupportMessage schemas
 class SupportMessagePhotoResponse(BaseModel):
     """Schema for support message photo response."""

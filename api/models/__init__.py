@@ -13,6 +13,7 @@ from api.models.support_message_photo import SupportMessagePhoto
 from api.models.admin_message import AdminMessage
 from api.models.admin_message_photo import AdminMessagePhoto
 from api.models.staff_user import StaffUser
+from api.models.menu_photo import MenuPhoto
 
 __all__ = [
     "User",
@@ -32,5 +33,6 @@ __all__ = [
     "AdminMessage",
     "AdminMessagePhoto",
     "StaffUser",
+    "MenuPhoto",
 ]
 

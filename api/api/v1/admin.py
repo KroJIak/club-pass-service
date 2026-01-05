@@ -54,8 +54,11 @@ from api.api.v1.schemas import (
     StaffUserCreate,
     StaffUserUpdate,
     StaffUserListResponse,
+    MenuPhotoResponse,
+    MenuPhotoListResponse,
+    MenuPhotoReorderRequest,
 )
-from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage
+from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage, MenuPhoto
 from api.models.ticket import TicketStatus
 from api.models.payment import PaymentStatus
 
@@ -2070,4 +2073,127 @@ async def delete_staff_user(
             detail=f"Staff user with id {staff_user_id} not found"
         )
     return None
+
+
+# Menu Photos CRUD
+@router.get("/admin/menu-photos", response_model=MenuPhotoListResponse)
+async def get_menu_photos(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all menu photos (admin only)."""
+    photos = MenuPhotoRepository.get_all(db)
+    return MenuPhotoListResponse(photos=[MenuPhotoResponse.model_validate(photo) for photo in photos])
+
+
+@router.post("/admin/menu-photos", response_model=MenuPhotoResponse, status_code=status.HTTP_201_CREATED)
+async def create_menu_photo(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Upload a new menu photo (admin only)."""
+    # Check current count
+    current_count = MenuPhotoRepository.get_count(db)
+    if current_count >= 10:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Maximum 10 menu photos allowed"
+        )
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Validate file size
+        max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
+        if len(file_content) > max_size:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File size exceeds maximum allowed size ({settings.MAX_PHOTO_SIZE_MB}MB)"
+            )
+        
+        # Validate MIME type
+        mime_type = file.content_type or "image/jpeg"
+        if not mime_type.startswith("image/"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="File must be an image"
+            )
+        
+        # Save file with compression
+        from api.services.file_storage_service import save_menu_photo
+        file_path = save_menu_photo(file_content, file.filename or "photo.jpg", mime_type, compress=True)
+        
+        # Get next display_order
+        display_order = MenuPhotoRepository.get_max_display_order(db)
+        
+        # Create photo record
+        menu_photo = MenuPhotoRepository.create(
+            db=db,
+            file_path=file_path,
+            file_name=file.filename or "photo.jpg",
+            file_size=len(file_content),
+            mime_type="image/jpeg",  # Always JPEG after compression
+            display_order=display_order,
+        )
+        
+        return MenuPhotoResponse.model_validate(menu_photo)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading menu photo: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to upload menu photo: {str(e)}"
+        )
+
+
+@router.delete("/admin/menu-photos/{photo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_menu_photo(
+    photo_id: int,
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete a menu photo (admin only)."""
+    if hard:
+        from api.services.file_storage_service import delete_menu_photo as delete_file
+        menu_photo = db.query(MenuPhoto).filter(MenuPhoto.id == photo_id).first()
+        if menu_photo:
+            delete_file(menu_photo.file_path)
+    
+    if not MenuPhotoRepository.delete(db, photo_id, hard=hard):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Menu photo with id {photo_id} not found"
+        )
+    return None
+
+
+@router.put("/admin/menu-photos/reorder", status_code=status.HTTP_200_OK)
+async def reorder_menu_photos(
+    reorder_request: MenuPhotoReorderRequest,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Reorder menu photos (admin only)."""
+    try:
+        # Convert to list of dicts for repository
+        photo_orders = [{"id": item.id, "display_order": item.display_order} for item in reorder_request.photos]
+        success = MenuPhotoRepository.reorder(db, photo_orders)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to reorder menu photos"
+            )
+        return {"message": "Menu photos reordered successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reordering menu photos: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reorder menu photos: {str(e)}"
+        )
 

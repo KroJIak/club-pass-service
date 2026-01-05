@@ -242,3 +242,23 @@ export interface TicketDetailResponse {
   } | null
 }
 
+export interface MenuPhoto {
+  id: number
+  file_path: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  display_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MenuPhotoReorderItem {
+  id: number
+  display_order: number
+}
+
+export interface MenuPhotoReorderRequest {
+  photos: MenuPhotoReorderItem[]
+}
+

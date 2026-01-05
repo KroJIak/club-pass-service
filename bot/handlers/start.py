@@ -34,12 +34,16 @@ async def cmd_start(message: Message, state: FSMContext):
         last_name=message.from_user.last_name,
     )
 
+    # Check if menu photos exist
+    menu_photos = await api_service.get_menu_photos()
+    has_menu_photos = len(menu_photos) > 0
+    
     # Main menu: only image, no text (uses cached image)
     photo_input = get_screen_image(locale, "main_menu")
     new_message = await message.answer_photo(
         photo=photo_input,
         caption=None,  # No text for main menu
-        reply_markup=get_main_menu_keyboard(locale),
+        reply_markup=get_main_menu_keyboard(locale, has_menu_photos=has_menu_photos),
     )
     
     # 2) Delete old system message (only for /start)

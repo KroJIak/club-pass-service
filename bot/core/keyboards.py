@@ -4,8 +4,13 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.core.i18n import t
 
-def get_main_menu_keyboard(locale: str) -> InlineKeyboardMarkup:
-    """Get main menu keyboard."""
+def get_main_menu_keyboard(locale: str, has_menu_photos: bool = False) -> InlineKeyboardMarkup:
+    """Get main menu keyboard.
+    
+    Args:
+        locale: User locale
+        has_menu_photos: Whether menu photos exist (to show menu button)
+    """
     builder = InlineKeyboardBuilder()
     # Buy ticket and My tickets on the same row
     builder.add(InlineKeyboardButton(text=t(locale, "buttons.buy_ticket"), callback_data="menu_buy_ticket"))
@@ -13,6 +18,8 @@ def get_main_menu_keyboard(locale: str) -> InlineKeyboardMarkup:
     builder.adjust(2)  # 2 buttons per row
     # Other buttons on separate rows
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.club_info"), callback_data="menu_club_info"))
+    if has_menu_photos:
+        builder.row(InlineKeyboardButton(text=t(locale, "buttons.menu"), callback_data="menu_food_drinks"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.support"), callback_data="menu_support"))
     return builder.as_markup()
 

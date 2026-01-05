@@ -18,6 +18,13 @@ def ensure_upload_directory() -> str:
     return upload_dir
 
 
+def ensure_menu_photos_directory() -> str:
+    """Ensure menu photos directory exists. Returns the directory path."""
+    upload_dir = os.path.join(os.getcwd(), settings.MENU_PHOTOS_DIR)
+    os.makedirs(upload_dir, exist_ok=True)
+    return upload_dir
+
+
 def compress_image(image_bytes: bytes, max_size_mb: float = 2.0, quality: int = 85) -> bytes:
     """
     Compress image to reduce file size while maintaining reasonable quality.
@@ -150,6 +157,69 @@ def delete_support_photo(file_path: str) -> bool:
             return False
     else:
         logger.warning(f"Support photo not found: {file_path}")
+        return False
+
+
+def save_menu_photo(file_content: bytes, filename: str, mime_type: str, compress: bool = True) -> str:
+    """
+    Save menu photo to disk with optional compression.
+    
+    Args:
+        file_content: Photo file content as bytes
+        filename: Original filename
+        mime_type: MIME type of the file
+        compress: Whether to compress the image (default True)
+        
+    Returns:
+        Relative file path from project root
+    """
+    # Compress image if enabled
+    if compress:
+        file_content = compress_image(file_content)
+    
+    # Ensure directory exists
+    upload_dir = ensure_menu_photos_directory()
+    
+    # Generate unique filename (always use .jpg for compressed images)
+    if compress:
+        file_ext = '.jpg'
+    else:
+        file_ext = Path(filename).suffix or _get_extension_from_mime_type(mime_type)
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+    file_path = os.path.join(upload_dir, unique_filename)
+    
+    # Save file
+    with open(file_path, 'wb') as f:
+        f.write(file_content)
+    
+    # Return relative path
+    relative_path = os.path.join(settings.MENU_PHOTOS_DIR, unique_filename)
+    logger.info(f"Saved menu photo: {relative_path} ({len(file_content)} bytes)")
+    return relative_path
+
+
+def delete_menu_photo(file_path: str) -> bool:
+    """
+    Delete menu photo file from disk.
+    
+    Args:
+        file_path: Relative file path from project root
+        
+    Returns:
+        True if file was deleted, False if not found
+    """
+    full_path = get_full_file_path(file_path)
+    
+    if os.path.exists(full_path):
+        try:
+            os.remove(full_path)
+            logger.info(f"Deleted menu photo: {file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to delete menu photo {file_path}: {e}")
+            return False
+    else:
+        logger.warning(f"Menu photo not found: {file_path}")
         return False
 
 

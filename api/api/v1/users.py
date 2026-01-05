@@ -9,7 +9,8 @@ from api.repositories.user_repository import UserRepository
 from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.repositories.support_message_repository import SupportMessageRepository
 from api.repositories.support_message_photo_repository import SupportMessagePhotoRepository
-from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse
+from api.repositories.menu_photo_repository import MenuPhotoRepository
+from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse, MenuPhotoResponse, MenuPhotoListResponse
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -353,3 +354,12 @@ async def delete_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting user: {str(e)}"
         )
+
+
+@router.get("/menu-photos", response_model=MenuPhotoListResponse)
+async def get_menu_photos_public(
+    db: Session = Depends(get_db),
+):
+    """Get all active menu photos (public endpoint for bot)."""
+    photos = MenuPhotoRepository.get_all(db)
+    return MenuPhotoListResponse(photos=[MenuPhotoResponse.model_validate(photo) for photo in photos])

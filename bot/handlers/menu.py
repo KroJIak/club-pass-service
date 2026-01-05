@@ -9,6 +9,7 @@ from bot.core.keyboards import (
     get_back_keyboard,
     get_main_menu_keyboard,
     get_support_cancel_keyboard,
+    get_back_to_menu_keyboard,
 )
 from bot.core.config import settings
 from bot.core.states import SupportStates
@@ -69,11 +70,15 @@ async def handle_back_to_menu(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     
     locale = get_user_locale(callback.from_user.language_code)
+    # Check if menu photos exist
+    menu_photos = await api_service.get_menu_photos()
+    has_menu_photos = len(menu_photos) > 0
+    
     # Main menu: only image, no text
     await safe_edit_message(
         callback,
         "",  # No text for main menu
-        reply_markup=get_main_menu_keyboard(locale),
+        reply_markup=get_main_menu_keyboard(locale, has_menu_photos=has_menu_photos),
         locale=locale,
         screen_key="main_menu"
     )
@@ -142,6 +147,102 @@ async def handle_club_info(callback: CallbackQuery):
         locale=locale,
         screen_key="club_info"
     )
+    await callback.answer()
+
+
+@router.callback_query(F.data == "menu_food_drinks")
+async def handle_menu_food_drinks(callback: CallbackQuery, state: FSMContext):
+    """Handle 'Menu' button - show food and drinks menu photos."""
+    locale = get_user_locale(callback.from_user.language_code)
+    
+    # Get menu photos from API
+    menu_photos = await api_service.get_menu_photos()
+    
+    if not menu_photos:
+        # No photos, show empty message
+        await safe_edit_message(
+            callback,
+            t(locale, "messages.menu_empty"),
+            reply_markup=get_back_to_menu_keyboard(locale),
+            locale=locale,
+        )
+        await callback.answer()
+        return
+    
+    # Prepare media group (max 10 photos)
+    from aiogram.types import InputMediaPhoto
+    from bot.core.config import settings
+    import os
+    
+    media_group = []
+    photos_to_send = menu_photos[:10]  # Telegram limit is 10 photos per media group
+    
+    for photo in photos_to_send:
+        # Build full file path
+        file_path = photo.get("file_path", "")
+        if not file_path:
+            continue
+        
+        # Get absolute path
+        full_path = os.path.join(os.getcwd(), file_path)
+        
+        # Check if file exists
+        if not os.path.exists(full_path):
+            logger.warning(f"Menu photo file not found: {full_path}")
+            continue
+        
+        # Create InputMediaPhoto
+        media = InputMediaPhoto(media=FSInputFile(full_path))
+        media_group.append(media)
+    
+    if not media_group:
+        # No valid photos found
+        await safe_edit_message(
+            callback,
+            t(locale, "messages.menu_empty"),
+            reply_markup=get_back_to_menu_keyboard(locale),
+            locale=locale,
+        )
+        await callback.answer()
+        return
+    
+    # Send media group
+    user_id = callback.from_user.id
+    bot = callback.bot
+    
+    # Freeze previous system message
+    await _freeze_previous_system_message(bot=bot, user_id=user_id)
+    temporary_messages_middleware.clear_last_system_message(user_id)
+    
+    # Send media group
+    messages = await bot.send_media_group(
+        chat_id=callback.message.chat.id,
+        media=media_group,
+    )
+    
+    # Send message with "Main Menu" button
+    menu_title = t(locale, "messages.menu_title")
+    new_message = await bot.send_message(
+        chat_id=callback.message.chat.id,
+        text=menu_title,
+        reply_markup=get_back_to_menu_keyboard(locale),
+        parse_mode="HTML",
+    )
+    
+    # Set the last message as system message
+    temporary_messages_middleware.set_last_system_message(
+        user_id, new_message.chat.id, new_message.message_id
+    )
+    
+    # Flush pending temporary user messages
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+    
+    # Delete the original message with menu button
+    try:
+        await callback.message.delete()
+    except Exception as e:
+        logger.warning(f"Failed to delete original menu message: {e}")
+    
     await callback.answer()
 
 

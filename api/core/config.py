@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     MAX_PHOTO_SIZE_MB: int = 10
     SUPPORT_PHOTOS_DIR: str = "uploads/support_photos"
+    MENU_PHOTOS_DIR: str = "uploads/menu_photos"
     
     class Config:
         env_file = ".env"

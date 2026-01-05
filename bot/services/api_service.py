@@ -200,6 +200,19 @@ class APIService:
             print(f"Error fetching club settings: {e}")
             return None
     
+    async def get_menu_photos(self) -> List[Dict[str, Any]]:
+        """Get menu photos from API."""
+        try:
+            response = await self.client.get(
+                f"{self.base_url}/v1/menu-photos"
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("photos", [])
+        except httpx.HTTPError as e:
+            print(f"Error fetching menu photos: {e}")
+            return []
+    
     async def create_support_message(self, user_id: int, message: str, photo_paths: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
         """Create a support message."""
         try:
