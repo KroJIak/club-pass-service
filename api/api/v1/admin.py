@@ -27,6 +27,7 @@ from api.repositories.support_message_photo_repository import SupportMessagePhot
 from api.repositories.admin_message_repository import AdminMessageRepository
 from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
 from api.repositories.staff_user_repository import StaffUserRepository
+from api.repositories.menu_photo_repository import MenuPhotoRepository
 from api.services.telegram_service import download_file_from_telegram
 from api.services.file_storage_service import save_support_photo, get_full_file_path
 from api.core.config import settings

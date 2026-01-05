@@ -133,6 +133,7 @@ const ClubSettings = () => {
   const [menuPhotos, setMenuPhotos] = useState<MenuPhoto[]>([])
   const [loadingPhotos, setLoadingPhotos] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [menuPhotosError, setMenuPhotosError] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     address: '',
     phone: '',
@@ -175,9 +176,11 @@ const ClubSettings = () => {
   const fetchMenuPhotos = async () => {
     try {
       setLoadingPhotos(true)
+      setMenuPhotosError(null)
       const response = await api.get<{ photos: MenuPhoto[] }>('/admin/menu-photos')
       setMenuPhotos(response.data.photos)
     } catch (err: any) {
+      setMenuPhotosError(err.response?.data?.detail || 'Failed to load menu photos')
       console.error('Failed to load menu photos:', err)
     } finally {
       setLoadingPhotos(false)
@@ -195,7 +198,7 @@ const ClubSettings = () => {
 
     try {
       setUploadingPhoto(true)
-      setError(null)
+      setMenuPhotosError(null)
       const formData = new FormData()
       formData.append('file', file)
 
@@ -209,7 +212,7 @@ const ClubSettings = () => {
       // Reset file input
       event.target.value = ''
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to upload photo')
+      setMenuPhotosError(err.response?.data?.detail || 'Failed to upload photo')
     } finally {
       setUploadingPhoto(false)
     }
@@ -219,10 +222,11 @@ const ClubSettings = () => {
     if (!window.confirm('Are you sure you want to delete this photo?')) return
 
     try {
+      setMenuPhotosError(null)
       await api.delete(`/admin/menu-photos/${photoId}`)
       await fetchMenuPhotos()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete photo')
+      setMenuPhotosError(err.response?.data?.detail || 'Failed to delete photo')
     }
   }
 
@@ -249,7 +253,7 @@ const ClubSettings = () => {
       }
       await api.put('/admin/menu-photos/reorder', reorderRequest)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to reorder photos')
+      setMenuPhotosError(err.response?.data?.detail || 'Failed to reorder photos')
       // Revert on error
       await fetchMenuPhotos()
     }
