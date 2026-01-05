@@ -9,6 +9,7 @@ from bot.core.keyboards import get_back_keyboard
 from bot.core.states import MusicStates
 from bot.core.i18n import get_user_locale, t
 from bot.core.message_manager import safe_edit_message
+from bot.core.middleware import temporary_messages_middleware
 from bot.services.api_service import api_service
 
 router = Router()
@@ -19,6 +20,8 @@ logger = logging.getLogger(__name__)
 async def handle_add_music(callback: CallbackQuery, state: FSMContext):
     """Handle 'Add music' button - check ticket and request song title."""
     locale = get_user_locale(callback.from_user.language_code)
+    bot = callback.bot
+    user_id = callback.from_user.id
     
     # Get user tickets to check if they have a used ticket for an active event
     telegram_user_id = callback.from_user.id
@@ -55,6 +58,8 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
 async def handle_music_title_input(message: Message, state: FSMContext):
     """Handle song title input - search for tracks and show results."""
     locale = get_user_locale(message.from_user.language_code)
+    bot = message.bot
+    user_id = message.from_user.id
     song_title = message.text.strip()
     
     if not song_title:
@@ -65,38 +70,40 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     search_result = await api_service.search_music(song_title)
     
     if not search_result or not search_result.get("tracks"):
-        await message.answer(t(locale, "messages.music.no_results"))
+        # Send no results message and flush pending user messages
+        no_results_msg = await message.answer(t(locale, "messages.music.no_results"))
+        temporary_messages_middleware.set_last_system_message(user_id, no_results_msg.chat.id, no_results_msg.message_id)
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return
     
     tracks = search_result.get("tracks", [])
     
+    # Limit to 4 tracks as per plan
+    tracks = tracks[:4]
+    
     # Format results as quote with hyperlinks
     result_lines = []
-    for i, track in enumerate(tracks[:10], 1):  # Limit to 10 results
+    for i, track in enumerate(tracks, 1):
         title = track.get("title", "Unknown")
         artist = track.get("artist", "Unknown")
         
-        # Get first available link
+        # Get Yandex Music link
         links = track.get("links", {})
-        url = None
-        for link_key in ["yandex_music", "youtube", "spotify", "apple_music", "soundcloud"]:
-            if links.get(link_key):
-                url = links[link_key]
-                break
+        yandex_url = links.get("yandex_music")
         
-        if url:
-            result_lines.append(f"{i}. <a href=\"{url}\">{artist} - {title}</a>")
+        if yandex_url:
+            result_lines.append(f"{i}. <a href=\"{yandex_url}\">{artist} - {title}</a>")
         else:
             result_lines.append(f"{i}. {artist} - {title}")
     
     result_text = "\n".join(result_lines)
     quote_text = f"<blockquote>{result_text}</blockquote>"
     
-    # Create inline keyboard with track numbers
+    # Create inline keyboard with track numbers (1-4)
     builder = InlineKeyboardBuilder()
-    for i in range(1, min(len(tracks) + 1, 11)):  # Max 10 buttons
+    for i in range(1, len(tracks) + 1):
         builder.add(InlineKeyboardButton(text=str(i), callback_data=f"select_track_{i}"))
-    builder.adjust(5)  # 5 buttons per row
+    builder.adjust(4)  # 4 buttons per row
     builder.row(InlineKeyboardButton(
         text=t(locale, "buttons.back_to_menu"),
         callback_data="back_to_menu"
@@ -106,11 +113,15 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     await state.update_data(tracks=tracks, song_title=song_title)
     
     # Send results
-    await message.answer(
+    results_msg = await message.answer(
         quote_text,
         reply_markup=builder.as_markup(),
         parse_mode="HTML"
     )
+    
+    # Mark as system message and flush pending user messages (including the user's song title message)
+    temporary_messages_middleware.set_last_system_message(user_id, results_msg.chat.id, results_msg.message_id)
+    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
     
     # Clear state
     await state.clear()
@@ -170,11 +181,16 @@ async def handle_track_selected(callback: CallbackQuery, state: FSMContext):
     # Clear state and return to menu
     await state.clear()
     
-    # Update message to show success
+    # Update message to show success and return to menu
+    from bot.core.keyboards import get_main_menu_keyboard
+    menu_photos = await api_service.get_menu_photos()
+    has_menu_photos = len(menu_photos) > 0
+    
     await safe_edit_message(
         callback,
         t(locale, "messages.music.request_success"),
-        reply_markup=get_back_keyboard(locale),
-        locale=locale
+        reply_markup=get_main_menu_keyboard(locale, has_menu_photos=has_menu_photos),
+        locale=locale,
+        screen_key="main_menu"
     )
 
