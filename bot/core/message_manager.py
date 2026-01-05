@@ -66,12 +66,17 @@ async def remove_inline_keyboard(bot, chat_id: int, message_id: int) -> bool:
 
 async def _after_system_action(bot, user_id: int, chat_id: int, message_id: int) -> None:
     # Delete old system message before setting new one
+    # Always delete old system message if it's different from the new one
+    # This ensures that when editing a message (same chat_id/message_id but different content),
+    # the old system message is properly replaced
     old_system = temporary_messages_middleware.get_last_system_message(user_id)
     if old_system:
         old_chat_id, old_message_id = old_system
-        # Don't delete the message we just sent
+        # Delete old system message if it's different from the new one
         if not (old_chat_id == chat_id and old_message_id == message_id):
             await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
+        # If it's the same message (editing), we still update the tracking
+        # The message content will be changed by the edit operation itself
     
     temporary_messages_middleware.set_last_system_message(user_id, chat_id, message_id)
     await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
