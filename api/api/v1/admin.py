@@ -1310,11 +1310,18 @@ async def get_club_settings(
     except AttributeError:
         timezone = "Europe/Moscow"
     
+    # Handle case where additional_info might not exist in DB
+    try:
+        additional_info = getattr(settings, 'additional_info', None)
+    except AttributeError:
+        additional_info = None
+    
     response_data = {
         "id": int(settings.id),
         "address": settings.address if settings.address else None,
         "phone": settings.phone if settings.phone else None,
         "email": settings.email if settings.email else None,
+        "additional_info": additional_info if additional_info else None,
         "auto_deactivate_events": bool(auto_deactivate),
         "timezone": timezone if timezone else "Europe/Moscow",
         "updated_at": updated_at
@@ -1336,6 +1343,7 @@ async def update_club_settings(
             address=settings_update.address,
             phone=settings_update.phone,
             email=settings_update.email,
+            additional_info=settings_update.additional_info,
             auto_deactivate_events=settings_update.auto_deactivate_events,
             timezone=settings_update.timezone
         )
@@ -1345,11 +1353,18 @@ async def update_club_settings(
         if updated_at is None:
             updated_at = datetime.utcnow()
         
+        # Handle case where additional_info might not exist in DB
+        try:
+            additional_info = getattr(settings, 'additional_info', None)
+        except AttributeError:
+            additional_info = None
+        
         response_data = {
             "id": int(settings.id),
             "address": settings.address if settings.address else None,
             "phone": settings.phone if settings.phone else None,
             "email": settings.email if settings.email else None,
+            "additional_info": additional_info if additional_info else None,
             "auto_deactivate_events": bool(settings.auto_deactivate_events),
             "timezone": settings.timezone if settings.timezone else "Europe/Moscow",
             "updated_at": updated_at.isoformat() if hasattr(updated_at, 'isoformat') else str(updated_at)

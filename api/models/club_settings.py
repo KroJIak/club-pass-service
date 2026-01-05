@@ -12,6 +12,7 @@ class ClubSettings(Base):
     address = Column(String, nullable=True)
     phone = Column(String, nullable=True)
     email = Column(String, nullable=True)
+    additional_info = Column(String, nullable=True)  # Additional information displayed in club info
     auto_deactivate_events = Column(Boolean, default=True, nullable=False)
     timezone = Column(String, default="Europe/Moscow", nullable=False)  # Default to Moscow timezone
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

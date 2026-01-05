@@ -60,6 +60,7 @@ class ClubSettingsRepository:
         address: str = None,
         phone: str = None,
         email: str = None,
+        additional_info: str = None,
         auto_deactivate_events: bool = None,
         timezone: str = None
     ) -> ClubSettings:
@@ -87,6 +88,9 @@ class ClubSettingsRepository:
         if email is not None:
             settings.email = email.strip() if email and email.strip() else None
         
+        if additional_info is not None:
+            settings.additional_info = additional_info.strip() if additional_info and additional_info.strip() else None
+        
         if auto_deactivate_events is not None:
             settings.auto_deactivate_events = auto_deactivate_events
         
@@ -103,6 +107,7 @@ class ClubSettingsRepository:
             f"address={settings.address}, "
             f"phone={settings.phone}, "
             f"email={settings.email}, "
+            f"additional_info={settings.additional_info}, "
             f"auto_deactivate_events={settings.auto_deactivate_events}, "
             f"timezone={settings.timezone}"
         )

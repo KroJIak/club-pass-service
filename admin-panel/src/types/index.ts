@@ -192,6 +192,7 @@ export interface ClubSettings {
   address: string | null
   phone: string | null
   email: string | null
+  additional_info: string | null
   auto_deactivate_events: boolean
   timezone: string
   updated_at: string
@@ -201,6 +202,7 @@ export interface ClubSettingsUpdate {
   address?: string | null
   phone?: string | null
   email?: string | null
+  additional_info?: string | null
   auto_deactivate_events?: boolean | null
   timezone?: string | null
 }

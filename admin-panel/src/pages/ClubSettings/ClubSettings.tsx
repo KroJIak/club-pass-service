@@ -205,6 +205,7 @@ const ClubSettings = () => {
     address: '',
     phone: '',
     email: '',
+    additional_info: '',
     auto_deactivate_events: true,
     timezone: 'Europe/Moscow',
   })
@@ -336,6 +337,7 @@ const ClubSettings = () => {
         address: response.data.address || '',
         phone: response.data.phone || '',
         email: response.data.email || '',
+        additional_info: response.data.additional_info || '',
         auto_deactivate_events: response.data.auto_deactivate_events ?? true,
         timezone: response.data.timezone || 'Europe/Moscow',
       })
@@ -346,7 +348,7 @@ const ClubSettings = () => {
     }
   }
 
-  const handleChange = (field: 'address' | 'phone' | 'email') => (
+  const handleChange = (field: 'address' | 'phone' | 'email' | 'additional_info') => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     setFormData({
@@ -379,6 +381,7 @@ const ClubSettings = () => {
         address: formData.address.trim() || null,
         phone: formData.phone.trim() || null,
         email: formData.email.trim() || null,
+        additional_info: formData.additional_info.trim() || null,
         auto_deactivate_events: formData.auto_deactivate_events,
         timezone: formData.timezone || null,
       }
@@ -459,6 +462,19 @@ const ClubSettings = () => {
             fullWidth
             type="email"
             helperText="Club email address displayed in the bot"
+            sx={{ mb: 2 }}
+          />
+        </Box>
+
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            label="Доп. информация"
+            value={formData.additional_info}
+            onChange={handleChange('additional_info')}
+            fullWidth
+            multiline
+            rows={3}
+            helperText="Дополнительная информация, отображаемая в формате цитаты внизу раздела 'Инфо о клубе'"
             sx={{ mb: 2 }}
           />
         </Box>

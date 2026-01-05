@@ -125,6 +125,10 @@ async def handle_club_info(callback: CallbackQuery):
         email = club_settings.get("email")
         if email and email.strip():
             info_text += f"{t(locale, 'labels.email')}: {email}\n"
+        
+        additional_info = club_settings.get("additional_info")
+        if additional_info and additional_info.strip():
+            info_text += f"\n<blockquote>{additional_info}</blockquote>"
     
     # Fallback to settings if API fails (backward compatibility)
     if not info_text:
