@@ -41,8 +41,8 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
     # This check will be done on the API side, but we can do a basic check here
     # For now, just proceed - API will validate
     
-    # Request song title
-    text = t(locale, "messages.music.enter_title")
+    # Request song title in quote format
+    text = f"<blockquote>{t(locale, 'messages.music.enter_title')}</blockquote>"
     await safe_edit_message(
         callback,
         text,
@@ -63,7 +63,10 @@ async def handle_music_title_input(message: Message, state: FSMContext):
     song_title = message.text.strip()
     
     if not song_title:
-        await message.answer(t(locale, "messages.music.enter_title"))
+        enter_title_text = f"<blockquote>{t(locale, 'messages.music.enter_title')}</blockquote>"
+        enter_msg = await message.answer(enter_title_text, parse_mode="HTML")
+        temporary_messages_middleware.set_last_system_message(user_id, enter_msg.chat.id, enter_msg.message_id)
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return
     
     # Search for music

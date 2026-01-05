@@ -99,41 +99,91 @@ class MusicSearcher:
     def search_advanced(self, song_title: str, artist: Optional[str] = None,
                        min_similarity: float = 0.3) -> List[Track]:
         """
-        Поиск треков через Yandex Music с фильтрацией по схожести
+        Поиск треков через Yandex Music с фильтрацией по схожести.
+        Если artist не указан, ищет song_title и как название песни, и как автора.
         
         Args:
-            song_title (str): Название песни
+            song_title (str): Название песни или текст для поиска
             artist (Optional[str]): Исполнитель
             min_similarity (float): Минимальный коэффициент схожести
         
         Returns:
-            List[Track]: Список найденных треков
+            List[Track]: Список найденных треков, отсортированный по релевантности
         """
-        # Формируем поисковый запрос
+        all_tracks = []
+        
         if artist:
+            # Если указан artist, ищем в формате "artist - song_title"
             query = f"{artist} - {song_title}"
+            logger.info(f"🚀 search_advanced: song_title='{song_title}', artist='{artist}', query='{query}', min_similarity={min_similarity}")
+            
+            yandex_results = self.search_yandex_music(query)
+            logger.info(f"📡 Yandex Music: Найдено треков до фильтрации: {len(yandex_results)}")
+            
+            # Фильтр по схожести
+            for track in yandex_results:
+                similarity = self._match_similarity(query, track.title, track.artist)
+                logger.info(f"📊 Yandex Music: '{track.artist} - {track.title}' - схожесть: {similarity:.2f} (порог: {min_similarity})")
+                if similarity >= min_similarity:
+                    all_tracks.append((track, similarity))
+                    logger.info(f"✅ Yandex Music: Трек прошел фильтр")
+                else:
+                    logger.info(f"❌ Yandex Music: Трек не прошел фильтр (схожесть {similarity:.2f} < {min_similarity})")
         else:
-            query = song_title
+            # Если artist не указан, ищем song_title и как название, и как автора
+            logger.info(f"🚀 search_advanced: song_title='{song_title}', artist=None - поиск как название и как автор")
+            
+            # Поиск 1: song_title как название песни
+            query1 = song_title
+            logger.info(f"📡 Поиск 1: '{query1}' как название песни")
+            results1 = self.search_yandex_music(query1)
+            logger.info(f"📡 Найдено треков (как название): {len(results1)}")
+            
+            for track in results1:
+                # Проверяем схожесть с названием
+                similarity_title = self._match_similarity(query1, track.title, "")
+                # Проверяем схожесть с автором
+                similarity_artist = self._match_similarity(query1, "", track.artist)
+                # Берем максимальную схожесть
+                similarity = max(similarity_title, similarity_artist)
+                logger.info(f"📊 '{track.artist} - {track.title}' - схожесть (название): {similarity_title:.2f}, схожесть (автор): {similarity_artist:.2f}, макс: {similarity:.2f}")
+                if similarity >= min_similarity:
+                    all_tracks.append((track, similarity))
+            
+            # Поиск 2: song_title как автор
+            query2 = song_title
+            logger.info(f"📡 Поиск 2: '{query2}' как автор")
+            results2 = self.search_yandex_music(query2)
+            logger.info(f"📡 Найдено треков (как автор): {len(results2)}")
+            
+            for track in results2:
+                # Проверяем схожесть с автором (приоритет)
+                similarity_artist = self._match_similarity(query2, "", track.artist)
+                # Проверяем схожесть с названием
+                similarity_title = self._match_similarity(query2, track.title, "")
+                # Берем максимальную схожесть, но приоритет у автора
+                similarity = max(similarity_artist * 1.2, similarity_title)  # Увеличиваем вес совпадения с автором
+                logger.info(f"📊 '{track.artist} - {track.title}' - схожесть (автор): {similarity_artist:.2f}, схожесть (название): {similarity_title:.2f}, взвешенная: {similarity:.2f}")
+                if similarity >= min_similarity:
+                    # Проверяем, не добавлен ли уже этот трек
+                    if not any(t[0].title.lower() == track.title.lower() and t[0].artist.lower() == track.artist.lower() for t in all_tracks):
+                        all_tracks.append((track, similarity))
         
-        logger.info(f"🚀 search_advanced: song_title='{song_title}', artist='{artist}', query='{query}', min_similarity={min_similarity}")
+        # Удаляем дубликаты и сортируем по схожести
+        seen = set()
+        unique_tracks = []
+        for track, similarity in all_tracks:
+            key = (track.title.lower(), track.artist.lower())
+            if key not in seen:
+                seen.add(key)
+                unique_tracks.append((track, similarity))
         
-        # Поиск в Yandex Music
+        # Сортируем по схожести (от большей к меньшей)
+        unique_tracks.sort(key=lambda x: x[1], reverse=True)
+        
+        # Возвращаем только треки (без similarity)
+        result_tracks = [track for track, _ in unique_tracks]
+        
         logger.info("=" * 60)
-        logger.info("📡 Поиск в Yandex Music...")
-        yandex_results = self.search_yandex_music(query)
-        logger.info(f"📡 Yandex Music: Найдено треков до фильтрации: {len(yandex_results)}")
-        
-        # Фильтр по схожести
-        filtered_tracks = []
-        for track in yandex_results:
-            similarity = self._match_similarity(query, track.title, track.artist)
-            logger.info(f"📊 Yandex Music: '{track.artist} - {track.title}' - схожесть: {similarity:.2f} (порог: {min_similarity})")
-            if similarity >= min_similarity:
-                filtered_tracks.append(track)
-                logger.info(f"✅ Yandex Music: Трек прошел фильтр")
-            else:
-                logger.info(f"❌ Yandex Music: Трек не прошел фильтр (схожесть {similarity:.2f} < {min_similarity})")
-        
-        logger.info("=" * 60)
-        logger.info(f"✅ search_advanced: Итого треков: {len(filtered_tracks)}")
-        return filtered_tracks
+        logger.info(f"✅ search_advanced: Итого уникальных треков: {len(result_tracks)}")
+        return result_tracks
