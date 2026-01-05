@@ -220,6 +220,11 @@ async def handle_track_selected(callback: CallbackQuery, state: FSMContext):
     
     if result.get("error"):
         error_msg = result.get("error", "Unknown error")
+        # Translate common error messages
+        if "Этот трек уже в очереди и скоро будет включён" in error_msg:
+            error_msg = t(locale, "messages.music.already_in_queue")
+        elif "Вы уже выбирали данную песню" in error_msg:
+            error_msg = t(locale, "messages.music.already_requested")
         await callback.answer(error_msg, show_alert=True)
         return
     

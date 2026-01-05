@@ -110,7 +110,9 @@
       "request_success": "✅ Your request has been added!",
       "too_soon": "You can add songs once every 5 minutes",
       "no_results": "😔 Nothing found. Try changing your query.",
-      "search_error": "❌ Error searching for music. Please try again later."
+      "search_error": "❌ Error searching for music. Please try again later.",
+      "already_in_queue": "This track is already in the queue and will be played soon",
+      "already_requested": "You have already requested this song"
     }
   }
 }
