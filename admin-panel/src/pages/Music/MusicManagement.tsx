@@ -79,7 +79,7 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
       }}
     >
-      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} onClick={(e) => e.stopPropagation()} />
+      <DragIndicatorIcon {...attributes} {...listeners} sx={{ cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -94,12 +94,12 @@ const SortableQueueItem = ({ item, isSelected, onSelect, onDelete }: SortableQue
         )}
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
-            <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
+            <Link href={item.yandex_music_url} target="_blank" rel="noopener">
               Yandex Music
             </Link>
           )}
           {item.other_source_url && (
-            <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
+            <Link href={item.other_source_url} target="_blank" rel="noopener">
               Other Source
             </Link>
           )}
