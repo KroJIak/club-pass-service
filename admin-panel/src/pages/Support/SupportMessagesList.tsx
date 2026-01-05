@@ -876,7 +876,7 @@ const SupportMessagesList: React.FC = () => {
                   cursor: selection.hasSelection ? 'pointer' : 'default',
                   border: selection.isSelected(msg.id) ? '2px solid' : 'none',
                   borderColor: selection.isSelected(msg.id) ? 'primary.main' : 'transparent',
-                  bgcolor: selection.isSelected(msg.id) ? 'action.selected' : 'background.paper',
+                  bgcolor: selection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                 }}
                 onClick={() => {
                   if (selection.hasSelection) {
@@ -1125,7 +1125,7 @@ const SupportMessagesList: React.FC = () => {
                       cursor: adminSelection.hasSelection ? 'pointer' : 'default',
                       border: adminSelection.isSelected(msg.id) ? '2px solid' : 'none',
                       borderColor: adminSelection.isSelected(msg.id) ? 'primary.main' : 'transparent',
-                      bgcolor: adminSelection.isSelected(msg.id) ? 'action.selected' : 'background.paper',
+                      bgcolor: adminSelection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                     }}
                     onClick={() => {
                       if (adminSelection.hasSelection) {

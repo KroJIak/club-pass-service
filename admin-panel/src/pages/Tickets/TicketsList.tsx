@@ -202,7 +202,7 @@ const TicketsList = () => {
                   position: 'relative',
                   border: selection.isSelected(ticket.id) ? '2px solid' : 'none',
                   borderColor: selection.isSelected(ticket.id) ? 'primary.main' : 'transparent',
-                  bgcolor: selection.isSelected(ticket.id) ? 'action.selected' : 'background.paper',
+                  bgcolor: selection.isSelected(ticket.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                 }}
                 onClick={() => toggleExpand(ticket.id)}
               >

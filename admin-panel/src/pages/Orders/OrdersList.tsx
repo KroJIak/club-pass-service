@@ -143,7 +143,7 @@ const OrdersList = () => {
                 cursor: 'pointer',
                 border: selection.isSelected(order.id) ? '2px solid' : 'none',
                 borderColor: selection.isSelected(order.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(order.id) ? 'action.selected' : 'background.paper',
+                bgcolor: selection.isSelected(order.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
               onClick={() => selection.toggleSelection(order.id)}
             >

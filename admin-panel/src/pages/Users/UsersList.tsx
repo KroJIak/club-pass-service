@@ -141,7 +141,7 @@ const UsersList = () => {
                 cursor: 'pointer',
                 border: selection.isSelected(user.id) ? '2px solid' : 'none',
                 borderColor: selection.isSelected(user.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(user.id) ? 'action.selected' : 'background.paper',
+                bgcolor: selection.isSelected(user.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
               onClick={() => selection.toggleSelection(user.id)}
             >

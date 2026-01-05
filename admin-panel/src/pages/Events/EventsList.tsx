@@ -305,7 +305,7 @@ const EventsList = () => {
                 position: 'relative',
                 border: selection.isSelected(event.id) ? '2px solid' : 'none',
                 borderColor: selection.isSelected(event.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(event.id) ? 'action.selected' : 'background.paper',
+                bgcolor: selection.isSelected(event.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
               onClick={() => toggleExpand(event.id)}
             >
