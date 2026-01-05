@@ -362,12 +362,7 @@ async def get_menu_photos_public(
 ):
     """Get all active menu photos (public endpoint for bot)."""
     photos = MenuPhotoRepository.get_all(db)
-    # Convert ORM objects to Pydantic models
-    photo_responses = []
-    for photo in photos:
-        try:
-            photo_responses.append(MenuPhotoResponse.model_validate(photo))
-        except Exception as e:
-            logger.error(f"Error validating menu photo {photo.id}: {e}", exc_info=True)
-            continue
+    # Convert ORM objects to Pydantic models using model_validate
+    # This works because MenuPhotoResponse has from_attributes = True
+    photo_responses = [MenuPhotoResponse.model_validate(photo) for photo in photos]
     return MenuPhotoListResponse(photos=photo_responses)
