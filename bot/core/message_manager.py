@@ -102,18 +102,25 @@ async def _edit_callback_message(
             )
             return None
     elif photo_input:
-        # Message doesn't have photo, but we need to add one - delete old and send new
-        # Try to delete, but if already deleted, ignore error
-        try:
-            await callback.message.delete()
-        except TelegramBadRequest:
-            pass  # Message already deleted, continue to send new
-        return await callback.message.answer_photo(
+        # Message doesn't have photo, but we need to add one - send new first, then delete old
+        old_chat_id = callback.message.chat.id
+        old_message_id = callback.message.message_id
+        
+        # Send new message with photo first
+        new_message = await callback.message.answer_photo(
             photo=photo_input,
             caption=text if text else None,
             reply_markup=reply_markup,
             parse_mode=parse_mode,
         )
+        
+        # Delete old message after new one is sent
+        try:
+            await callback.bot.delete_message(chat_id=old_chat_id, message_id=old_message_id)
+        except TelegramBadRequest:
+            pass  # Message already deleted or can't be deleted, continue
+        
+        return new_message
     else:
         # Regular text message
         await callback.message.edit_text(
@@ -131,18 +138,31 @@ async def _delete_and_send_new_from_callback(
     parse_mode: Optional[str],
     photo_input: Optional[BufferedInputFile | FSInputFile] = None,
 ) -> Message:
-    try:
-        await callback.message.delete()
-    except Exception:
-        pass
+    """
+    Send new message first, then delete old one.
+    This ensures user always sees a message (no gap).
+    """
+    old_chat_id = callback.message.chat.id
+    old_message_id = callback.message.message_id
+    
+    # Send new message first
     if photo_input:
-        return await callback.message.answer_photo(
+        new_message = await callback.message.answer_photo(
             photo=photo_input,
             caption=text,
             reply_markup=reply_markup,
             parse_mode=parse_mode,
         )
-    return await callback.message.answer(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+    else:
+        new_message = await callback.message.answer(text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+    
+    # Delete old message after new one is sent
+    try:
+        await callback.bot.delete_message(chat_id=old_chat_id, message_id=old_message_id)
+    except Exception:
+        pass  # Best effort - if deletion fails, continue
+    
+    return new_message
 
 
 async def safe_edit_message(
@@ -213,19 +233,13 @@ async def safe_edit_message(
             return False
         
         # If editing fails for other reasons (e.g., different content type),
-        # delete old message and send new one
+        # send new message first, then delete old one (handled in _delete_and_send_new_from_callback)
         old_message_id = callback.message.message_id
         new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
 
         await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
 
-        # Delete old system message if it was different
-        if old_message_id != new_message.message_id:
-            try:
-                await bot.delete_message(chat_id=chat_id, message_id=old_message_id)
-            except Exception:
-                pass
-
+        # Old message deletion is already handled in _delete_and_send_new_from_callback
         return False
 
 

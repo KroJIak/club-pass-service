@@ -293,18 +293,17 @@ async def handle_support_new_message(callback: CallbackQuery, state: FSMContext)
     user_id = callback.from_user.id
     bot = callback.bot
     
-    # Delete old system message before sending new one
+    # Remember old system message to delete it after sending new one
     old_system = temporary_messages_middleware.get_last_system_message(user_id)
+    old_chat_id = None
+    old_message_id = None
     if old_system:
         old_chat_id, old_message_id = old_system
-        # Don't delete the message we're clicking on (admin response)
-        if not (old_chat_id == callback.message.chat.id and old_message_id == callback.message.message_id):
-            await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
     
     # Clear last system message tracking
     temporary_messages_middleware.clear_last_system_message(user_id)
     
-    # Send new system message with support form
+    # Send new system message with support form FIRST
     from bot.core.message_manager import get_screen_image
     photo_input = get_screen_image(locale, "support")
     new_message = await callback.message.answer_photo(
@@ -318,6 +317,12 @@ async def handle_support_new_message(callback: CallbackQuery, state: FSMContext)
     temporary_messages_middleware.set_last_system_message(
         user_id, new_message.chat.id, new_message.message_id
     )
+    
+    # Delete old system message AFTER new one is sent (if it's different)
+    if old_system and old_chat_id and old_message_id:
+        # Don't delete the message we're clicking on (admin response)
+        if not (old_chat_id == callback.message.chat.id and old_message_id == callback.message.message_id):
+            await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
     
     # Flush pending temporary user messages
     await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
