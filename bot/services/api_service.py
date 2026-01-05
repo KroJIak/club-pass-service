@@ -204,7 +204,7 @@ class APIService:
         """Get menu photos from API."""
         try:
             response = await self.client.get(
-                f"{self.base_url}/v1/menu-photos"
+                f"{self.base_url}/v1/users/menu-photos"
             )
             response.raise_for_status()
             data = response.json()
