@@ -80,8 +80,67 @@ async def create_user(
         )
 
 
-# IMPORTANT: Specific routes (like /club-settings, /support-messages) must be defined BEFORE generic routes (like /{user_id})
+# IMPORTANT: Specific routes (like /club-settings, /support-messages, /menu-photos) must be defined BEFORE generic routes (like /{user_id})
 # Otherwise FastAPI will try to match them as /{user_id} and fail with 422
+@router.get("/menu-photos")
+async def get_menu_photos_public(
+    db: Session = Depends(get_db),
+):
+    """Get all active menu photos (public endpoint for bot)."""
+    logger.info("=" * 80)
+    logger.info("MENU PHOTOS ENDPOINT CALLED")
+    logger.info("=" * 80)
+    
+    try:
+        logger.info("Step 1: Calling MenuPhotoRepository.get_all(db)")
+        photos = MenuPhotoRepository.get_all(db)
+        logger.info(f"Step 2: Retrieved {len(photos)} photos from repository")
+        
+        # Convert ORM objects to Pydantic models
+        photo_responses = []
+        for i, photo in enumerate(photos):
+            try:
+                logger.info(f"Step 3.{i+1}: Validating photo {photo.id}")
+                logger.info(f"  - Photo ID: {photo.id}")
+                logger.info(f"  - File path: {photo.file_path}")
+                logger.info(f"  - File name: {photo.file_name}")
+                logger.info(f"  - File size: {photo.file_size}")
+                logger.info(f"  - MIME type: {photo.mime_type}")
+                logger.info(f"  - Display order: {photo.display_order}")
+                logger.info(f"  - Created at: {photo.created_at} (type: {type(photo.created_at)})")
+                logger.info(f"  - Updated at: {photo.updated_at} (type: {type(photo.updated_at)})")
+                logger.info(f"  - Is deleted: {photo.is_deleted}")
+                logger.info(f"  - Deleted at: {photo.deleted_at}")
+                
+                photo_response = MenuPhotoResponse.model_validate(photo)
+                logger.info(f"Step 3.{i+1}: Photo {photo.id} validated successfully")
+                photo_responses.append(photo_response)
+            except Exception as e:
+                logger.error(f"Step 3.{i+1}: Error validating photo {photo.id}: {e}", exc_info=True)
+                logger.error(f"  - Photo object: {photo}")
+                logger.error(f"  - Photo dict: {photo.__dict__ if hasattr(photo, '__dict__') else 'N/A'}")
+                continue
+        
+        logger.info(f"Step 4: Created {len(photo_responses)} photo responses")
+        
+        result = MenuPhotoListResponse(photos=photo_responses)
+        logger.info(f"Step 5: Created MenuPhotoListResponse with {len(result.photos)} photos")
+        logger.info(f"Step 6: Converting to dict")
+        result_dict = result.model_dump()
+        logger.info(f"Step 7: Result dict: {result_dict}")
+        logger.info(f"Step 8: Returning response")
+        logger.info("=" * 80)
+        
+        return result_dict
+    except Exception as e:
+        logger.error(f"CRITICAL ERROR in get_menu_photos_public: {e}", exc_info=True)
+        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"Exception args: {e.args}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise
+
+
 @router.post("/support-messages", response_model=SupportMessageResponse, status_code=status.HTTP_201_CREATED)
 async def create_support_message(
     message_data: SupportMessageCreate,
