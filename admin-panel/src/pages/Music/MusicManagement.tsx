@@ -81,6 +81,7 @@ const SortableQueueItem = ({ item, isSelected, onDelete }: SortableQueueItemProp
         position: 'relative',
       }}
     >
+      <DragIndicatorIcon sx={{ color: 'text.secondary', cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
@@ -157,6 +158,7 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue }: Sor
         position: 'relative',
       }}
     >
+      <DragIndicatorIcon sx={{ color: 'text.secondary', cursor: 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
