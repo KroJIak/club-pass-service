@@ -345,6 +345,13 @@ const MusicManagement = () => {
     const activeId = String(active.id)
     const overId = String(over.id)
 
+    // Check if dragging from queue to wishlist FIRST (before checking within queue)
+    if (activeId.startsWith('queue-') && (overId === 'wishlist-droppable' || overId.startsWith('wishlist-'))) {
+      const queueId = parseInt(activeId.replace('queue-', ''))
+      await handleMoveToWishlist(queueId)
+      return
+    }
+
     // Check if dragging from wishlist to queue (droppable zone or queue item)
     if (activeId.startsWith('wishlist-') && (overId === 'queue-droppable' || overId.startsWith('queue-'))) {
       const wishlistId = parseInt(activeId.replace('wishlist-', ''))
@@ -352,14 +359,7 @@ const MusicManagement = () => {
       return
     }
 
-    // Check if dragging from queue to wishlist (droppable zone or wishlist item)
-    if (activeId.startsWith('queue-') && (overId === 'wishlist-droppable' || overId.startsWith('wishlist-'))) {
-      const queueId = parseInt(activeId.replace('queue-', ''))
-      await handleMoveToWishlist(queueId)
-      return
-    }
-
-    // Check if dragging within queue
+    // Check if dragging within queue (only if not moving to wishlist)
     if (activeId.startsWith('queue-') && overId.startsWith('queue-')) {
       const activeQueueId = parseInt(activeId.replace('queue-', ''))
       const overQueueId = parseInt(overId.replace('queue-', ''))

@@ -65,6 +65,25 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+@router.callback_query(F.data == "back")
+async def handle_back(callback: CallbackQuery, state: FSMContext):
+    """Handle back button - return to song title input."""
+    locale = get_user_locale(callback.from_user.language_code)
+    
+    # Request song title again
+    text = t(locale, "messages.music.enter_title")
+    await safe_edit_message(
+        callback,
+        text,
+        reply_markup=get_back_keyboard(locale),
+        locale=locale,
+        screen_key="add_music"
+    )
+    
+    await state.set_state(MusicStates.waiting_title)
+    await callback.answer()
+
+
 @router.message(MusicStates.waiting_title)
 async def handle_music_title_input(message: Message, state: FSMContext):
     """Handle song title input - search for tracks and show results."""
@@ -88,7 +107,8 @@ async def handle_music_title_input(message: Message, state: FSMContext):
         no_results_text = t(locale, "messages.music.no_results")
         no_results_msg = await message.answer(no_results_text)
         temporary_messages_middleware.set_last_system_message(user_id, no_results_msg.chat.id, no_results_msg.message_id)
-        # Don't flush pending user messages - keep user's search query visible
+        # Flush pending user messages to mark this as temporary, but keep user's search query visible
+        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
         return
     
     tracks = search_result.get("tracks", [])
@@ -120,7 +140,7 @@ async def handle_music_title_input(message: Message, state: FSMContext):
         builder.add(InlineKeyboardButton(text=t(locale, "buttons.next"), callback_data="select_track_1"))
         builder.row(InlineKeyboardButton(
             text=t(locale, "buttons.back"),
-            callback_data="back_to_menu"
+            callback_data="back"
         ))
     else:
         # Multiple tracks: with numbering
@@ -148,7 +168,7 @@ async def handle_music_title_input(message: Message, state: FSMContext):
         builder.adjust(4)  # 4 buttons per row
         builder.row(InlineKeyboardButton(
             text=t(locale, "buttons.back"),
-            callback_data="back_to_menu"
+            callback_data="back"
         ))
     
     # Delete the "enter title" message if it exists (get from last system message)
