@@ -151,14 +151,14 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disab
         display: 'flex',
         alignItems: 'center',
         gap: 2,
-        cursor: isDragging ? 'grabbing' : 'grab',
+        cursor: disableDrag ? 'default' : isDragging ? 'grabbing' : 'grab',
         border: isSelected ? '2px solid' : 'none',
         borderColor: isSelected ? 'primary.main' : 'transparent',
         bgcolor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
         position: 'relative',
       }}
     >
-      <DragIndicatorIcon sx={{ color: 'text.secondary', cursor: 'grab' }} />
+      <DragIndicatorIcon sx={{ color: 'text.secondary', cursor: disableDrag ? 'default' : 'grab' }} />
       <Box sx={{ flexGrow: 1 }}>
         <Typography variant="body1" fontWeight="bold">
           {item.track_title}
