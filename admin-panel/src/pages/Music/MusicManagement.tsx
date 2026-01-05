@@ -25,7 +25,6 @@ import {
   useSensors,
   DragEndEvent,
   useDroppable,
-  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
