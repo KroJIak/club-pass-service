@@ -43,10 +43,9 @@ import type { ClubSettings, ClubSettingsUpdate, MenuPhoto, MenuPhotoReorderReque
 interface SortableMenuPhotoProps {
   photo: MenuPhoto
   onDelete: (id: number) => void
-  baseUrl: string
 }
 
-const SortableMenuPhoto = ({ photo, onDelete, baseUrl }: SortableMenuPhotoProps) => {
+const SortableMenuPhoto = ({ photo, onDelete }: SortableMenuPhotoProps) => {
   const {
     attributes,
     listeners,
@@ -55,6 +54,44 @@ const SortableMenuPhoto = ({ photo, onDelete, baseUrl }: SortableMenuPhotoProps)
     transition,
     isDragging,
   } = useSortable({ id: photo.id })
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    const loadImage = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        const response = await api.get(
+          `/admin/menu-photos/${photo.id}/file`,
+          {
+            responseType: 'blob',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        const blob = new Blob([response.data])
+        const url = URL.createObjectURL(blob)
+        setImageUrl(url)
+        setLoading(false)
+      } catch (err) {
+        console.error('Failed to load menu photo:', err)
+        setError(true)
+        setLoading(false)
+      }
+    }
+
+    loadImage()
+
+    // Cleanup blob URL on unmount
+    return () => {
+      if (imageUrl) {
+        URL.revokeObjectURL(imageUrl)
+      }
+    }
+  }, [photo.id])
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -94,16 +131,46 @@ const SortableMenuPhoto = ({ photo, onDelete, baseUrl }: SortableMenuPhotoProps)
       >
         <DragIndicator sx={{ color: 'white', fontSize: 20 }} />
       </Box>
-      <CardMedia
-        component="img"
-        image={`${baseUrl}/${photo.file_path}`}
-        alt={photo.file_name}
-        sx={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-        }}
-      />
+      {loading ? (
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'grey.200',
+          }}
+        >
+          <CircularProgress size={24} />
+        </Box>
+      ) : error || !imageUrl ? (
+        <Box
+          sx={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'grey.200',
+          }}
+        >
+          <Typography variant="caption" color="error">
+            Failed to load
+          </Typography>
+        </Box>
+      ) : (
+        <CardMedia
+          component="img"
+          image={imageUrl}
+          alt={photo.file_name}
+          sx={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      )}
       <IconButton
         onClick={() => onDelete(photo.id)}
         sx={{
@@ -503,7 +570,6 @@ const ClubSettings = () => {
                     key={photo.id}
                     photo={photo}
                     onDelete={handlePhotoDelete}
-                    baseUrl={import.meta.env.VITE_API_URL || ''}
                   />
                 ))}
                 {menuPhotos.length < 10 && (

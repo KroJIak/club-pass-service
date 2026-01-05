@@ -2087,6 +2087,35 @@ async def get_menu_photos(
     return MenuPhotoListResponse(photos=[MenuPhotoResponse.model_validate(photo) for photo in photos])
 
 
+@router.get("/admin/menu-photos/{photo_id}/file")
+async def get_menu_photo_file(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get menu photo file (admin only)."""
+    photo = MenuPhotoRepository.get_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Menu photo with id {photo_id} not found"
+        )
+    
+    full_path = get_full_file_path(photo.file_path)
+    
+    if not os.path.exists(full_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Photo file not found: {photo.file_path}"
+        )
+    
+    return FileResponse(
+        full_path,
+        media_type=photo.mime_type,
+        filename=photo.file_name,
+    )
+
+
 @router.post("/admin/menu-photos", response_model=MenuPhotoResponse, status_code=status.HTTP_201_CREATED)
 async def create_menu_photo(
     file: UploadFile = File(...),
