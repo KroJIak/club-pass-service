@@ -1,6 +1,7 @@
 """Users endpoints."""
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import Optional
 import logging
 from api.core.config import settings
 
