@@ -15,6 +15,7 @@ import {
   Business as BusinessIcon,
   Support as SupportIcon,
   Badge as StaffIcon,
+  MusicNote as MusicIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
 
@@ -26,6 +27,7 @@ const menuItems = [
   { text: 'Support', icon: <SupportIcon />, path: '/support' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
   { text: 'Staff', icon: <StaffIcon />, path: '/staff' },
+  { text: 'Music', icon: <MusicIcon />, path: '/music' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
 ]
 

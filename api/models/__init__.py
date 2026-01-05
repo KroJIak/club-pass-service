@@ -14,6 +14,9 @@ from api.models.admin_message import AdminMessage
 from api.models.admin_message_photo import AdminMessagePhoto
 from api.models.staff_user import StaffUser
 from api.models.menu_photo import MenuPhoto
+from api.models.music_request import MusicRequest
+from api.models.music_queue import MusicQueue
+from api.models.music_request_limit import MusicRequestLimit
 
 __all__ = [
     "User",
@@ -34,5 +37,8 @@ __all__ = [
     "AdminMessagePhoto",
     "StaffUser",
     "MenuPhoto",
+    "MusicRequest",
+    "MusicQueue",
+    "MusicRequestLimit",
 ]
 

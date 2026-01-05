@@ -264,3 +264,36 @@ export interface MenuPhotoReorderRequest {
   photos: MenuPhotoReorderItem[]
 }
 
+export interface MusicRequest {
+  id: number
+  user_id: number
+  event_id: number
+  track_title: string
+  track_artist: string
+  yandex_music_url: string | null
+  other_source_url: string | null
+  request_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MusicQueue {
+  id: number
+  track_title: string
+  track_artist: string
+  yandex_music_url: string | null
+  other_source_url: string | null
+  queue_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MusicQueueReorderItem {
+  id: number
+  queue_order: number
+}
+
+export interface MusicQueueReorderRequest {
+  items: MusicQueueReorderItem[]
+}
+

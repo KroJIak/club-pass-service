@@ -10,7 +10,17 @@ from api.repositories.club_settings_repository import ClubSettingsRepository
 from api.repositories.support_message_repository import SupportMessageRepository
 from api.repositories.support_message_photo_repository import SupportMessagePhotoRepository
 from api.repositories.menu_photo_repository import MenuPhotoRepository
-from api.api.v1.schemas import UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse, MenuPhotoResponse, MenuPhotoListResponse
+from api.repositories.ticket_repository import TicketRepository
+from api.repositories.music_request_repository import MusicRequestRepository
+from api.repositories.music_request_limit_repository import MusicRequestLimitRepository
+from api.repositories.event_repository import EventRepository
+from api.api.v1.schemas import (
+    UserCreate, UserUpdate, UserResponse, ClubSettingsResponse, SupportMessageCreate, SupportMessageResponse,
+    MenuPhotoResponse, MenuPhotoListResponse, MusicRequestCreate, MusicRequestResponse
+)
+from api.models.ticket import TicketStatus
+from datetime import datetime
+import pytz
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -348,6 +358,112 @@ async def get_club_settings_public(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting club settings: {str(e)}"
+        )
+
+
+@router.post("/music-requests", response_model=MusicRequestResponse)
+async def create_music_request(
+    request_data: MusicRequestCreate,
+    telegram_user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Create a music request. Requires user to have a used ticket for an active event."""
+    try:
+        # Get user by telegram_user_id
+        user = UserRepository.get_by_telegram_id(db, telegram_user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Get all used tickets for the user
+        tickets = TicketRepository.get_by_user_id(db, user.id, active_only=False)
+        used_tickets = [t for t in tickets if t.status == TicketStatus.USED]
+        
+        if not used_tickets:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You need to be in the club to add music requests"
+            )
+        
+        # Find an active event that hasn't ended
+        valid_event = None
+        current_time = datetime.utcnow()
+        
+        # Get timezone from club settings
+        from api.utils.timezone import get_current_time_in_timezone
+        current_time_tz = get_current_time_in_timezone(db)
+        
+        # Get timezone string
+        settings = ClubSettingsRepository.get_settings(db)
+        timezone_str = settings.timezone or "Europe/Moscow"
+        tz = pytz.timezone(timezone_str)
+        current_time_aware = tz.localize(current_time_tz)
+        
+        for ticket in used_tickets:
+            event = ticket.event
+            if not event or not event.is_active:
+                continue
+            
+            # Parse end_date and end_time
+            try:
+                end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
+                end_dt_aware = tz.localize(end_dt)
+                
+                # Check if event hasn't ended
+                if end_dt_aware > current_time_aware:
+                    valid_event = event
+                    break
+            except Exception as e:
+                logger.warning(f"Error parsing event end date/time: {e}")
+                continue
+        
+        if not valid_event:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No active event found. The event may have ended."
+            )
+        
+        # Check rate limit (5 minutes)
+        if not MusicRequestLimitRepository.can_make_request(db, user.id, valid_event.id, cooldown_minutes=5):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="You can add music requests once every 5 minutes"
+            )
+        
+        # Check if request already exists for this event
+        existing_request = MusicRequestRepository.get_by_title_artist(
+            db, valid_event.id, request_data.track_title, request_data.track_artist or ""
+        )
+        
+        if existing_request:
+            # Increment request count
+            music_request = MusicRequestRepository.increment_request_count(db, existing_request.id)
+        else:
+            # Create new request
+            music_request = MusicRequestRepository.create(
+                db,
+                user_id=user.id,
+                event_id=valid_event.id,
+                track_title=request_data.track_title,
+                track_artist=request_data.track_artist or "",
+                yandex_music_url=request_data.yandex_music_url,
+                other_source_url=request_data.other_source_url,
+            )
+        
+        # Update last request time
+        MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)
+        
+        return MusicRequestResponse.model_validate(music_request)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating music request: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating music request: {str(e)}"
         )
 
 

@@ -237,6 +237,65 @@ class APIService:
                 except:
                     pass
             return None
+    
+    async def search_music(self, song_title: str, artist: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Search for music tracks using music-search service."""
+        try:
+            # Use music-search service (running on port 8004)
+            music_search_url = "http://music-search:8004"
+            request_data = {"song_title": song_title}
+            if artist:
+                request_data["artist"] = artist
+            
+            response = await self.client.post(
+                f"{music_search_url}/search",
+                json=request_data,
+                timeout=10.0
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error searching music: {e}")
+            return None
+    
+    async def create_music_request(
+        self,
+        telegram_user_id: int,
+        track_title: str,
+        track_artist: Optional[str] = None,
+        yandex_music_url: Optional[str] = None,
+        other_source_url: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """Create a music request."""
+        try:
+            request_data = {
+                "track_title": track_title,
+                "track_artist": track_artist,
+                "yandex_music_url": yandex_music_url,
+                "other_source_url": other_source_url
+            }
+            response = await self.client.post(
+                f"{self.base_url}/v1/users/music-requests",
+                json=request_data,
+                params={"telegram_user_id": telegram_user_id}
+            )
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error creating music request: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_detail = e.response.json().get("detail", str(e))
+                    logger.error(f"Error detail: {error_detail}")
+                    # Return error detail for handling
+                    return {"error": error_detail}
+                except:
+                    pass
+            return None
 
 
 # Global instance

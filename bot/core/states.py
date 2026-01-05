@@ -14,3 +14,8 @@ class PurchaseStates(StatesGroup):
 class SupportStates(StatesGroup):
     """States for support flow."""
     waiting_message = State()  # Ожидание сообщения от пользователя
+
+
+class MusicStates(StatesGroup):
+    """States for music request flow."""
+    waiting_title = State()  # Ожидание названия песни

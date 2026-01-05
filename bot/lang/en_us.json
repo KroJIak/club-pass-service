@@ -8,6 +8,7 @@
     "my_tickets": "🎟️ My tickets",
     "events": "🎉 Upcoming events",
     "club_info": "ℹ️ Club info",
+    "add_music": "🎵 Add music",
     "support": "💬 Support",
     "write_again": "✍️ Write again",
     "write_to_support": "✍️ Write to support",
@@ -97,6 +98,15 @@
       "refund_already_refunded": "⚠️ <b>Ticket Already Refunded</b>\n\nThis ticket has already been refunded.",
       "refund_cannot_refund": "⚠️ <b>Cannot Refund Ticket</b>\n\nThis ticket cannot be refunded (it may have already been used).",
       "refund_status_error": "Cannot refund this ticket, please try again"
+    },
+    "music": {
+      "not_in_club": "You need to be in the club to add music requests",
+      "enter_title": "Enter song title:",
+      "search_results": "Found tracks:",
+      "request_success": "✅ Your request has been added!",
+      "too_soon": "You can add songs once every 5 minutes",
+      "no_results": "😔 Nothing found. Try changing your query.",
+      "search_error": "❌ Error searching for music. Please try again later."
     }
   }
 }

@@ -11,6 +11,7 @@ import QRScanner from './pages/QRScanner/QRScanner'
 import ClubSettings from './pages/ClubSettings/ClubSettings'
 import SupportMessagesList from './pages/Support/SupportMessagesList'
 import Staff from './pages/Staff/Staff'
+import MusicManagement from './pages/Music/MusicManagement'
 import { useAuth } from './hooks/useAuth'
 import { FilterPanelProvider } from './hooks/useFilterPanel'
 
@@ -64,6 +65,7 @@ function App() {
               <Route path="qr-scanner" element={<QRScanner />} />
               <Route path="support" element={<SupportMessagesList />} />
               <Route path="staff" element={<Staff />} />
+              <Route path="music" element={<MusicManagement />} />
               <Route path="club-settings" element={<ClubSettings />} />
             </Route>
           </Routes>

@@ -1,7 +1,7 @@
 """Admin CRUD endpoints for all models."""
 import logging
 import os
-from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response, UploadFile, File, Form, Body
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -28,6 +28,8 @@ from api.repositories.admin_message_repository import AdminMessageRepository
 from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
 from api.repositories.staff_user_repository import StaffUserRepository
 from api.repositories.menu_photo_repository import MenuPhotoRepository
+from api.repositories.music_request_repository import MusicRequestRepository
+from api.repositories.music_queue_repository import MusicQueueRepository
 from api.services.telegram_service import download_file_from_telegram
 from api.services.file_storage_service import save_support_photo, get_full_file_path
 from api.core.config import settings
@@ -58,6 +60,12 @@ from api.api.v1.schemas import (
     MenuPhotoResponse,
     MenuPhotoListResponse,
     MenuPhotoReorderRequest,
+    MusicRequestResponse,
+    MusicRequestListResponse,
+    MusicQueueResponse,
+    MusicQueueListResponse,
+    MusicQueueCreate,
+    MusicQueueReorderRequest,
 )
 from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage, MenuPhoto
 from api.models.ticket import TicketStatus
@@ -2241,4 +2249,151 @@ async def reorder_menu_photos(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reorder menu photos: {str(e)}"
         )
+
+
+# Music Management endpoints
+
+@router.get("/admin/music-queue", response_model=MusicQueueListResponse)
+async def get_music_queue(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get music queue (admin only)."""
+    queue_items = MusicQueueRepository.get_all(db)
+    return MusicQueueListResponse(queue=[MusicQueueResponse.model_validate(item) for item in queue_items])
+
+
+@router.get("/admin/music-wishlist", response_model=MusicRequestListResponse)
+async def get_music_wishlist(
+    event_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get music wishlist (admin only)."""
+    requests = MusicRequestRepository.get_all(db, event_id=event_id)
+    return MusicRequestListResponse(requests=[MusicRequestResponse.model_validate(req) for req in requests])
+
+
+@router.post("/admin/music-queue", response_model=MusicQueueResponse, status_code=status.HTTP_201_CREATED)
+async def create_music_queue_item(
+    queue_data: MusicQueueCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Add a track to music queue (admin only)."""
+    queue_item = MusicQueueRepository.create(
+        db,
+        track_title=queue_data.track_title,
+        track_artist=queue_data.track_artist,
+        yandex_music_url=queue_data.yandex_music_url,
+        other_source_url=queue_data.other_source_url,
+    )
+    return MusicQueueResponse.model_validate(queue_item)
+
+
+@router.put("/admin/music-queue/reorder", status_code=status.HTTP_200_OK)
+async def reorder_music_queue(
+    reorder_request: MusicQueueReorderRequest,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Reorder music queue items (admin only)."""
+    try:
+        queue_orders = [{"id": item.id, "queue_order": item.queue_order} for item in reorder_request.items]
+        success = MusicQueueRepository.reorder(db, queue_orders)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to reorder music queue"
+            )
+        return {"message": "Music queue reordered successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error reordering music queue: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reorder music queue: {str(e)}"
+        )
+
+
+@router.delete("/admin/music-queue/{queue_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_music_queue_item(
+    queue_id: int,
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete a music queue item (admin only)."""
+    if not MusicQueueRepository.delete(db, queue_id, hard=hard):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Music queue item with id {queue_id} not found"
+        )
+    return None
+
+
+@router.delete("/admin/music-wishlist/{request_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_music_request(
+    request_id: int,
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete a music request from wishlist (admin only)."""
+    if not MusicRequestRepository.delete(db, request_id, hard=hard):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Music request with id {request_id} not found"
+        )
+    return None
+
+
+@router.post("/admin/music-wishlist/{request_id}/move-to-queue", response_model=MusicQueueResponse, status_code=status.HTTP_201_CREATED)
+async def move_music_request_to_queue(
+    request_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Move a music request from wishlist to queue (admin only)."""
+    music_request = MusicRequestRepository.get_by_id(db, request_id)
+    if not music_request:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Music request with id {request_id} not found"
+        )
+    
+    queue_item = MusicQueueRepository.create(
+        db,
+        track_title=music_request.track_title,
+        track_artist=music_request.track_artist,
+        yandex_music_url=music_request.yandex_music_url,
+        other_source_url=music_request.other_source_url,
+    )
+    
+    return MusicQueueResponse.model_validate(queue_item)
+
+
+@router.delete("/admin/music-queue/batch", status_code=status.HTTP_200_OK)
+async def delete_music_queue_batch(
+    queue_ids: List[int] = Body(...),
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete multiple music queue items (admin only)."""
+    count = MusicQueueRepository.delete_batch(db, queue_ids, hard=hard)
+    return {"deleted_count": count}
+
+
+@router.delete("/admin/music-wishlist/batch", status_code=status.HTTP_200_OK)
+async def delete_music_wishlist_batch(
+    request_ids: List[int] = Body(...),
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete multiple music requests from wishlist (admin only)."""
+    count = MusicRequestRepository.delete_batch(db, request_ids, hard=hard)
+    return {"deleted_count": count}
 

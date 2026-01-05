@@ -448,3 +448,91 @@ class StaffAccessCheckResponse(BaseModel):
     has_access: bool
     staff_user: Optional[StaffUserResponse] = None
 
+
+# Music Request schemas
+class MusicRequestCreate(BaseModel):
+    """Schema for creating a music request."""
+    track_title: str
+    track_artist: Optional[str] = None
+    yandex_music_url: Optional[str] = None
+    other_source_url: Optional[str] = None
+
+
+class MusicRequestResponse(BaseModel):
+    """Schema for music request response."""
+    id: int
+    user_id: int
+    event_id: int
+    track_title: str
+    track_artist: str
+    yandex_music_url: Optional[str] = None
+    other_source_url: Optional[str] = None
+    request_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MusicRequestListResponse(BaseModel):
+    """Schema for list of music requests."""
+    requests: List[MusicRequestResponse]
+
+
+# Music Queue schemas
+class MusicQueueCreate(BaseModel):
+    """Schema for creating a music queue item."""
+    track_title: str
+    track_artist: str
+    yandex_music_url: Optional[str] = None
+    other_source_url: Optional[str] = None
+
+
+class MusicQueueResponse(BaseModel):
+    """Schema for music queue response."""
+    id: int
+    track_title: str
+    track_artist: str
+    yandex_music_url: Optional[str] = None
+    other_source_url: Optional[str] = None
+    queue_order: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MusicQueueListResponse(BaseModel):
+    """Schema for list of music queue items."""
+    queue: List[MusicQueueResponse]
+
+
+class MusicQueueReorderItem(BaseModel):
+    """Schema for reordering music queue items."""
+    id: int
+    queue_order: int
+
+
+class MusicQueueReorderRequest(BaseModel):
+    """Schema for music queue reorder request."""
+    items: List[MusicQueueReorderItem]
+
+
+# Music Search schemas
+class MusicSearchTrackResponse(BaseModel):
+    """Schema for music search track response."""
+    title: str
+    artist: str
+    source: str
+    links: dict
+    album: Optional[str] = None
+    release_date: Optional[str] = None
+    track_id: Optional[str] = None
+
+
+class MusicSearchResponse(BaseModel):
+    """Schema for music search response."""
+    tracks: List[MusicSearchTrackResponse]
+

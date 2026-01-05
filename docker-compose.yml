@@ -146,6 +146,18 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
+  music-search:
+    build:
+      context: .
+      dockerfile: music-search-service/Dockerfile
+    container_name: club-pass-music-search
+    environment:
+      YANDEX_MUSIC_TOKEN: ${YANDEX_MUSIC_TOKEN}
+      MUSIC_API_BASE_URL: ${MUSIC_API_BASE_URL:-https://bhindi1.ddns.net/music/api}
+    ports:
+      - "8004:8004"
+    restart: unless-stopped
+
   cloudpub-init:
     image: alpine:latest
     container_name: club-pass-cloudpub-init
