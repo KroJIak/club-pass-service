@@ -32,7 +32,7 @@ def _get_all_screen_images() -> Dict[str, list[str]]:
             # Get all screen images from lang file
             screen_images = []
             # Collect all unique image filenames from screens
-            screen_keys = ["main_menu", "buy_ticket", "my_tickets", "events", "club_info", "support"]
+            screen_keys = ["main_menu", "buy_ticket", "my_tickets", "events", "club_info", "support", "add_music"]
             for screen_key in screen_keys:
                 try:
                     img_filename = t(locale, f"screens.{screen_key}.image")

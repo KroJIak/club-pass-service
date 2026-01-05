@@ -49,6 +49,9 @@
     },
     "refund_confirm": {
       "image": "banner.jpg"
+    },
+    "add_music": {
+      "image": "banner.jpg"
     }
   },
   "messages": {

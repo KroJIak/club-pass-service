@@ -57,7 +57,8 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
         callback,
         text,
         reply_markup=get_back_keyboard(locale),
-        locale=locale
+        locale=locale,
+        screen_key="add_music"
     )
     
     await state.set_state(MusicStates.waiting_title)
