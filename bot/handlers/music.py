@@ -107,8 +107,8 @@ async def handle_music_title_input(message: Message, state: FSMContext):
         no_results_text = t(locale, "messages.music.no_results")
         no_results_msg = await message.answer(no_results_text)
         temporary_messages_middleware.set_last_system_message(user_id, no_results_msg.chat.id, no_results_msg.message_id)
-        # Flush pending user messages to mark this as temporary, but keep user's search query visible
-        await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+        # DO NOT flush pending user messages - keep user's search query visible
+        # The message will be deleted when user performs next system action (e.g., clicks "Main Menu")
         return
     
     tracks = search_result.get("tracks", [])
