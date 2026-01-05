@@ -30,6 +30,7 @@ class MusicQueueRepository:
         track_artist: str,
         yandex_music_url: Optional[str] = None,
         other_source_url: Optional[str] = None,
+        request_count: int = 0,
     ) -> MusicQueue:
         """Create a new music queue item (adds to end of queue)."""
         max_order = MusicQueueRepository.get_max_order(db)
@@ -39,6 +40,7 @@ class MusicQueueRepository:
             yandex_music_url=yandex_music_url,
             other_source_url=other_source_url,
             queue_order=max_order,
+            request_count=request_count,
         )
         db.add(music_queue)
         db.commit()

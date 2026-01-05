@@ -14,6 +14,7 @@ class MusicQueue(Base):
     yandex_music_url = Column(String, nullable=True)
     other_source_url = Column(String, nullable=True)
     queue_order = Column(Integer, nullable=False, index=True)
+    request_count = Column(Integer, nullable=False, default=0, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
     is_deleted = Column(Boolean, default=False, nullable=False, index=True)

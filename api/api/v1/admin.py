@@ -2261,17 +2261,9 @@ async def get_music_queue(
     """Get music queue (admin only)."""
     queue_items = MusicQueueRepository.get_all(db)
     
-    # For each queue item, find corresponding request to get request_count
-    # Note: We search in soft-deleted requests too, as they might have been moved to queue
+    # request_count is now stored directly in MusicQueue, no need to search in MusicRequest
     queue_responses = []
     for item in queue_items:
-        # Find request with same title and artist (search across all events, including soft-deleted)
-        from api.models.music_request import MusicRequest
-        request = db.query(MusicRequest).filter(
-            MusicRequest.track_title == item.track_title,
-            MusicRequest.track_artist == item.track_artist,
-        ).order_by(MusicRequest.request_count.desc()).first()
-        
         queue_dict = {
             "id": item.id,
             "track_title": item.track_title,
@@ -2281,7 +2273,7 @@ async def get_music_queue(
             "queue_order": item.queue_order,
             "created_at": item.created_at,
             "updated_at": item.updated_at,
-            "request_count": request.request_count if request else 0,
+            "request_count": item.request_count,
         }
         queue_responses.append(MusicQueueResponse.model_validate(queue_dict))
     
@@ -2397,17 +2389,32 @@ async def move_music_request_to_queue(
     ).first()
     
     if existing_queue_item:
-        # Track already in queue, just delete the request from wishlist (hard delete - moving between columns)
+        # Track already in queue, update request_count if needed
+        # Sum up request_count from all requests with same title/artist for this event
+        from api.models.music_request import MusicRequest
+        total_requests = db.query(MusicRequest).filter(
+            MusicRequest.track_title == music_request.track_title,
+            MusicRequest.track_artist == music_request.track_artist,
+            MusicRequest.is_deleted == False
+        ).count()
+        
+        # Update request_count in queue item (use max of current and total from requests)
+        existing_queue_item.request_count = max(existing_queue_item.request_count, total_requests)
+        db.commit()
+        db.refresh(existing_queue_item)
+        
+        # Delete the request from wishlist (hard delete - moving between columns)
         MusicRequestRepository.delete(db, request_id, hard=True)
         return MusicQueueResponse.model_validate(existing_queue_item)
     
-    # Create queue item
+    # Create queue item with request_count from the request being moved
     queue_item = MusicQueueRepository.create(
         db,
         track_title=music_request.track_title,
         track_artist=music_request.track_artist,
         yandex_music_url=music_request.yandex_music_url,
         other_source_url=music_request.other_source_url,
+        request_count=music_request.request_count,
     )
     
     # Delete the request from wishlist (hard delete - moving between columns)
