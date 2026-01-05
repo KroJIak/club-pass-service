@@ -17,9 +17,10 @@ def get_main_menu_keyboard(locale: str, has_menu_photos: bool = False) -> Inline
     builder.add(InlineKeyboardButton(text=t(locale, "buttons.my_tickets"), callback_data="menu_my_tickets"))
     builder.adjust(2)  # 2 buttons per row
     # Other buttons on separate rows
-    builder.row(InlineKeyboardButton(text=t(locale, "buttons.club_info"), callback_data="menu_club_info"))
+    # Menu button (if exists) should be above Club info
     if has_menu_photos:
         builder.row(InlineKeyboardButton(text=t(locale, "buttons.menu"), callback_data="menu_food_drinks"))
+    builder.row(InlineKeyboardButton(text=t(locale, "buttons.club_info"), callback_data="menu_club_info"))
     builder.row(InlineKeyboardButton(text=t(locale, "buttons.support"), callback_data="menu_support"))
     return builder.as_markup()
 

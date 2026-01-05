@@ -220,11 +220,10 @@ async def handle_menu_food_drinks(callback: CallbackQuery, state: FSMContext):
         media=media_group,
     )
     
-    # Send message with "Main Menu" button
-    menu_title = t(locale, "messages.menu_title")
+    # Send message with "Main Menu" button (no text, only button)
     new_message = await bot.send_message(
         chat_id=callback.message.chat.id,
-        text=menu_title,
+        text="",  # No text, only inline button
         reply_markup=get_back_to_menu_keyboard(locale),
         parse_mode="HTML",
     )
