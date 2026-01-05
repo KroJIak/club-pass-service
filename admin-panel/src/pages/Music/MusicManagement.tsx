@@ -253,6 +253,10 @@ const MusicManagement = () => {
 
   const queueSelection = useSelection(queue)
   const wishlistSelection = useSelection(wishlist)
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  // Disable drag if any items are selected
+  const disableDrag = queueSelection.hasSelection || wishlistSelection.hasSelection
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -306,8 +310,13 @@ const MusicManagement = () => {
     return () => clearInterval(interval)
   }, [fetchQueue, fetchWishlist])
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(String(event.active.id))
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
 
     if (!over) {
       return
@@ -446,10 +455,19 @@ const MusicManagement = () => {
     )
   }
 
+  // Find active item for DragOverlay
+  const activeQueueItem = activeId?.startsWith('queue-') 
+    ? queue.find((item) => `queue-${item.id}` === activeId)
+    : null
+  const activeWishlistItem = activeId?.startsWith('wishlist-')
+    ? wishlist.find((item) => `wishlist-${item.id}` === activeId)
+    : null
+
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
       <Box sx={{ p: 3 }}>
@@ -502,6 +520,7 @@ const MusicManagement = () => {
                           item={item}
                           isSelected={queueSelection.isSelected(item.id)}
                           onDelete={handleDeleteQueueItem}
+                          disableDrag={disableDrag}
                         />
                       ))
                     )}
@@ -565,6 +584,67 @@ const MusicManagement = () => {
           </Card>
         </Box>
       </Box>
+      <DragOverlay style={{ zIndex: 9999 }}>
+        {activeQueueItem ? (
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              cursor: 'grabbing',
+              border: queueSelection.isSelected(activeQueueItem.id) ? '2px solid' : 'none',
+              borderColor: queueSelection.isSelected(activeQueueItem.id) ? 'primary.main' : 'transparent',
+              bgcolor: queueSelection.isSelected(activeQueueItem.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+              boxShadow: 6,
+              width: '400px',
+            }}
+          >
+            <DragIndicatorIcon sx={{ color: 'text.secondary' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="body1" fontWeight="bold">
+                {activeQueueItem.track_title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {activeQueueItem.track_artist}
+              </Typography>
+              {activeQueueItem.request_count !== undefined && activeQueueItem.request_count > 0 && (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
+                  Requests: {activeQueueItem.request_count}
+                </Typography>
+              )}
+            </Box>
+          </Paper>
+        ) : activeWishlistItem ? (
+          <Paper
+            sx={{
+              p: 2,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              cursor: 'grabbing',
+              border: wishlistSelection.isSelected(activeWishlistItem.id) ? '2px solid' : 'none',
+              borderColor: wishlistSelection.isSelected(activeWishlistItem.id) ? 'primary.main' : 'transparent',
+              bgcolor: wishlistSelection.isSelected(activeWishlistItem.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+              boxShadow: 6,
+              width: '400px',
+            }}
+          >
+            <DragIndicatorIcon sx={{ color: 'text.secondary' }} />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="body1" fontWeight="bold">
+                {activeWishlistItem.track_title}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {activeWishlistItem.track_artist}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
+                Requests: {activeWishlistItem.request_count}
+              </Typography>
+            </Box>
+          </Paper>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }
