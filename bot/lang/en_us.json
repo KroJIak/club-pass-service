@@ -18,7 +18,8 @@
     "confirm": "✅ Confirm order",
     "refund_ticket": "↩️ Refund ticket",
     "yes": "✅ Yes",
-    "no": "❌ No"
+    "no": "❌ No",
+    "next": "➡️ Next"
   },
   "labels": {
     "address": "📍 Address",
