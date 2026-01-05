@@ -361,8 +361,50 @@ async def get_menu_photos_public(
     db: Session = Depends(get_db),
 ):
     """Get all active menu photos (public endpoint for bot)."""
-    photos = MenuPhotoRepository.get_all(db)
-    # Convert ORM objects to Pydantic models using model_validate
-    # This works because MenuPhotoResponse has from_attributes = True
-    photo_responses = [MenuPhotoResponse.model_validate(photo) for photo in photos]
-    return MenuPhotoListResponse(photos=photo_responses)
+    logger.info("=" * 80)
+    logger.info("MENU PHOTOS ENDPOINT CALLED")
+    logger.info("=" * 80)
+    
+    try:
+        logger.info("Step 1: Calling MenuPhotoRepository.get_all(db)")
+        photos = MenuPhotoRepository.get_all(db)
+        logger.info(f"Step 2: Retrieved {len(photos)} photos from repository")
+        
+        # Convert ORM objects to Pydantic models
+        photo_responses = []
+        for i, photo in enumerate(photos):
+            try:
+                logger.info(f"Step 3.{i+1}: Validating photo {photo.id}")
+                logger.info(f"  - Photo ID: {photo.id}")
+                logger.info(f"  - File path: {photo.file_path}")
+                logger.info(f"  - File name: {photo.file_name}")
+                logger.info(f"  - File size: {photo.file_size}")
+                logger.info(f"  - MIME type: {photo.mime_type}")
+                logger.info(f"  - Display order: {photo.display_order}")
+                logger.info(f"  - Created at: {photo.created_at} (type: {type(photo.created_at)})")
+                logger.info(f"  - Updated at: {photo.updated_at} (type: {type(photo.updated_at)})")
+                logger.info(f"  - Is deleted: {photo.is_deleted}")
+                logger.info(f"  - Deleted at: {photo.deleted_at}")
+                
+                photo_response = MenuPhotoResponse.model_validate(photo)
+                logger.info(f"Step 3.{i+1}: Photo {photo.id} validated successfully")
+                photo_responses.append(photo_response)
+            except Exception as e:
+                logger.error(f"Step 3.{i+1}: Error validating photo {photo.id}: {e}", exc_info=True)
+                logger.error(f"  - Photo object: {photo}")
+                logger.error(f"  - Photo dict: {photo.__dict__ if hasattr(photo, '__dict__') else 'N/A'}")
+                continue
+        
+        logger.info(f"Step 4: Created {len(photo_responses)} photo responses")
+        
+        result = MenuPhotoListResponse(photos=photo_responses)
+        logger.info(f"Step 5: Created MenuPhotoListResponse with {len(result.photos)} photos")
+        logger.info(f"Step 6: Returning response")
+        logger.info("=" * 80)
+        
+        return result
+    except Exception as e:
+        logger.error(f"CRITICAL ERROR in get_menu_photos_public: {e}", exc_info=True)
+        logger.error(f"Exception type: {type(e)}")
+        logger.error(f"Exception args: {e.args}")
+        raise
