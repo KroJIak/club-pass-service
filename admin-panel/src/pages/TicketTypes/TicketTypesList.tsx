@@ -10,7 +10,7 @@ import {
   Chip,
   IconButton,
 } from '@mui/material'
-import { Add as AddIcon, Delete as DeleteIcon, Close as CloseIcon } from '@mui/icons-material'
+import { Add as AddIcon, Delete as DeleteIcon, Close as CloseIcon, Edit as EditIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { TicketType, TicketTypeTemplate } from '../../types'
 import TicketTypeForm from './TicketTypeForm'
@@ -149,7 +149,19 @@ const TicketTypesList = () => {
       <Grid container spacing={3}>
         {ticketTypes.map((tt) => (
           <Grid item xs={12} sm={6} md={4} key={tt.id}>
-            <Card>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                '&:hover': {
+                  boxShadow: 4,
+                },
+              }}
+              onClick={() => {
+                setEditingTicketType(tt)
+                setSelectedTemplate(null)
+                setFormOpen(true)
+              }}
+            >
               <CardContent>
                 <Typography variant="h6">{tt.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -168,8 +180,24 @@ const TicketTypesList = () => {
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
                 <IconButton
                   size="small"
+                  color="primary"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditingTicketType(tt)
+                    setSelectedTemplate(null)
+                    setFormOpen(true)
+                  }}
+                  title="Edit"
+                >
+                  <EditIcon />
+                </IconButton>
+                <IconButton
+                  size="small"
                   color="error"
-                  onClick={() => handleDelete(tt.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(tt.id)
+                  }}
                   title="Delete"
                 >
                   <DeleteIcon />
