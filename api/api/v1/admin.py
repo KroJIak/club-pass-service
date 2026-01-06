@@ -247,7 +247,10 @@ async def create_event(
         # Check if trying to create active event with past end date/time
         # Only validate if auto_deactivate_events is enabled
         club_settings = ClubSettingsRepository.get_settings(db)
+        logger.info(f"[CREATE EVENT] Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (type: {type(club_settings.auto_deactivate_events)})")
+        logger.info(f"[CREATE EVENT] event_data.is_active={event_data.is_active}, end_date={event_data.end_date}, end_time={event_data.end_time}")
         if event_data.is_active and event_data.end_date and event_data.end_time and club_settings.auto_deactivate_events:
+            logger.info(f"[CREATE EVENT] Validation will be performed (auto_deactivate_events is enabled)")
             try:
                 tz = pytz.timezone(timezone_str)
                 end_dt_tz = tz.localize(end_dt)
