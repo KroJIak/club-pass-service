@@ -384,15 +384,17 @@ async def update_event(
             import pytz
             from api.repositories.club_settings_repository import ClubSettingsRepository
             
-            try:
-                # Get timezone from club settings
-                club_settings = ClubSettingsRepository.get_settings(db)
-                timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
-                if not timezone_str:
-                    timezone_str = 'Europe/Moscow'
-                
-                # Only validate if auto_deactivate_events is enabled
-                if club_settings.auto_deactivate_events:
+            # Get timezone from club settings
+            club_settings = ClubSettingsRepository.get_settings(db)
+            timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
+            if not timezone_str:
+                timezone_str = 'Europe/Moscow'
+            
+            logger.info(f"Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (type: {type(club_settings.auto_deactivate_events)})")
+            
+            # Only validate if auto_deactivate_events is enabled
+            if club_settings.auto_deactivate_events:
+                try:
                     end_dt = datetime.strptime(f"{end_date_to_check} {end_time_to_check}", "%d.%m.%Y %H:%M")
                     
                     try:
@@ -434,9 +436,11 @@ async def update_event(
                                     status_code=status.HTTP_400_BAD_REQUEST,
                                     detail="Cannot activate event with end date and time in the past"
                                 )
-            except ValueError:
-                # Date format errors will be caught by Pydantic
-                pass
+                except ValueError:
+                    # Date format errors will be caught by Pydantic
+                    pass
+            else:
+                logger.info(f"Skipping validation: auto_deactivate_events is disabled")
     
     # Handle end_date and end_time changes
     end_date_changed = event_data.end_date is not None
