@@ -421,17 +421,49 @@ async def check_music_request_limit(
                 detail="User not found"
             )
         
-        # Get valid event
-        valid_event = _get_valid_event_for_user(db, user.id)
+        # Check if user is staff - staff users can always add music
+        from api.repositories.staff_user_repository import StaffUserRepository
+        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
+        
+        # Get valid event - for staff, get any active event; for regular users, require used ticket
+        valid_event = None
+        if is_staff:
+            # Staff users can use any active event
+            from api.repositories.event_repository import EventRepository
+            active_events = EventRepository.get_all_active(db)
+            if active_events:
+                # Get timezone for date comparison
+                from api.utils.timezone import get_current_time_in_timezone
+                current_time_tz = get_current_time_in_timezone(db)
+                settings = ClubSettingsRepository.get_settings(db)
+                timezone_str = settings.timezone or "Europe/Moscow"
+                tz = pytz.timezone(timezone_str)
+                current_time_aware = tz.localize(current_time_tz)
+                
+                # Find first active event that hasn't ended
+                for event in active_events:
+                    if event.end_date and event.end_time:
+                        try:
+                            end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
+                            end_dt_aware = tz.localize(end_dt)
+                            if end_dt_aware > current_time_aware:
+                                valid_event = event
+                                break
+                        except Exception:
+                            continue
+                    else:
+                        # Event without end date/time - use it
+                        valid_event = event
+                        break
+        else:
+            # Regular users need used ticket
+            valid_event = _get_valid_event_for_user(db, user.id)
+        
         if not valid_event:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="No active event found. You need to be in the club to add music requests."
             )
-        
-        # Check if user is staff - staff users bypass rate limit
-        from api.repositories.staff_user_repository import StaffUserRepository
-        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
         
         # Check rate limit (5 minutes) - skip for staff users
         can_make = True
@@ -468,8 +500,44 @@ async def create_music_request(
                 detail="User not found"
             )
         
-        # Get valid event
-        valid_event = _get_valid_event_for_user(db, user.id)
+        # Check if user is staff - staff users can always add music
+        from api.repositories.staff_user_repository import StaffUserRepository
+        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
+        
+        # Get valid event - for staff, get any active event; for regular users, require used ticket
+        valid_event = None
+        if is_staff:
+            # Staff users can use any active event
+            from api.repositories.event_repository import EventRepository
+            active_events = EventRepository.get_all_active(db)
+            if active_events:
+                # Get timezone for date comparison
+                from api.utils.timezone import get_current_time_in_timezone
+                current_time_tz = get_current_time_in_timezone(db)
+                settings = ClubSettingsRepository.get_settings(db)
+                timezone_str = settings.timezone or "Europe/Moscow"
+                tz = pytz.timezone(timezone_str)
+                current_time_aware = tz.localize(current_time_tz)
+                
+                # Find first active event that hasn't ended
+                for event in active_events:
+                    if event.end_date and event.end_time:
+                        try:
+                            end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
+                            end_dt_aware = tz.localize(end_dt)
+                            if end_dt_aware > current_time_aware:
+                                valid_event = event
+                                break
+                        except Exception:
+                            continue
+                    else:
+                        # Event without end date/time - use it
+                        valid_event = event
+                        break
+        else:
+            # Regular users need used ticket
+            valid_event = _get_valid_event_for_user(db, user.id)
+        
         if not valid_event:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -502,10 +570,6 @@ async def create_music_request(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Вы уже выбирали данную песню"
             )
-        
-        # Check if user is staff - staff users bypass rate limit
-        from api.repositories.staff_user_repository import StaffUserRepository
-        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
         
         # Track is not in queue and not in wishlist - user can add it
         # Create new request
