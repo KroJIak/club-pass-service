@@ -403,9 +403,12 @@ async def update_event(
             from api.repositories.club_settings_repository import ClubSettingsRepository
             
             # Get timezone from club settings
-            # Force reload from DB to avoid caching issues - expire the object first
+            # Force reload from DB to avoid caching issues - expire ONLY ClubSettings, not the event
             from api.models.club_settings import ClubSettings
-            db.expire_all()  # Expire all objects in session to force fresh load
+            # Expire only ClubSettings, not the event object
+            club_settings_obj = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+            if club_settings_obj:
+                db.expire(club_settings_obj)  # Expire only this object, not all
             club_settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
             if not club_settings:
                 # Fallback to repository if query fails
