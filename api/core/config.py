@@ -1,6 +1,9 @@
 """Configuration settings for API service."""
 from pydantic_settings import BaseSettings
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -54,3 +57,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Log admin credentials on startup (without exposing password)
+logger.info(f"Admin credentials loaded: username='{settings.ADMIN_USERNAME}', password_length={len(settings.ADMIN_PASSWORD)}")

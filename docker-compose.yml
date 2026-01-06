@@ -47,6 +47,8 @@ services:
       EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       BOT_API_URL: ${BOT_API_URL:-http://bot:8002}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:

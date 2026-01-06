@@ -4,8 +4,10 @@ from pydantic import BaseModel
 from api.core.auth import create_access_token, get_current_admin
 from api.core.config import settings
 from datetime import timedelta
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 class LoginRequest(BaseModel):
@@ -28,12 +30,28 @@ class AdminInfo(BaseModel):
 @router.post("/admin/login", response_model=LoginResponse)
 async def login(login_data: LoginRequest):
     """Admin login endpoint."""
-    if login_data.username != settings.ADMIN_USERNAME or login_data.password != settings.ADMIN_PASSWORD:
+    # Log authentication attempt (without password for security)
+    logger.info(f"Login attempt: username='{login_data.username}'")
+    logger.info(f"Expected username: '{settings.ADMIN_USERNAME}', Expected password length: {len(settings.ADMIN_PASSWORD)}")
+    logger.info(f"Provided password length: {len(login_data.password)}")
+    
+    if login_data.username != settings.ADMIN_USERNAME:
+        logger.warning(f"Login failed: username mismatch (expected: '{settings.ADMIN_USERNAME}', got: '{login_data.username}')")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    if login_data.password != settings.ADMIN_PASSWORD:
+        logger.warning(f"Login failed: password mismatch (expected length: {len(settings.ADMIN_PASSWORD)}, got length: {len(login_data.password)})")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    logger.info(f"Login successful for username: '{login_data.username}'")
     
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
