@@ -10,7 +10,7 @@ import {
   IconButton,
   Divider,
 } from '@mui/material'
-import { Close as CloseIcon, Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import { Close as CloseIcon, Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
 import { Event, EventCreate, EventUpdate, TicketType, TicketTypeTemplate } from '../../types'
@@ -39,6 +39,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
   const [ticketTypeFormOpen, setTicketTypeFormOpen] = useState(false)
   const [templateFormOpen, setTemplateFormOpen] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<TicketTypeTemplate | null>(null)
+  const [editingTicketType, setEditingTicketType] = useState<TicketType | null>(null)
   const [deleteTicketTypeDialog, setDeleteTicketTypeDialog] = useState<{ open: boolean; ticketTypeId: number | null }>({
     open: false,
     ticketTypeId: null,
@@ -364,7 +365,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                   variant="outlined"
                   size="small"
                   startIcon={<AddIcon />}
-                  onClick={handleCreateTicketType}
+                  onClick={() => {
+                    setEditingTicketType(null)
+                    setSelectedTemplate(null)
+                    setTicketTypeFormOpen(true)
+                  }}
                   disabled={!eventId}
                 >
                   Add Ticket Type
@@ -430,6 +435,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                 {ticketTypes.map((tt) => (
                   <Box
                     key={tt.id}
+                    onClick={() => {
+                      setEditingTicketType(tt)
+                      setSelectedTemplate(null)
+                      setTicketTypeFormOpen(true)
+                    }}
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -438,6 +448,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       border: '1px solid',
                       borderColor: 'divider',
                       borderRadius: 1,
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'action.hover',
+                      },
                     }}
                   >
                     <Box>
@@ -448,13 +462,32 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                         Price: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽ | Available: {tt.available_quantity} / {tt.total_quantity}
                       </Typography>
                     </Box>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => setDeleteTicketTypeDialog({ open: true, ticketTypeId: tt.id })}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setEditingTicketType(tt)
+                          setSelectedTemplate(null)
+                          setTicketTypeFormOpen(true)
+                        }}
+                        title="Edit"
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setDeleteTicketTypeDialog({ open: true, ticketTypeId: tt.id })
+                        }}
+                        title="Delete"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Box>
                   </Box>
                 ))}
               </Box>
@@ -484,13 +517,16 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         <TicketTypeForm
           open={ticketTypeFormOpen}
           eventId={eventId}
+          ticketType={editingTicketType}
           template={selectedTemplate}
           onClose={() => {
             setTicketTypeFormOpen(false)
+            setEditingTicketType(null)
             setSelectedTemplate(null)
           }}
           onSuccess={() => {
             handleTicketTypeCreated()
+            setEditingTicketType(null)
             setSelectedTemplate(null)
           }}
         />
