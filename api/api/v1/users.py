@@ -429,8 +429,14 @@ async def check_music_request_limit(
                 detail="No active event found. You need to be in the club to add music requests."
             )
         
-        # Check rate limit (5 minutes)
-        can_make = MusicRequestLimitRepository.can_make_request(db, user.id, valid_event.id, cooldown_minutes=5)
+        # Check if user is staff - staff users bypass rate limit
+        from api.repositories.staff_user_repository import StaffUserRepository
+        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
+        
+        # Check rate limit (5 minutes) - skip for staff users
+        can_make = True
+        if not is_staff:
+            can_make = MusicRequestLimitRepository.can_make_request(db, user.id, valid_event.id, cooldown_minutes=5)
         
         return {
             "can_make_request": can_make,
@@ -497,6 +503,10 @@ async def create_music_request(
                 detail="Вы уже выбирали данную песню"
             )
         
+        # Check if user is staff - staff users bypass rate limit
+        from api.repositories.staff_user_repository import StaffUserRepository
+        is_staff = StaffUserRepository.get_by_telegram_id(db, telegram_user_id) is not None
+        
         # Track is not in queue and not in wishlist - user can add it
         # Create new request
         music_request = MusicRequestRepository.create(
@@ -509,8 +519,9 @@ async def create_music_request(
             other_source_url=request_data.other_source_url,
         )
         
-        # Update last request time
-        MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)
+        # Update last request time (only for non-staff users, but updating doesn't hurt)
+        if not is_staff:
+            MusicRequestLimitRepository.update_last_request(db, user.id, valid_event.id)
         
         return MusicRequestResponse.model_validate(music_request)
     

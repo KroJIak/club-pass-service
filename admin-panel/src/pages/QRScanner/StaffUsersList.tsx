@@ -203,7 +203,10 @@ const StaffUsersList = () => {
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Autocomplete
-              options={users}
+              options={users.filter((user) => {
+                // Filter out users who are already staff
+                return !staffUsers.some((staffUser) => staffUser.telegram_user_id === user.telegram_user_id)
+              })}
               getOptionLabel={(option) => getUserDisplayName(option)}
               value={selectedUser}
               onChange={(_, newValue) => setSelectedUser(newValue)}
