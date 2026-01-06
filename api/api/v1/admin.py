@@ -246,12 +246,18 @@ async def create_event(
         
         # Check if trying to create active event with past end date/time
         # Only validate if auto_deactivate_events is enabled
-        # Refresh settings from DB to avoid caching issues
-        club_settings = ClubSettingsRepository.get_settings(db)
-        db.refresh(club_settings)  # Force refresh from DB
-        # Ensure auto_deactivate_events is a boolean
-        auto_deactivate = bool(club_settings.auto_deactivate_events) if club_settings.auto_deactivate_events is not None else False
-        logger.info(f"[CREATE EVENT] Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (raw), {auto_deactivate} (bool), type: {type(club_settings.auto_deactivate_events)})")
+        # Force reload from DB to avoid caching issues - expire the object first
+        from api.models.club_settings import ClubSettings
+        db.expire_all()  # Expire all objects in session to force fresh load
+        club_settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+        if not club_settings:
+            # Fallback to repository if query fails
+            club_settings = ClubSettingsRepository.get_settings(db)
+        
+        # Ensure auto_deactivate_events is a boolean - read directly from DB value
+        auto_deactivate_raw = club_settings.auto_deactivate_events
+        auto_deactivate = bool(auto_deactivate_raw) if auto_deactivate_raw is not None else False
+        logger.info(f"[CREATE EVENT] 🔍 Checking auto_deactivate_events from DB: raw={auto_deactivate_raw}, bool={auto_deactivate}, type={type(auto_deactivate_raw)}")
         logger.info(f"[CREATE EVENT] event_data.is_active={event_data.is_active}, end_date={event_data.end_date}, end_time={event_data.end_time}")
         if event_data.is_active and event_data.end_date and event_data.end_time and auto_deactivate:
             logger.info(f"[CREATE EVENT] Validation will be performed (auto_deactivate_events is enabled)")
@@ -392,16 +398,22 @@ async def update_event(
             from api.repositories.club_settings_repository import ClubSettingsRepository
             
             # Get timezone from club settings
-            # Refresh settings from DB to avoid caching issues
-            club_settings = ClubSettingsRepository.get_settings(db)
-            db.refresh(club_settings)  # Force refresh from DB
+            # Force reload from DB to avoid caching issues - expire the object first
+            from api.models.club_settings import ClubSettings
+            db.expire_all()  # Expire all objects in session to force fresh load
+            club_settings = db.query(ClubSettings).filter(ClubSettings.id == 1).first()
+            if not club_settings:
+                # Fallback to repository if query fails
+                club_settings = ClubSettingsRepository.get_settings(db)
+            
             timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
             if not timezone_str:
                 timezone_str = 'Europe/Moscow'
             
-            # Ensure auto_deactivate_events is a boolean
-            auto_deactivate = bool(club_settings.auto_deactivate_events) if club_settings.auto_deactivate_events is not None else False
-            logger.info(f"[UPDATE EVENT] Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (raw), {auto_deactivate} (bool), type: {type(club_settings.auto_deactivate_events)}")
+            # Ensure auto_deactivate_events is a boolean - read directly from DB value
+            auto_deactivate_raw = club_settings.auto_deactivate_events
+            auto_deactivate = bool(auto_deactivate_raw) if auto_deactivate_raw is not None else False
+            logger.info(f"[UPDATE EVENT] 🔍 Checking auto_deactivate_events from DB: raw={auto_deactivate_raw}, bool={auto_deactivate}, type={type(auto_deactivate_raw)}")
             logger.info(f"[UPDATE EVENT] will_be_active={will_be_active}, end_date_to_check={end_date_to_check}, end_time_to_check={end_time_to_check}")
             
             # Only validate if auto_deactivate_events is enabled
