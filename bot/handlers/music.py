@@ -23,33 +23,40 @@ async def handle_add_music(callback: CallbackQuery, state: FSMContext):
     bot = callback.bot
     user_id = callback.from_user.id
     
-    # Get user tickets to check if they have a used ticket for an active event
+    # Check if user can make music request (this checks both ticket validity and rate limit)
     telegram_user_id = callback.from_user.id
-    tickets = await api_service.get_user_tickets(telegram_user_id, active_only=False)
+    limit_check = await api_service.check_music_request_limit(telegram_user_id)
     
-    # Filter for used tickets
-    used_tickets = [t for t in tickets if t.get("status") == "used"]
-    
-    if not used_tickets:
+    if not limit_check:
+        # API error - show generic error
         await callback.answer(
             t(locale, "messages.music.not_in_club"),
             show_alert=True
         )
         return
     
-    # Check rate limit (5 minutes) - this should be done BEFORE requesting song title
-    try:
-        limit_check = await api_service.check_music_request_limit(telegram_user_id)
-        if not limit_check or not limit_check.get("can_make_request", True):
-            error_msg = limit_check.get("message", t(locale, "messages.music.too_soon"))
-            # Translate error message if needed
-            if locale == "ru_ru" and "You can add music requests once every 5 minutes" in error_msg:
-                error_msg = t(locale, "messages.music.too_soon")
+    # Check if there's an error (e.g., no valid event or rate limit)
+    if limit_check.get("error"):
+        error_msg = limit_check.get("error", "")
+        # If error is about needing to be in club, show that message
+        if "need to be in the club" in error_msg.lower() or "no active event" in error_msg.lower():
+            await callback.answer(
+                t(locale, "messages.music.not_in_club"),
+                show_alert=True
+            )
+        else:
+            # Other errors (rate limit, etc.)
             await callback.answer(error_msg, show_alert=True)
-            return
-    except Exception as e:
-        logger.error(f"Error checking music request limit: {e}")
-        # Continue anyway - API will check again when creating request
+        return
+    
+    # Check rate limit (5 minutes)
+    if not limit_check.get("can_make_request", True):
+        error_msg = limit_check.get("message", t(locale, "messages.music.too_soon"))
+        # Translate error message if needed
+        if locale == "ru_ru" and "You can add music requests once every 5 minutes" in error_msg:
+            error_msg = t(locale, "messages.music.too_soon")
+        await callback.answer(error_msg, show_alert=True)
+        return
     
     # Request song title (without quote format)
     text = t(locale, "messages.music.enter_title")

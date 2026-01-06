@@ -269,18 +269,23 @@ class APIService:
             )
             response.raise_for_status()
             return response.json()
-        except httpx.HTTPError as e:
+        except httpx.HTTPStatusError as e:
             import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Error checking music request limit: {e}")
-            if hasattr(e, 'response') and e.response is not None:
+            if e.response is not None:
                 try:
                     error_detail = e.response.json().get("detail", str(e))
                     logger.error(f"Error detail: {error_detail}")
                     return {"error": error_detail, "can_make_request": False}
                 except:
                     pass
-            return {"can_make_request": False}
+            return {"error": "Error checking music request limit", "can_make_request": False}
+        except httpx.HTTPError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error checking music request limit: {e}")
+            return {"error": "Error checking music request limit", "can_make_request": False}
     
     async def create_music_request(
         self,
