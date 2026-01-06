@@ -32,8 +32,8 @@ async def get_event(
     event_id: int,
     db: Session = Depends(get_db),
 ):
-    """Get event by ID."""
-    event = EventRepository.get_active_by_id(db, event_id)
+    """Get event by ID (including inactive events)."""
+    event = EventRepository.get_by_id(db, event_id)
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -49,9 +49,9 @@ async def get_event_ticket_types(
     active_only: bool = True,
     db: Session = Depends(get_db),
 ):
-    """Get ticket types for an event."""
-    # Check if event exists
-    event = EventRepository.get_active_by_id(db, event_id)
+    """Get ticket types for an event (including inactive events)."""
+    # Check if event exists (including inactive events)
+    event = EventRepository.get_by_id(db, event_id)
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
