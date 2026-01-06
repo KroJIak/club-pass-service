@@ -153,6 +153,12 @@ async def handle_ticket_type_selected(callback: CallbackQuery, state: FSMContext
     
     available_quantity = ticket_type.get("available_quantity", 0)
     
+    # Check if ticket type is sold out
+    if available_quantity <= 0:
+        error_message = t(locale, "messages.purchase.ticket_type_sold_out")
+        await callback.answer(error_message, show_alert=True)
+        return
+    
     # If only 1 ticket available, skip quantity selection and go directly to confirmation
     if available_quantity == 1:
         # Set quantity to 1 and go directly to confirmation

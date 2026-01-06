@@ -80,6 +80,7 @@
       "event_not_found": "❌ Event not found",
       "event_inactive": "❌ Event is inactive",
       "ticket_type_not_found": "❌ Ticket type not found",
+      "ticket_type_sold_out": "Sorry, but this ticket type is sold out",
       "not_enough_tickets": "❌ Not enough tickets. Available: {available}",
       "event_ended": "❌ Event has already ended",
       "processing_payment": "💳 <b>Processing Payment</b>\n\nYour order is being processed. You will be redirected to the payment page shortly...",
