@@ -337,12 +337,15 @@ async def update_event(
     current_admin: dict = Depends(get_current_admin),
 ):
     """Update an event."""
+    logger.info(f"[UPDATE EVENT] Received update request for event {event_id}: is_active={event_data.is_active}")
     event = EventRepository.get_by_id(db, event_id)
     if not event:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Event with id {event_id} not found"
         )
+    
+    logger.info(f"[UPDATE EVENT] Current event state: is_active={event.is_active}")
     
     if event_data.name is not None:
         event.name = event_data.name
@@ -359,7 +362,9 @@ async def update_event(
     if event_data.djs is not None:
         event.djs = event_data.djs
     if event_data.is_active is not None:
+        logger.info(f"[UPDATE EVENT] Setting is_active to {event_data.is_active}")
         event.is_active = event_data.is_active
+        logger.info(f"[UPDATE EVENT] After setting: event.is_active={event.is_active}")
     
     # Validate datetime if any date/time fields are being updated
     if (event_data.start_date is not None or event_data.start_time is not None or 
@@ -471,8 +476,10 @@ async def update_event(
     end_date_changed = event_data.end_date is not None
     end_time_changed = event_data.end_time is not None
     
+    logger.info(f"[UPDATE EVENT] Before commit: event.is_active={event.is_active}")
     db.commit()
     db.refresh(event)
+    logger.info(f"[UPDATE EVENT] After commit and refresh: event.is_active={event.is_active}")
     
     # Schedule or cancel deactivation based on changes
     if (end_date_changed or end_time_changed) and event.is_active:
@@ -484,13 +491,17 @@ async def update_event(
             # Cancel if end_date or end_time removed
             await cancel_event_deactivation(event.id)
     elif event_data.is_active is not None:
+        logger.info(f"[UPDATE EVENT] Handling is_active change: event.is_active={event.is_active}, event.end_date={event.end_date}, event.end_time={event.end_time}")
         if event.is_active and event.end_date and event.end_time:
             # Event reactivated, schedule deactivation
+            logger.info(f"[UPDATE EVENT] Event reactivated, scheduling deactivation")
             await schedule_event_deactivation(db, event.id, event.end_date, event.end_time)
         elif not event.is_active:
             # Event deactivated, cancel scheduled deactivation
+            logger.info(f"[UPDATE EVENT] Event deactivated, cancelling deactivation")
             await cancel_event_deactivation(event.id)
     
+    logger.info(f"[UPDATE EVENT] Final state before return: event.is_active={event.is_active}")
     return EventResponse.model_validate(event)
 
 
