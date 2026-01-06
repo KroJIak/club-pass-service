@@ -246,7 +246,9 @@ async def create_event(
         
         # Check if trying to create active event with past end date/time
         # Only validate if auto_deactivate_events is enabled
+        # Refresh settings from DB to avoid caching issues
         club_settings = ClubSettingsRepository.get_settings(db)
+        db.refresh(club_settings)  # Force refresh from DB
         # Ensure auto_deactivate_events is a boolean
         auto_deactivate = bool(club_settings.auto_deactivate_events) if club_settings.auto_deactivate_events is not None else False
         logger.info(f"[CREATE EVENT] Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (raw), {auto_deactivate} (bool), type: {type(club_settings.auto_deactivate_events)})")
@@ -390,17 +392,21 @@ async def update_event(
             from api.repositories.club_settings_repository import ClubSettingsRepository
             
             # Get timezone from club settings
+            # Refresh settings from DB to avoid caching issues
             club_settings = ClubSettingsRepository.get_settings(db)
+            db.refresh(club_settings)  # Force refresh from DB
             timezone_str = getattr(club_settings, 'timezone', 'Europe/Moscow')
             if not timezone_str:
                 timezone_str = 'Europe/Moscow'
             
             # Ensure auto_deactivate_events is a boolean
             auto_deactivate = bool(club_settings.auto_deactivate_events) if club_settings.auto_deactivate_events is not None else False
-            logger.info(f"Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (raw), {auto_deactivate} (bool), type: {type(club_settings.auto_deactivate_events)}")
+            logger.info(f"[UPDATE EVENT] Checking auto_deactivate_events: {club_settings.auto_deactivate_events} (raw), {auto_deactivate} (bool), type: {type(club_settings.auto_deactivate_events)}")
+            logger.info(f"[UPDATE EVENT] will_be_active={will_be_active}, end_date_to_check={end_date_to_check}, end_time_to_check={end_time_to_check}")
             
             # Only validate if auto_deactivate_events is enabled
             if auto_deactivate:
+                logger.info(f"[UPDATE EVENT] Validation will be performed (auto_deactivate_events is enabled)")
                 try:
                     end_dt = datetime.strptime(f"{end_date_to_check} {end_time_to_check}", "%d.%m.%Y %H:%M")
                     
