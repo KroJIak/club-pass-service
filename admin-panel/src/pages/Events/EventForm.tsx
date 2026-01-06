@@ -226,11 +226,6 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     }
   }
 
-  const handleCreateTicketType = () => {
-    if (!eventId) return
-    setTicketTypeFormOpen(true)
-  }
-
   const handleTicketTypeCreated = () => {
     if (eventId) {
       fetchTicketTypes(eventId)

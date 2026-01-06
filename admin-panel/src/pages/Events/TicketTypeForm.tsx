@@ -8,18 +8,19 @@ import {
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import api from '../../services/api'
-import { TicketTypeCreate, TicketTypeTemplate } from '../../types'
+import { TicketType, TicketTypeCreate, TicketTypeUpdate, TicketTypeTemplate } from '../../types'
 import TextField from '../../components/forms/TextField'
 
 interface TicketTypeFormProps {
   open: boolean
   eventId: number
+  ticketType?: TicketType | null
   template?: TicketTypeTemplate | null
   onClose: () => void
   onSuccess: () => void
 }
 
-const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketTypeFormProps) => {
+const TicketTypeForm = ({ open, eventId, ticketType, template, onClose, onSuccess }: TicketTypeFormProps) => {
   const [loading, setLoading] = useState(false)
 
   const {
@@ -27,7 +28,7 @@ const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketT
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<TicketTypeCreate>({
+  } = useForm<TicketTypeCreate | TicketTypeUpdate>({
     defaultValues: {
       event_id: eventId,
       name: '',
@@ -40,7 +41,15 @@ const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketT
 
   useEffect(() => {
     if (open) {
-      if (template) {
+      if (ticketType) {
+        reset({
+          name: ticketType.name,
+          price: ticketType.price,
+          available_quantity: ticketType.available_quantity,
+          total_quantity: ticketType.total_quantity,
+          is_active: ticketType.is_active,
+        })
+      } else if (template) {
         reset({
           event_id: eventId,
           name: template.name,
@@ -60,16 +69,25 @@ const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketT
         })
       }
     }
-  }, [open, eventId, template, reset])
+  }, [open, eventId, ticketType, template, reset])
 
-  const onSubmit = async (data: TicketTypeCreate) => {
+  const onSubmit = async (data: TicketTypeCreate | TicketTypeUpdate) => {
     setLoading(true)
     try {
-      await api.post('/admin/ticket-types', data)
+      if (ticketType) {
+        await api.put(`/admin/ticket-types/${ticketType.id}`, data)
+      } else {
+        const createData: TicketTypeCreate = {
+          ...data,
+          event_id: eventId,
+        }
+        await api.post('/admin/ticket-types', createData)
+      }
       onSuccess()
       onClose()
-    } catch (error) {
-      console.error('Failed to create ticket type:', error)
+    } catch (error: any) {
+      console.error('Failed to save ticket type:', error)
+      alert(error.response?.data?.detail || 'Failed to save ticket type')
     } finally {
       setLoading(false)
     }
@@ -78,7 +96,7 @@ const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketT
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>Create Ticket Type</DialogTitle>
+        <DialogTitle>{ticketType ? 'Edit Ticket Type' : 'Create Ticket Type'}</DialogTitle>
         <DialogContent>
           <TextField
             label="Name"
@@ -123,7 +141,7 @@ const TicketTypeForm = ({ open, eventId, template, onClose, onSuccess }: TicketT
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? 'Creating...' : 'Create'}
+            {loading ? (ticketType ? 'Updating...' : 'Creating...') : (ticketType ? 'Update' : 'Create')}
           </Button>
         </DialogActions>
       </form>
