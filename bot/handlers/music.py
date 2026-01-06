@@ -171,26 +171,16 @@ async def handle_music_title_input(message: Message, state: FSMContext):
             callback_data="back"
         ))
     
-    # Delete the "enter title" message if it exists (get from last system message)
-    last_system = temporary_messages_middleware.get_last_system_message(user_id)
-    if last_system:
-        old_chat_id, old_message_id = last_system
-        try:
-            await bot.delete_message(chat_id=old_chat_id, message_id=old_message_id)
-            logger.debug(f"Deleted old 'enter title' message for user {user_id}")
-        except Exception as e:
-            logger.warning(f"Failed to delete old message: {e}")
-    
-    # Send results
+    # Send results first
     results_msg = await message.answer(
         quote_text,
         reply_markup=builder.as_markup(),
         parse_mode="HTML"
     )
     
-    # Mark as system message and flush pending user messages (including the user's song title message)
-    temporary_messages_middleware.set_last_system_message(user_id, results_msg.chat.id, results_msg.message_id)
-    await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
+    # Use _after_system_action to properly delete old system message and set new one
+    from bot.core.message_manager import _after_system_action
+    await _after_system_action(bot, user_id, results_msg.chat.id, results_msg.message_id)
     
     # DO NOT clear state here - we need tracks in state for track selection
 
