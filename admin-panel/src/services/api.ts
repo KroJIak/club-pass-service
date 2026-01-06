@@ -34,8 +34,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      window.location.href = '/login'
+      // Don't redirect if we're already on login page or if it's a login request
+      const isLoginRequest = error.config?.url?.includes('/admin/login')
+      const isOnLoginPage = window.location.pathname === '/login'
+      
+      if (!isLoginRequest && !isOnLoginPage) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   }
