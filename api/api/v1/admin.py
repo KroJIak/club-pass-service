@@ -245,7 +245,9 @@ async def create_event(
             )
         
         # Check if trying to create active event with past end date/time
-        if event_data.is_active and event_data.end_date and event_data.end_time:
+        # Only validate if auto_deactivate_events is enabled
+        club_settings = ClubSettingsRepository.get_settings(db)
+        if event_data.is_active and event_data.end_date and event_data.end_time and club_settings.auto_deactivate_events:
             try:
                 tz = pytz.timezone(timezone_str)
                 end_dt_tz = tz.localize(end_dt)
@@ -371,6 +373,7 @@ async def update_event(
             pass
     
     # Check if trying to activate event with past end date/time
+    # Only validate if auto_deactivate_events is enabled
     will_be_active = event_data.is_active if event_data.is_active is not None else event.is_active
     if will_be_active:
         end_date_to_check = event_data.end_date if event_data.end_date is not None else event.end_date
@@ -388,47 +391,49 @@ async def update_event(
                 if not timezone_str:
                     timezone_str = 'Europe/Moscow'
                 
-                end_dt = datetime.strptime(f"{end_date_to_check} {end_time_to_check}", "%d.%m.%Y %H:%M")
-                
-                try:
-                    tz = pytz.timezone(timezone_str)
-                    end_dt_tz = tz.localize(end_dt)
-                    current_time = datetime.now(tz)
+                # Only validate if auto_deactivate_events is enabled
+                if club_settings.auto_deactivate_events:
+                    end_dt = datetime.strptime(f"{end_date_to_check} {end_time_to_check}", "%d.%m.%Y %H:%M")
                     
-                    logger.info(f"Validating event activation: end_dt_tz={end_dt_tz}, current_time={current_time}, timezone={timezone_str}")
-                    
-                    if end_dt_tz <= current_time:
-                        logger.warning(f"Rejecting activation: end time {end_dt_tz} is in the past (current: {current_time})")
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Cannot activate event with end date and time in the past"
-                        )
-                except HTTPException:
-                    # Re-raise HTTPException
-                    raise
-                except Exception as tz_error:
-                    # If timezone parsing fails, try to use UTC as fallback
-                    logger.warning(f"Timezone parsing failed: {tz_error}, using UTC for comparison")
                     try:
-                        tz_utc = pytz.UTC
-                        end_dt_utc = tz_utc.localize(end_dt)
-                        current_time_utc = datetime.now(tz_utc)
+                        tz = pytz.timezone(timezone_str)
+                        end_dt_tz = tz.localize(end_dt)
+                        current_time = datetime.now(tz)
                         
-                        if end_dt_utc <= current_time_utc:
+                        logger.info(f"Validating event activation: end_dt_tz={end_dt_tz}, current_time={current_time}, timezone={timezone_str}")
+                        
+                        if end_dt_tz <= current_time:
+                            logger.warning(f"Rejecting activation: end time {end_dt_tz} is in the past (current: {current_time})")
                             raise HTTPException(
                                 status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Cannot activate event with end date and time in the past"
                             )
                     except HTTPException:
+                        # Re-raise HTTPException
                         raise
-                    except Exception:
-                        # Last resort: use naive datetime (should not happen)
-                        logger.error(f"All timezone parsing methods failed, using naive datetime")
-                        if end_dt <= datetime.now():
-                            raise HTTPException(
-                                status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Cannot activate event with end date and time in the past"
-                            )
+                    except Exception as tz_error:
+                        # If timezone parsing fails, try to use UTC as fallback
+                        logger.warning(f"Timezone parsing failed: {tz_error}, using UTC for comparison")
+                        try:
+                            tz_utc = pytz.UTC
+                            end_dt_utc = tz_utc.localize(end_dt)
+                            current_time_utc = datetime.now(tz_utc)
+                            
+                            if end_dt_utc <= current_time_utc:
+                                raise HTTPException(
+                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Cannot activate event with end date and time in the past"
+                                )
+                        except HTTPException:
+                            raise
+                        except Exception:
+                            # Last resort: use naive datetime (should not happen)
+                            logger.error(f"All timezone parsing methods failed, using naive datetime")
+                            if end_dt <= datetime.now():
+                                raise HTTPException(
+                                    status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Cannot activate event with end date and time in the past"
+                                )
             except ValueError:
                 # Date format errors will be caught by Pydantic
                 pass
@@ -1346,6 +1351,11 @@ async def update_club_settings(
 ):
     """Update club settings."""
     try:
+        # Get current settings to check if auto_deactivate_events is being enabled
+        current_settings = ClubSettingsRepository.get_settings(db)
+        was_auto_deactivate_disabled = not current_settings.auto_deactivate_events
+        will_be_auto_deactivate_enabled = settings_update.auto_deactivate_events if settings_update.auto_deactivate_events is not None else current_settings.auto_deactivate_events
+        
         settings = ClubSettingsRepository.update_settings(
             db,
             address=settings_update.address,
@@ -1355,6 +1365,58 @@ async def update_club_settings(
             auto_deactivate_events=settings_update.auto_deactivate_events,
             timezone=settings_update.timezone
         )
+        
+        # If auto_deactivate_events was just enabled, check all active events
+        if was_auto_deactivate_disabled and will_be_auto_deactivate_enabled:
+            logger.info("Auto deactivate events was just enabled, checking all active events for expiration...")
+            from api.models.event import Event
+            from api.models.ticket import Ticket, TicketStatus
+            import pytz
+            
+            # Get timezone
+            timezone_str = settings.timezone or "Europe/Moscow"
+            tz = pytz.timezone(timezone_str)
+            current_time = datetime.now(tz)
+            
+            # Get all active events
+            active_events = db.query(Event).filter(
+                Event.is_active == True,
+                Event.is_deleted == False
+            ).all()
+            
+            deactivated_count = 0
+            expired_tickets_count = 0
+            
+            for event in active_events:
+                if event.end_date and event.end_time:
+                    try:
+                        end_dt = datetime.strptime(f"{event.end_date} {event.end_time}", "%d.%m.%Y %H:%M")
+                        end_dt_tz = tz.localize(end_dt)
+                        
+                        if end_dt_tz <= current_time:
+                            logger.info(f"Deactivating expired event {event.id} ({event.name})")
+                            event.is_active = False
+                            deactivated_count += 1
+                            
+                            # Mark all active tickets for this event as expired
+                            tickets = db.query(Ticket).filter(
+                                Ticket.event_id == event.id,
+                                Ticket.status == TicketStatus.ACTIVE
+                            ).all()
+                            
+                            for ticket in tickets:
+                                ticket.status = TicketStatus.EXPIRED
+                                expired_tickets_count += 1
+                                logger.debug(f"   Expired ticket {ticket.id} (token: {ticket.token})")
+                    except Exception as e:
+                        logger.error(f"Error processing event {event.id}: {e}", exc_info=True)
+                        continue
+            
+            if deactivated_count > 0 or expired_tickets_count > 0:
+                db.commit()
+                logger.info(f"✅ Checked all active events: deactivated {deactivated_count} event(s), expired {expired_tickets_count} ticket(s)")
+            else:
+                logger.info("✅ Checked all active events: no expired events found")
         
         # Ensure updated_at is a datetime object
         updated_at = settings.updated_at
