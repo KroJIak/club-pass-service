@@ -44,6 +44,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     open: false,
     ticketTypeId: null,
   })
+  const [autoDeactivateEvents, setAutoDeactivateEvents] = useState<boolean>(true)
 
   const {
     register,
@@ -78,8 +79,20 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     }
   }
 
+  const fetchClubSettings = async () => {
+    try {
+      const response = await api.get('/admin/club-settings')
+      setAutoDeactivateEvents(response.data.auto_deactivate_events ?? true)
+    } catch (error) {
+      console.error('Failed to fetch club settings:', error)
+      // Default to true if fetch fails
+      setAutoDeactivateEvents(true)
+    }
+  }
+
   useEffect(() => {
     fetchTemplates()
+    fetchClubSettings()
   }, [])
 
   useEffect(() => {
@@ -180,8 +193,9 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     }
     
     // Check if trying to activate event with past end date/time
+    // Only validate if auto_deactivate_events is enabled
     const willBeActive = data.is_active !== undefined ? data.is_active : (event?.is_active ?? true)
-    if (willBeActive && endDate && endTime) {
+    if (willBeActive && endDate && endTime && autoDeactivateEvents) {
       try {
         const parseDate = (dateStr: string, timeStr: string): Date => {
           const [day, month, year] = dateStr.split('.')

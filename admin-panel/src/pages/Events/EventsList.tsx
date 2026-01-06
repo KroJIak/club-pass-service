@@ -36,6 +36,7 @@ const EventsList = () => {
   const [filterState, setFilterState] = useState<EventsFilterState>(DEFAULT_FILTER_STATE)
   const { setFilterPanel } = useFilterPanel()
   const selection = useSelection(events)
+  const [autoDeactivateEvents, setAutoDeactivateEvents] = useState<boolean>(true)
 
   const fetchEvents = async () => {
     try {
@@ -59,9 +60,21 @@ const EventsList = () => {
     }
   }
 
+  const fetchClubSettings = async () => {
+    try {
+      const response = await api.get('/admin/club-settings')
+      setAutoDeactivateEvents(response.data.auto_deactivate_events ?? true)
+    } catch (error) {
+      console.error('Failed to fetch club settings:', error)
+      // Default to true if fetch fails
+      setAutoDeactivateEvents(true)
+    }
+  }
+
   useEffect(() => {
     fetchEvents()
     fetchTicketTypes()
+    fetchClubSettings()
   }, [])
 
   // Set up filter panel
@@ -207,7 +220,8 @@ const EventsList = () => {
     }
     
     // If trying to activate event, check if end date/time is in the past
-    if (e.target.checked && event.end_date && event.end_time) {
+    // Only validate if auto_deactivate_events is enabled
+    if (e.target.checked && event.end_date && event.end_time && autoDeactivateEvents) {
       try {
         const parseDate = (dateStr: string, timeStr: string): Date => {
           const [day, month, year] = dateStr.split('.')
