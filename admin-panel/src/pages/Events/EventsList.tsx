@@ -21,9 +21,11 @@ import EventsFilter, { EventsFilterState, DEFAULT_FILTER_STATE } from '../../com
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const EventsList = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('events')
   const [events, setEvents] = useState<Event[]>([])
   const [allEvents, setAllEvents] = useState<Event[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -198,7 +200,7 @@ const EventsList = () => {
   }
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} event(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: selection.selectedCount }))) {
       return
     }
 
@@ -210,7 +212,7 @@ const EventsList = () => {
       fetchEvents()
     } catch (error) {
       console.error('Failed to delete events:', error)
-      alert('Failed to delete some events')
+      alert(t('messages.deleteFailed'))
     }
   }
 
@@ -235,7 +237,7 @@ const EventsList = () => {
         const now = new Date()
         
         if (endDt <= now) {
-          alert('Cannot activate event with end date and time in the past')
+          alert(t('messages.cannotActivatePastEvent'))
           return
         }
       } catch (err) {
@@ -279,13 +281,13 @@ const EventsList = () => {
   }
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return <Typography>{t('common:status.loading', 'Loading...')}</Typography>
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">Events</Typography>
+        <Typography variant="h6">{t('title')}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {hasPermission('events', 'delete') && selection.hasSelection && (
             <Button
@@ -294,7 +296,7 @@ const EventsList = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelected}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('events', 'delete') && (
@@ -306,7 +308,7 @@ const EventsList = () => {
           )}
           {hasPermission('events', 'write') && (
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
-              Create New
+              {t('createEvent')}
             </Button>
           )}
         </Box>
@@ -345,7 +347,7 @@ const EventsList = () => {
                       disabled={!hasPermission('events', 'write')}
                     />
                     <Chip
-                      label={event.is_active ? 'Active' : 'Inactive'}
+                      label={event.is_active ? t('active') : t('inactive')}
                       color={event.is_active ? 'success' : 'default'}
                       size="small"
                     />
@@ -366,7 +368,7 @@ const EventsList = () => {
                 </Box>
                 {event.djs && event.djs.length > 0 && (
                   <Typography variant="body2" color="text.secondary" gutterBottom>
-                    DJs: {event.djs.join(', ')}
+                    {t('djs')}: {event.djs.join(', ')}
                   </Typography>
                 )}
                 {event.description && (
@@ -422,8 +424,8 @@ const EventsList = () => {
 
       <ConfirmDialog
         open={deleteDialog.open}
-        title="Delete Event"
-        message="Are you sure you want to delete this event? This action cannot be undone."
+        title={t('common:actions.delete', 'Delete')}
+        message={t('messages.deleteConfirm')}
         onConfirm={() => deleteDialog.eventId && handleDelete(deleteDialog.eventId)}
         onCancel={() => setDeleteDialog({ open: false, eventId: null })}
       />

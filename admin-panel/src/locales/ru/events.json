@@ -3,6 +3,12 @@
   "createEvent": "Создать событие",
   "editEvent": "Редактировать событие",
   "eventDetails": "Детали события",
+  "deleteSelected": "Удалить выбранные",
+  "selectAll": "Выбрать все",
+  "active": "Активное",
+  "inactive": "Неактивное",
+  "djs": "Диджеи",
+  "noEvents": "События не найдены",
   "fields": {
     "name": "Название события",
     "description": "Описание",
@@ -13,7 +19,8 @@
     "location": "Место проведения",
     "poster": "Постер",
     "additionalInfo": "Дополнительная информация",
-    "ticketTypes": "Типы билетов"
+    "ticketTypes": "Типы билетов",
+    "djs": "Диджеи"
   },
   "ticketTypes": {
     "title": "Типы билетов",
@@ -26,13 +33,19 @@
     "isActive": "Активен",
     "templates": "Шаблоны",
     "useTemplate": "Использовать шаблон",
-    "saveAsTemplate": "Сохранить как шаблон"
+    "saveAsTemplate": "Сохранить как шаблон",
+    "available": "Доступно",
+    "sold": "Продано"
   },
   "messages": {
     "createSuccess": "Событие успешно создано",
     "updateSuccess": "Событие успешно обновлено",
     "deleteSuccess": "Событие успешно удалено",
-    "deleteConfirm": "Вы уверены, что хотите удалить это событие?"
+    "deleteConfirm": "Вы уверены, что хотите удалить это событие?",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить {{count}} событий? Это действие нельзя отменить.",
+    "deleteFailed": "Не удалось удалить некоторые события",
+    "cannotActivatePastEvent": "Невозможно активировать событие с датой окончания в прошлом",
+    "fetchFailed": "Не удалось загрузить события"
   }
 }
 
