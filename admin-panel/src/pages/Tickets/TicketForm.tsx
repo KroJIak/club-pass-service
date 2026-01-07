@@ -374,6 +374,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
                   required={!isEditMode}
                   fullWidth
                   disabled={!hasPermission('tickets', 'write')}
+                  InputLabelProps={{ shrink: true }}
                 />
               )}
             />
