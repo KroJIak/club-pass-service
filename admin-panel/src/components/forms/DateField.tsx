@@ -10,9 +10,10 @@ interface DateFieldProps {
   onChange: (value: string | null) => void
   error?: boolean
   helperText?: string
+  disabled?: boolean
 }
 
-const DateField = ({ label, value, onChange, error, helperText }: DateFieldProps) => {
+const DateField = ({ label, value, onChange, error, helperText, disabled }: DateFieldProps) => {
   const dayjsValue = value ? dayjs(value, 'DD.MM.YYYY') : null
 
   const handleChange = (newValue: Dayjs | null) => {
@@ -30,6 +31,7 @@ const DateField = ({ label, value, onChange, error, helperText }: DateFieldProps
         value={dayjsValue}
         onChange={handleChange}
         format="DD.MM.YYYY"
+        disabled={disabled}
         slotProps={{
           textField: {
             fullWidth: true,

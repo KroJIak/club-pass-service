@@ -16,6 +16,7 @@ import { useForm, Controller } from 'react-hook-form'
 import api from '../../services/api'
 import { Ticket, TicketCreate, TicketUpdate, Event, TicketType, User } from '../../types'
 import TextField from '../../components/forms/TextField'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface TicketFormProps {
   open?: boolean

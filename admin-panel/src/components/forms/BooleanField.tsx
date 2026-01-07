@@ -4,9 +4,10 @@ interface BooleanFieldProps {
   label: string
   value: boolean
   onChange: (value: boolean) => void
+  disabled?: boolean
 }
 
-const BooleanField = ({ label, value, onChange }: BooleanFieldProps) => {
+const BooleanField = ({ label, value, onChange, disabled }: BooleanFieldProps) => {
   return (
     <FormControlLabel
       control={
@@ -14,6 +15,7 @@ const BooleanField = ({ label, value, onChange }: BooleanFieldProps) => {
           checked={value}
           onChange={(e) => onChange(e.target.checked)}
           color="primary"
+          disabled={disabled}
         />
       }
       label={label}

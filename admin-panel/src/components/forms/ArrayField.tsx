@@ -6,9 +6,10 @@ interface ArrayFieldProps {
   label: string
   value: string[]
   onChange: (value: string[]) => void
+  disabled?: boolean
 }
 
-const ArrayField = ({ label, value, onChange }: ArrayFieldProps) => {
+const ArrayField = ({ label, value, onChange, disabled }: ArrayFieldProps) => {
   const [inputValue, setInputValue] = useState('')
 
   const handleAdd = () => {
@@ -38,11 +39,12 @@ const ArrayField = ({ label, value, onChange }: ArrayFieldProps) => {
         onChange={(e) => setInputValue(e.target.value)}
         onKeyPress={handleKeyPress}
         margin="normal"
+        disabled={disabled}
         InputProps={{
           endAdornment: (
             <AddIcon
-              sx={{ cursor: 'pointer', color: 'primary.main' }}
-              onClick={handleAdd}
+              sx={{ cursor: disabled ? 'not-allowed' : 'pointer', color: 'primary.main', opacity: disabled ? 0.5 : 1 }}
+              onClick={disabled ? undefined : handleAdd}
             />
           ),
         }}
@@ -52,7 +54,7 @@ const ArrayField = ({ label, value, onChange }: ArrayFieldProps) => {
           <Chip
             key={index}
             label={item}
-            onDelete={() => handleDelete(index)}
+            onDelete={disabled ? undefined : () => handleDelete(index)}
             color="primary"
             variant="outlined"
           />

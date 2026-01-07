@@ -23,6 +23,7 @@ import {
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { User } from '../../types/index'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface StaffUser {
   id: number
@@ -188,8 +189,7 @@ const StaffUsersList = () => {
                       <IconButton
                         color="error"
                         onClick={() => handleDelete(user.id)}
-                        disabled={!hasPermission('staff', 'delete')}
-                        disabled={deletingId === user.id}
+                        disabled={!hasPermission('staff', 'delete') || deletingId === user.id}
                       >
                         <DeleteIcon />
                       </IconButton>
