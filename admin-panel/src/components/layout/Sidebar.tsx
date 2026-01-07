@@ -33,10 +33,10 @@ const allMenuItems: MenuItem[] = [
   { text: 'Events', icon: <EventIcon />, path: '/events', resource: 'events' },
   { text: 'Users', icon: <UsersIcon />, path: '/users', resource: 'users' },
   { text: 'Tickets', icon: <TicketIcon />, path: '/tickets', resource: 'tickets' },
+  { text: 'Music', icon: <MusicIcon />, path: '/music', resource: 'music' },
   { text: 'Support', icon: <SupportIcon />, path: '/support', resource: 'support' },
   { text: 'Orders', icon: <OrderIcon />, path: '/orders', resource: 'orders' },
   { text: 'Staff', icon: <StaffIcon />, path: '/staff', resource: 'staff' },
-  { text: 'Music', icon: <MusicIcon />, path: '/music', resource: 'music' },
   { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings', resource: 'club_settings' },
 ]
 
