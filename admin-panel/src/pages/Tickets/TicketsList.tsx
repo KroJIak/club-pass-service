@@ -106,7 +106,7 @@ const TicketsList = () => {
   }, [allTickets, filterState])
 
   const toggleExpand = (ticketId: number) => {
-    if (selection.hasSelection) {
+    if (selection.hasSelection && hasPermission('tickets', 'delete')) {
       selection.toggleSelection(ticketId)
       return
     }
@@ -206,9 +206,9 @@ const TicketsList = () => {
                   flexDirection: 'column',
                   cursor: 'pointer',
                   position: 'relative',
-                  border: selection.isSelected(ticket.id) ? '2px solid' : 'none',
-                  borderColor: selection.isSelected(ticket.id) ? 'primary.main' : 'transparent',
-                  bgcolor: selection.isSelected(ticket.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                  border: hasPermission('tickets', 'delete') && selection.isSelected(ticket.id) ? '2px solid' : 'none',
+                  borderColor: hasPermission('tickets', 'delete') && selection.isSelected(ticket.id) ? 'primary.main' : 'transparent',
+                  bgcolor: hasPermission('tickets', 'delete') && selection.isSelected(ticket.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                 }}
                 onClick={() => toggleExpand(ticket.id)}
               >
@@ -269,16 +269,18 @@ const TicketsList = () => {
                         >
                           <EditIcon />
                         </IconButton>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setDeleteDialog({ open: true, ticketId: ticket.id })
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                        {hasPermission('tickets', 'delete') && (
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setDeleteDialog({ open: true, ticketId: ticket.id })
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        )}
                       </Box>
                     )}
                   </Box>

@@ -265,7 +265,7 @@ const EventsList = () => {
   }
 
   const toggleExpand = (eventId: number) => {
-    if (selection.hasSelection) {
+    if (selection.hasSelection && hasPermission('events', 'delete')) {
       selection.toggleSelection(eventId)
       return
     }
@@ -323,9 +323,9 @@ const EventsList = () => {
                 flexDirection: 'column',
                 cursor: 'pointer',
                 position: 'relative',
-                border: selection.isSelected(event.id) ? '2px solid' : 'none',
-                borderColor: selection.isSelected(event.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(event.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                border: hasPermission('events', 'delete') && selection.isSelected(event.id) ? '2px solid' : 'none',
+                borderColor: hasPermission('events', 'delete') && selection.isSelected(event.id) ? 'primary.main' : 'transparent',
+                bgcolor: hasPermission('events', 'delete') && selection.isSelected(event.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
               onClick={() => toggleExpand(event.id)}
             >
@@ -374,7 +374,7 @@ const EventsList = () => {
                     {event.description}
                   </Typography>
                 )}
-                {!selection.hasSelection && (
+                {!selection.hasSelection && hasPermission('events', 'delete') && (
                   <Box sx={{ position: 'absolute', bottom: 16, right: 16 }}>
                     <IconButton
                       size="small"

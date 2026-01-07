@@ -144,12 +144,12 @@ const OrdersList = () => {
                 height: '100%', 
                 display: 'flex', 
                 flexDirection: 'column',
-                cursor: 'pointer',
-                border: selection.isSelected(order.id) ? '2px solid' : 'none',
-                borderColor: selection.isSelected(order.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(order.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                cursor: hasPermission('orders', 'delete') ? 'pointer' : 'default',
+                border: hasPermission('orders', 'delete') && selection.isSelected(order.id) ? '2px solid' : 'none',
+                borderColor: hasPermission('orders', 'delete') && selection.isSelected(order.id) ? 'primary.main' : 'transparent',
+                bgcolor: hasPermission('orders', 'delete') && selection.isSelected(order.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
-              onClick={() => selection.toggleSelection(order.id)}
+              onClick={() => hasPermission('orders', 'delete') && selection.toggleSelection(order.id)}
             >
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
@@ -199,7 +199,7 @@ const OrdersList = () => {
                       }
                     </Typography>
                   </Box>
-                  {!selection.hasSelection && (
+                  {!selection.hasSelection && hasPermission('orders', 'delete') && (
                     <IconButton
                       size="small"
                       color="error"

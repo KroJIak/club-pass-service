@@ -142,12 +142,12 @@ const UsersList = () => {
                 height: '100%', 
                 display: 'flex', 
                 flexDirection: 'column',
-                cursor: 'pointer',
-                border: selection.isSelected(user.id) ? '2px solid' : 'none',
-                borderColor: selection.isSelected(user.id) ? 'primary.main' : 'transparent',
-                bgcolor: selection.isSelected(user.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                cursor: hasPermission('users', 'delete') ? 'pointer' : 'default',
+                border: hasPermission('users', 'delete') && selection.isSelected(user.id) ? '2px solid' : 'none',
+                borderColor: hasPermission('users', 'delete') && selection.isSelected(user.id) ? 'primary.main' : 'transparent',
+                bgcolor: hasPermission('users', 'delete') && selection.isSelected(user.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
               }}
-              onClick={() => selection.toggleSelection(user.id)}
+              onClick={() => hasPermission('users', 'delete') && selection.toggleSelection(user.id)}
             >
               <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <Box sx={{ flex: 1 }}>

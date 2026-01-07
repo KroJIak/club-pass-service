@@ -875,13 +875,13 @@ const SupportMessagesList: React.FC = () => {
             <Grid item xs={12} key={msg.id}>
               <Card
                 sx={{
-                  cursor: selection.hasSelection ? 'pointer' : 'default',
-                  border: selection.isSelected(msg.id) ? '2px solid' : 'none',
-                  borderColor: selection.isSelected(msg.id) ? 'primary.main' : 'transparent',
-                  bgcolor: selection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                  cursor: hasPermission('support', 'delete') && selection.hasSelection ? 'pointer' : 'default',
+                  border: hasPermission('support', 'delete') && selection.isSelected(msg.id) ? '2px solid' : 'none',
+                  borderColor: hasPermission('support', 'delete') && selection.isSelected(msg.id) ? 'primary.main' : 'transparent',
+                  bgcolor: hasPermission('support', 'delete') && selection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                 }}
                 onClick={() => {
-                  if (selection.hasSelection) {
+                  if (hasPermission('support', 'delete') && selection.hasSelection) {
                     selection.toggleSelection(msg.id)
                   }
                 }}
@@ -913,7 +913,7 @@ const SupportMessagesList: React.FC = () => {
                         color={getStatusColor(msg.status) as any}
                         size="small"
                       />
-                      {!selection.hasSelection && (
+                      {!selection.hasSelection && hasPermission('support', 'delete') && (
                         <IconButton
                           color="error"
                           onClick={() => handleDelete(msg.id)}
@@ -1124,13 +1124,13 @@ const SupportMessagesList: React.FC = () => {
                 <Grid item xs={12} key={msg.id}>
                   <Card
                     sx={{
-                      cursor: adminSelection.hasSelection ? 'pointer' : 'default',
-                      border: adminSelection.isSelected(msg.id) ? '2px solid' : 'none',
-                      borderColor: adminSelection.isSelected(msg.id) ? 'primary.main' : 'transparent',
-                      bgcolor: adminSelection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
+                      cursor: hasPermission('support', 'delete') && adminSelection.hasSelection ? 'pointer' : 'default',
+                      border: hasPermission('support', 'delete') && adminSelection.isSelected(msg.id) ? '2px solid' : 'none',
+                      borderColor: hasPermission('support', 'delete') && adminSelection.isSelected(msg.id) ? 'primary.main' : 'transparent',
+                      bgcolor: hasPermission('support', 'delete') && adminSelection.isSelected(msg.id) ? 'rgba(25, 118, 210, 0.08)' : 'background.paper',
                     }}
                     onClick={() => {
-                      if (adminSelection.hasSelection) {
+                      if (hasPermission('support', 'delete') && adminSelection.hasSelection) {
                         adminSelection.toggleSelection(msg.id)
                       }
                     }}
@@ -1146,7 +1146,7 @@ const SupportMessagesList: React.FC = () => {
                             From: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
                           </Typography>
                         </Box>
-                        {!adminSelection.hasSelection && (
+                        {!adminSelection.hasSelection && hasPermission('support', 'delete') && (
                           <IconButton
                             color="error"
                             onClick={() => handleDeleteAdminMessage(msg.id)}

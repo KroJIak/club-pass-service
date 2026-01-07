@@ -48,9 +48,10 @@ interface SortableQueueItemProps {
   onDelete: (id: number) => void
   disableDrag?: boolean
   onToggleSelection?: (id: number) => void
+  canDelete?: boolean
 }
 
-const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, onToggleSelection }: SortableQueueItemProps) => {
+const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, onToggleSelection, canDelete = true }: SortableQueueItemProps) => {
   const {
     attributes,
     listeners,
@@ -119,13 +120,15 @@ const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, on
           )}
         </Box>
       </Box>
-      <IconButton 
-        onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} 
-        color="error"
-        disabled={disableDrag}
-      >
-        <DeleteIcon />
-      </IconButton>
+      {canDelete && (
+        <IconButton 
+          onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} 
+          color="error"
+          disabled={disableDrag}
+        >
+          <DeleteIcon />
+        </IconButton>
+      )}
     </Paper>
   )
 }
@@ -138,9 +141,10 @@ interface SortableWishlistItemProps {
   onMoveToQueue: (id: number) => void
   disableDrag?: boolean
   onToggleSelection?: (id: number) => void
+  canDelete?: boolean
 }
 
-const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false, onToggleSelection }: SortableWishlistItemProps) => {
+const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false, onToggleSelection, canDelete = true }: SortableWishlistItemProps) => {
   const {
     attributes,
     listeners,
@@ -218,17 +222,19 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disab
       >
         <PlayArrowIcon />
       </IconButton>
-      <IconButton 
-        onClick={(e) => { 
-          e.stopPropagation(); 
-          onDelete(item.id); 
-        }} 
-        color="error"
-        sx={{ pointerEvents: 'auto' }}
-        disabled={disableDrag}
-      >
-        <DeleteIcon />
-      </IconButton>
+      {canDelete && (
+        <IconButton 
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            onDelete(item.id); 
+          }} 
+          color="error"
+          sx={{ pointerEvents: 'auto' }}
+          disabled={disableDrag}
+        >
+          <DeleteIcon />
+        </IconButton>
+      )}
     </Paper>
   )
 }
@@ -600,6 +606,7 @@ const MusicManagement = () => {
                         onDelete={handleDeleteQueueItem}
                         disableDrag={disableDrag}
                         onToggleSelection={queueSelection.toggleSelection}
+                        canDelete={hasPermission('music', 'delete')}
                       />
                     ))}
                   </SortableContext>
@@ -654,6 +661,7 @@ const MusicManagement = () => {
                         onMoveToQueue={handleMoveToQueue}
                         disableDrag={disableDrag}
                         onToggleSelection={wishlistSelection.toggleSelection}
+                        canDelete={hasPermission('music', 'delete')}
                       />
                     ))}
                   </SortableContext>
