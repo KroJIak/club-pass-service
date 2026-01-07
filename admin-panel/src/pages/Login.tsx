@@ -62,11 +62,29 @@ const Login = () => {
         }}
       >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              mb: 3,
+            }}
+          >
+            <Box
+              component="img"
+              src="/logo.png"
+              alt="FLAME"
+              sx={{
+                height: 100,
+                width: 100,
+                objectFit: 'contain',
+              }}
+            />
+          </Box>
           <Typography variant="h4" component="h1" gutterBottom align="center">
             Admin Login
           </Typography>
           <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-            Club Pass Admin Panel
+            FLAME Admin Panel
           </Typography>
 
           {error && (

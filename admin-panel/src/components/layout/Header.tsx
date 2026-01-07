@@ -45,9 +45,21 @@ const Header = () => {
           },
         }}
       >
-        <Typography variant="h6" component="div">
-          Admin Panel
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="FLAME"
+            sx={{
+              height: 40,
+              width: 40,
+              objectFit: 'contain',
+            }}
+          />
+          <Typography variant="h6" component="div">
+            Admin Panel
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="body1">{username}</Typography>
           <IconButton
