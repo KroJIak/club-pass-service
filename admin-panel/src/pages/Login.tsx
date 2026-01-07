@@ -43,12 +43,12 @@ const Login = () => {
         // Simple redirect after successful login
         navigate('/events', { replace: true })
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || t('login.messages.loginFailed'))
         setLoading(false)
       }
     } catch (error) {
       console.error('Unexpected error:', error)
-      setError('An unexpected error occurred')
+      setError(t('login.messages.unexpectedError'))
       setLoading(false)
     }
   }
@@ -74,7 +74,7 @@ const Login = () => {
             <Box
               component="img"
               src="/logo.png"
-              alt="FLAME"
+              alt="Logo"
               sx={{
                 height: 100,
                 width: 100,
