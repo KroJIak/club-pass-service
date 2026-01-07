@@ -298,3 +298,97 @@ export interface MusicQueueReorderRequest {
   items: MusicQueueReorderItem[]
 }
 
+// Admin Groups and Accounts
+export interface AdminGroup {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminGroupCreate {
+  name: string
+  description?: string | null
+}
+
+export interface AdminGroupUpdate {
+  name?: string | null
+  description?: string | null
+}
+
+export interface AdminAccount {
+  id: number
+  group_id: number
+  username: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminAccountCreate {
+  group_id: number
+  username: string
+  password: string
+  is_active?: boolean
+}
+
+export interface AdminAccountUpdate {
+  group_id?: number | null
+  username?: string | null
+  password?: string | null
+  is_active?: boolean | null
+}
+
+export interface AdminPermission {
+  id: number
+  group_id: number
+  resource: string
+  can_read: boolean
+  can_write: boolean
+  can_delete: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminPermissionItem {
+  resource: string
+  can_read: boolean
+  can_write: boolean
+  can_delete: boolean
+}
+
+export interface AdminPermissionUpdateRequest {
+  permissions: AdminPermissionItem[]
+}
+
+export interface AdminGroupWithPermissions extends AdminGroup {
+  permissions: AdminPermission[]
+}
+
+// Permissions
+export interface ResourcePermission {
+  can_read: boolean
+  can_write: boolean
+  can_delete: boolean
+}
+
+export interface UserPermissions {
+  is_superadmin: boolean
+  permissions: Record<string, ResourcePermission>
+}
+
+export type ResourceName = 
+  | 'qr_scanner'
+  | 'events'
+  | 'users'
+  | 'tickets'
+  | 'support'
+  | 'orders'
+  | 'staff'
+  | 'music'
+  | 'club_settings'
+  | 'admin_accounts'
+
+export type Action = 'read' | 'write' | 'delete'
+

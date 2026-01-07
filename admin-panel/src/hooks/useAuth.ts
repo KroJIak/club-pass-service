@@ -32,6 +32,13 @@ export const useAuth = () => {
       localStorage.setItem('token', response.access_token)
       setIsAuthenticated(true)
       setIsLoading(false)
+      // Load permissions after login
+      try {
+        const perms = await authService.getPermissions()
+        localStorage.setItem('permissions', JSON.stringify(perms))
+      } catch (e) {
+        console.error('Failed to load permissions after login:', e)
+      }
       return { success: true }
     } catch (error: any) {
       return {
@@ -43,6 +50,7 @@ export const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('permissions')
     setIsAuthenticated(false)
     // Use window.location to ensure full page reload
     window.location.href = '/login'

@@ -1,4 +1,5 @@
 import api from './api'
+import { UserPermissions } from '../types'
 
 export interface LoginRequest {
   username: string
@@ -12,6 +13,9 @@ export interface LoginResponse {
 
 export interface AdminInfo {
   username: string
+  is_superadmin: boolean
+  group_id: number | null
+  permissions: Record<string, { can_read: boolean; can_write: boolean; can_delete: boolean }> | null
 }
 
 export const authService = {
@@ -22,6 +26,11 @@ export const authService = {
 
   getMe: async (): Promise<AdminInfo> => {
     const response = await api.get<AdminInfo>('/admin/me')
+    return response.data
+  },
+
+  getPermissions: async (): Promise<UserPermissions> => {
+    const response = await api.get<UserPermissions>('/admin/permissions')
     return response.data
   },
 }

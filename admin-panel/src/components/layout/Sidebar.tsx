@@ -18,22 +18,35 @@ import {
   MusicNote as MusicIcon,
 } from '@mui/icons-material'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { usePermissions } from '../../hooks/usePermissions'
+import { ResourceName } from '../../types'
 
-const menuItems = [
-  { text: 'QR Scanner', icon: <QrCodeIcon />, path: '/qr-scanner' },
-  { text: 'Events', icon: <EventIcon />, path: '/events' },
-  { text: 'Users', icon: <UsersIcon />, path: '/users' },
-  { text: 'Tickets', icon: <TicketIcon />, path: '/tickets' },
-  { text: 'Support', icon: <SupportIcon />, path: '/support' },
-  { text: 'Orders', icon: <OrderIcon />, path: '/orders' },
-  { text: 'Staff', icon: <StaffIcon />, path: '/staff' },
-  { text: 'Music', icon: <MusicIcon />, path: '/music' },
-  { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings' },
+interface MenuItem {
+  text: string
+  icon: JSX.Element
+  path: string
+  resource: ResourceName
+}
+
+const allMenuItems: MenuItem[] = [
+  { text: 'QR Scanner', icon: <QrCodeIcon />, path: '/qr-scanner', resource: 'qr_scanner' },
+  { text: 'Events', icon: <EventIcon />, path: '/events', resource: 'events' },
+  { text: 'Users', icon: <UsersIcon />, path: '/users', resource: 'users' },
+  { text: 'Tickets', icon: <TicketIcon />, path: '/tickets', resource: 'tickets' },
+  { text: 'Support', icon: <SupportIcon />, path: '/support', resource: 'support' },
+  { text: 'Orders', icon: <OrderIcon />, path: '/orders', resource: 'orders' },
+  { text: 'Staff', icon: <StaffIcon />, path: '/staff', resource: 'staff' },
+  { text: 'Music', icon: <MusicIcon />, path: '/music', resource: 'music' },
+  { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings', resource: 'club_settings' },
 ]
 
 const Sidebar = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { canAccessResource } = usePermissions()
+  
+  // Filter menu items based on permissions
+  const menuItems = allMenuItems.filter(item => canAccessResource(item.resource))
 
   return (
     <Box

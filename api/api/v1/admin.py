@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 from api.core.db import get_db
 from api.core.auth import get_current_admin
+from api.core.permissions import require_permission, has_permission
 from api.repositories.event_repository import EventRepository
 from api.repositories.ticket_type_repository import TicketTypeRepository
 from api.repositories.ticket_type_template_repository import TicketTypeTemplateRepository
@@ -30,6 +31,10 @@ from api.repositories.staff_user_repository import StaffUserRepository
 from api.repositories.menu_photo_repository import MenuPhotoRepository
 from api.repositories.music_request_repository import MusicRequestRepository
 from api.repositories.music_queue_repository import MusicQueueRepository
+from api.repositories.admin_group_repository import AdminGroupRepository
+from api.repositories.admin_account_repository import AdminAccountRepository
+from api.repositories.admin_permission_repository import AdminPermissionRepository
+from api.core.auth import hash_password
 from api.services.telegram_service import download_file_from_telegram
 from api.services.file_storage_service import save_support_photo, get_full_file_path
 from api.core.config import settings
@@ -66,6 +71,19 @@ from api.api.v1.schemas import (
     MusicQueueListResponse,
     MusicQueueCreate,
     MusicQueueReorderRequest,
+    AdminGroupCreate,
+    AdminGroupUpdate,
+    AdminGroupResponse,
+    AdminGroupListResponse,
+    AdminGroupWithPermissionsResponse,
+    AdminAccountCreate,
+    AdminAccountUpdate,
+    AdminAccountResponse,
+    AdminAccountListResponse,
+    AdminPermissionItem,
+    AdminPermissionUpdateRequest,
+    AdminPermissionResponse,
+    AdminPermissionListResponse,
 )
 from api.models import Event, TicketType, TicketTypeTemplate, Ticket, Payment, Order, SupportMessage, MenuPhoto
 from api.models.ticket import TicketStatus
@@ -195,6 +213,7 @@ class OrderListResponse(BaseModel):
 async def get_all_events(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("events", "read"),
 ):
     """Get all events (admin only)."""
     events = EventRepository.get_all(db)
@@ -730,6 +749,7 @@ async def delete_ticket_type_template(
 async def get_all_users(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("users", "read"),
 ):
     """Get all users (admin only)."""
     users = UserRepository.get_all(db)
@@ -757,6 +777,7 @@ async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("users", "write"),
 ):
     """Create a new user (admin only)."""
     # Check if user with this telegram_user_id already exists
@@ -777,6 +798,7 @@ async def update_user(
     user_data: UserUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("users", "write"),
 ):
     """Update a user."""
     user = UserRepository.update(db, user_id, user_data)
@@ -794,6 +816,7 @@ async def delete_user(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("users", "delete"),
 ):
     """Delete a user (soft delete by default, hard delete if hard=true)."""
     success = UserRepository.delete(db, user_id, hard=hard)
@@ -2610,4 +2633,305 @@ async def delete_music_wishlist_batch(
     """Delete multiple music requests from wishlist (admin only)."""
     count = MusicRequestRepository.delete_batch(db, request_ids, hard=hard)
     return {"deleted_count": count}
+
+
+# Admin Groups endpoints
+@router.get("/admin/groups", response_model=AdminGroupListResponse)
+async def get_admin_groups(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all admin groups (admin only)."""
+    groups = AdminGroupRepository.get_all(db)
+    return AdminGroupListResponse(groups=[AdminGroupResponse.model_validate(g) for g in groups])
+
+
+@router.post("/admin/groups", response_model=AdminGroupResponse, status_code=status.HTTP_201_CREATED)
+async def create_admin_group(
+    group_data: AdminGroupCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Create a new admin group (admin only)."""
+    # Check if group with same name exists
+    existing = AdminGroupRepository.get_by_name(db, group_data.name)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Group with this name already exists"
+        )
+    
+    group = AdminGroupRepository.create(db, group_data.name, group_data.description)
+    return AdminGroupResponse.model_validate(group)
+
+
+@router.get("/admin/groups/{group_id}", response_model=AdminGroupWithPermissionsResponse)
+async def get_admin_group(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get admin group by ID with permissions (admin only)."""
+    group = AdminGroupRepository.get_by_id(db, group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    permissions = AdminPermissionRepository.get_all_by_group(db, group_id)
+    
+    return AdminGroupWithPermissionsResponse(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        permissions=[AdminPermissionResponse.model_validate(p) for p in permissions],
+        created_at=group.created_at,
+        updated_at=group.updated_at
+    )
+
+
+@router.put("/admin/groups/{group_id}", response_model=AdminGroupResponse)
+async def update_admin_group(
+    group_id: int,
+    group_data: AdminGroupUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update admin group (admin only)."""
+    if group_data.name:
+        # Check if another group with same name exists
+        existing = AdminGroupRepository.get_by_name(db, group_data.name)
+        if existing and existing.id != group_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Group with this name already exists"
+            )
+    
+    group = AdminGroupRepository.update(db, group_id, group_data.name, group_data.description)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    return AdminGroupResponse.model_validate(group)
+
+
+@router.delete("/admin/groups/{group_id}", status_code=status.HTTP_200_OK)
+async def delete_admin_group(
+    group_id: int,
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete admin group (admin only)."""
+    success = AdminGroupRepository.delete(db, group_id, hard=hard)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    return {"message": "Group deleted successfully"}
+
+
+@router.get("/admin/groups/{group_id}/permissions", response_model=AdminPermissionListResponse)
+async def get_admin_group_permissions(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get permissions for a group (admin only)."""
+    group = AdminGroupRepository.get_by_id(db, group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    permissions = AdminPermissionRepository.get_all_by_group(db, group_id)
+    return AdminPermissionListResponse(permissions=[AdminPermissionResponse.model_validate(p) for p in permissions])
+
+
+@router.put("/admin/groups/{group_id}/permissions", response_model=AdminPermissionListResponse)
+async def update_admin_group_permissions(
+    group_id: int,
+    permissions_data: AdminPermissionUpdateRequest,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update permissions for a group (admin only)."""
+    group = AdminGroupRepository.get_by_id(db, group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    # Validate: can_write and can_delete require can_read
+    for perm in permissions_data.permissions:
+        if perm.can_write and not perm.can_read:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"can_write requires can_read for resource: {perm.resource}"
+            )
+        if perm.can_delete and not perm.can_read:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"can_delete requires can_read for resource: {perm.resource}"
+            )
+    
+    # Bulk update permissions
+    permissions_list = [{"resource": p.resource, "can_read": p.can_read, "can_write": p.can_write, "can_delete": p.can_delete} for p in permissions_data.permissions]
+    permissions = AdminPermissionRepository.bulk_update(db, group_id, permissions_list)
+    
+    return AdminPermissionListResponse(permissions=[AdminPermissionResponse.model_validate(p) for p in permissions])
+
+
+# Admin Accounts endpoints
+@router.get("/admin/accounts", response_model=AdminAccountListResponse)
+async def get_admin_accounts(
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all admin accounts (admin only)."""
+    accounts = AdminAccountRepository.get_all(db)
+    return AdminAccountListResponse(accounts=[AdminAccountResponse.model_validate(a) for a in accounts])
+
+
+@router.post("/admin/accounts", response_model=AdminAccountResponse, status_code=status.HTTP_201_CREATED)
+async def create_admin_account(
+    account_data: AdminAccountCreate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Create a new admin account (admin only)."""
+    # Check if group exists
+    group = AdminGroupRepository.get_by_id(db, account_data.group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    # Check if username already exists
+    existing = AdminAccountRepository.get_by_username(db, account_data.username)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Account with this username already exists"
+        )
+    
+    # Hash password
+    password_hash = hash_password(account_data.password)
+    
+    account = AdminAccountRepository.create(
+        db,
+        account_data.group_id,
+        account_data.username,
+        password_hash,
+        account_data.is_active
+    )
+    
+    return AdminAccountResponse.model_validate(account)
+
+
+@router.get("/admin/accounts/{account_id}", response_model=AdminAccountResponse)
+async def get_admin_account(
+    account_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get admin account by ID (admin only)."""
+    account = AdminAccountRepository.get_by_id(db, account_id)
+    if not account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found"
+        )
+    
+    return AdminAccountResponse.model_validate(account)
+
+
+@router.put("/admin/accounts/{account_id}", response_model=AdminAccountResponse)
+async def update_admin_account(
+    account_id: int,
+    account_data: AdminAccountUpdate,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update admin account (admin only)."""
+    if account_data.group_id:
+        # Check if group exists
+        group = AdminGroupRepository.get_by_id(db, account_data.group_id)
+        if not group:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Group not found"
+            )
+    
+    if account_data.username:
+        # Check if another account with same username exists
+        existing = AdminAccountRepository.get_by_username(db, account_data.username)
+        if existing and existing.id != account_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Account with this username already exists"
+            )
+    
+    password_hash = None
+    if account_data.password:
+        password_hash = hash_password(account_data.password)
+    
+    account = AdminAccountRepository.update(
+        db,
+        account_id,
+        account_data.group_id,
+        account_data.username,
+        password_hash,
+        account_data.is_active
+    )
+    
+    if not account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found"
+        )
+    
+    return AdminAccountResponse.model_validate(account)
+
+
+@router.delete("/admin/accounts/{account_id}", status_code=status.HTTP_200_OK)
+async def delete_admin_account(
+    account_id: int,
+    hard: bool = False,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Delete admin account (admin only)."""
+    success = AdminAccountRepository.delete(db, account_id, hard=hard)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found"
+        )
+    return {"message": "Account deleted successfully"}
+
+
+@router.get("/admin/groups/{group_id}/accounts", response_model=AdminAccountListResponse)
+async def get_admin_group_accounts(
+    group_id: int,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Get all accounts in a group (admin only)."""
+    group = AdminGroupRepository.get_by_id(db, group_id)
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Group not found"
+        )
+    
+    accounts = AdminAccountRepository.get_by_group(db, group_id)
+    return AdminAccountListResponse(accounts=[AdminAccountResponse.model_validate(a) for a in accounts])
 

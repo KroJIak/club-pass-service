@@ -537,3 +537,115 @@ class MusicSearchResponse(BaseModel):
     """Schema for music search response."""
     tracks: List[MusicSearchTrackResponse]
 
+
+# Admin Group schemas
+class AdminGroupCreate(BaseModel):
+    """Schema for creating an admin group."""
+    name: str
+    description: Optional[str] = None
+
+
+class AdminGroupUpdate(BaseModel):
+    """Schema for updating an admin group."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class AdminGroupResponse(BaseModel):
+    """Schema for admin group response."""
+    id: int
+    name: str
+    description: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminGroupListResponse(BaseModel):
+    """Schema for list of admin groups."""
+    groups: List[AdminGroupResponse]
+
+
+# Admin Account schemas
+class AdminAccountCreate(BaseModel):
+    """Schema for creating an admin account."""
+    group_id: int
+    username: str
+    password: str
+    is_active: bool = True
+
+
+class AdminAccountUpdate(BaseModel):
+    """Schema for updating an admin account."""
+    group_id: Optional[int] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class AdminAccountResponse(BaseModel):
+    """Schema for admin account response."""
+    id: int
+    group_id: int
+    username: str
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminAccountListResponse(BaseModel):
+    """Schema for list of admin accounts."""
+    accounts: List[AdminAccountResponse]
+
+
+# Admin Permission schemas
+class AdminPermissionItem(BaseModel):
+    """Schema for a single permission."""
+    resource: str
+    can_read: bool
+    can_write: bool
+    can_delete: bool
+
+
+class AdminPermissionUpdateRequest(BaseModel):
+    """Schema for updating permissions."""
+    permissions: List[AdminPermissionItem]
+
+
+class AdminPermissionResponse(BaseModel):
+    """Schema for admin permission response."""
+    id: int
+    group_id: int
+    resource: str
+    can_read: bool
+    can_write: bool
+    can_delete: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AdminPermissionListResponse(BaseModel):
+    """Schema for list of admin permissions."""
+    permissions: List[AdminPermissionResponse]
+
+
+class AdminGroupWithPermissionsResponse(BaseModel):
+    """Schema for admin group with permissions."""
+    id: int
+    name: str
+    description: Optional[str] = None
+    permissions: List[AdminPermissionResponse]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
