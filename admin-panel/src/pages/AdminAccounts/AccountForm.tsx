@@ -12,7 +12,10 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
+  InputAdornment,
+  IconButton,
 } from '@mui/material'
+import { Refresh as RefreshIcon } from '@mui/icons-material'
 import api from '../../services/api'
 import { AdminAccount, AdminAccountCreate, AdminAccountUpdate, AdminGroup } from '../../types'
 
@@ -47,6 +50,33 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
     }
     setError(null)
   }, [account, groupId, open])
+
+  const generateRandomPassword = () => {
+    // Generate a random password with 16 characters
+    // Using uppercase, lowercase, numbers, and special characters
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+    const numbers = '0123456789'
+    const special = '!@#$%^&*'
+    const allChars = uppercase + lowercase + numbers + special
+    
+    let password = ''
+    // Ensure at least one character from each category
+    password += uppercase[Math.floor(Math.random() * uppercase.length)]
+    password += lowercase[Math.floor(Math.random() * lowercase.length)]
+    password += numbers[Math.floor(Math.random() * numbers.length)]
+    password += special[Math.floor(Math.random() * special.length)]
+    
+    // Fill the rest randomly
+    for (let i = password.length; i < 16; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)]
+    }
+    
+    // Shuffle the password
+    password = password.split('').sort(() => Math.random() - 0.5).join('')
+    
+    setPassword(password)
+  }
 
   const handleSubmit = async () => {
     if (!username.trim()) {
@@ -125,6 +155,19 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
           onChange={(e) => setPassword(e.target.value)}
           required={!account}
           sx={{ mb: 2 }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={generateRandomPassword}
+                  edge="end"
+                  title="Generate random password"
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
         />
         <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
           <InputLabel>Group</InputLabel>
