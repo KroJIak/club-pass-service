@@ -275,6 +275,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             options={events}
             getOptionLabel={getEventLabel}
             loading={loadingEvents}
+            disabled={!hasPermission('tickets', 'write')}
             value={selectedEvent}
             onChange={(_, newValue) => {
               setSelectedEvent(newValue)
@@ -307,6 +308,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
               options={ticketTypes}
               getOptionLabel={(tt) => tt.name}
               loading={loadingTicketTypes}
+              disabled={!hasPermission('tickets', 'write')}
               value={selectedTicketType}
               onChange={(_, newValue) => {
                 setSelectedTicketType(newValue)
@@ -378,6 +380,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
               onClick={generateToken}
               title="Generate Token"
               sx={{ alignSelf: 'center' }}
+              disabled={!hasPermission('tickets', 'write')}
             >
               <RefreshIcon />
             </IconButton>
