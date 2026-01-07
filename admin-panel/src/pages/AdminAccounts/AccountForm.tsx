@@ -15,7 +15,7 @@ import {
   InputAdornment,
   IconButton,
 } from '@mui/material'
-import { Refresh as RefreshIcon } from '@mui/icons-material'
+import { Refresh as RefreshIcon, Visibility, VisibilityOff } from '@mui/icons-material'
 import api from '../../services/api'
 import { AdminAccount, AdminAccountCreate, AdminAccountUpdate, AdminGroup } from '../../types'
 
@@ -31,6 +31,7 @@ interface AccountFormProps {
 const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: AccountFormProps) => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null)
   const [isActive, setIsActive] = useState(true)
   const [loading, setLoading] = useState(false)
@@ -148,7 +149,7 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
         <TextField
           margin="dense"
           label={account ? 'New Password (leave empty to keep current)' : 'Password'}
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           fullWidth
           variant="outlined"
           value={password}
@@ -162,8 +163,16 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
                   onClick={generateRandomPassword}
                   edge="end"
                   title="Generate random password"
+                  sx={{ mr: 0.5 }}
                 >
                   <RefreshIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
               </InputAdornment>
             ),
