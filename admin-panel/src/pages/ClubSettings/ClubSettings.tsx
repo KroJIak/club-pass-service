@@ -38,6 +38,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import api from '../../services/api'
 import type { ClubSettings, ClubSettingsUpdate, MenuPhoto, MenuPhotoReorderRequest } from '../../types'
+import { usePermissions } from '../../hooks/usePermissions'
 
 // Sortable Menu Photo Item Component
 interface SortableMenuPhotoProps {
@@ -192,6 +193,7 @@ const SortableMenuPhoto = ({ photo, onDelete }: SortableMenuPhotoProps) => {
 }
 
 const ClubSettings = () => {
+  const { hasPermission } = usePermissions()
   const [settings, setSettings] = useState<ClubSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -451,6 +453,7 @@ const ClubSettings = () => {
             fullWidth
             helperText="Club phone number displayed in the bot"
             sx={{ mb: 2 }}
+            disabled={!hasPermission('club_settings', 'write')}
           />
         </Box>
 
@@ -463,6 +466,7 @@ const ClubSettings = () => {
             type="email"
             helperText="Club email address displayed in the bot"
             sx={{ mb: 2 }}
+            disabled={!hasPermission('club_settings', 'write')}
           />
         </Box>
 
@@ -476,6 +480,7 @@ const ClubSettings = () => {
             rows={3}
             helperText="Дополнительная информация, отображаемая в формате цитаты внизу раздела 'Инфо о клубе'"
             sx={{ mb: 2 }}
+            disabled={!hasPermission('club_settings', 'write')}
           />
         </Box>
 
@@ -521,7 +526,7 @@ const ClubSettings = () => {
           <Button
             variant="contained"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !hasPermission('club_settings', 'write')}
             size="large"
           >
             {saving ? <CircularProgress size={24} /> : 'Save Settings'}

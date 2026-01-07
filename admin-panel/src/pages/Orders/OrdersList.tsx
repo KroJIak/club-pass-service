@@ -8,8 +8,10 @@ import FilterPanel from '../../components/filters/FilterPanel'
 import OrdersFilter, { OrdersFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/OrdersFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const OrdersList = () => {
+  const { hasPermission } = usePermissions()
   const [orders, setOrders] = useState<Order[]>([])
   const [allOrders, setAllOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -115,7 +117,7 @@ const OrdersList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Orders</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {selection.hasSelection && (
+          {hasPermission('orders', 'delete') && selection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -125,11 +127,13 @@ const OrdersList = () => {
               Delete Selected
             </Button>
           )}
-          <Checkbox
-            checked={selection.getSelectionState() === 'all'}
-            indeterminate={selection.getSelectionState() === 'some'}
-            onChange={selection.handleSelectAllClick}
-          />
+          {hasPermission('orders', 'delete') && (
+            <Checkbox
+              checked={selection.getSelectionState() === 'all'}
+              indeterminate={selection.getSelectionState() === 'some'}
+              onChange={selection.handleSelectAllClick}
+            />
+          )}
         </Box>
       </Box>
       <Grid container spacing={3}>

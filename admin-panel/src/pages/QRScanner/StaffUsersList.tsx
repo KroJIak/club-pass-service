@@ -34,6 +34,7 @@ interface StaffUser {
 }
 
 const StaffUsersList = () => {
+  const { hasPermission } = usePermissions()
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
@@ -138,9 +139,11 @@ const StaffUsersList = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Staff Users</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
-          Add User
-        </Button>
+        {hasPermission('staff', 'write') && (
+          <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
+            Add User
+          </Button>
+        )}
       </Box>
 
       {error && (
@@ -185,6 +188,7 @@ const StaffUsersList = () => {
                       <IconButton
                         color="error"
                         onClick={() => handleDelete(user.id)}
+                        disabled={!hasPermission('staff', 'delete')}
                         disabled={deletingId === user.id}
                       >
                         <DeleteIcon />

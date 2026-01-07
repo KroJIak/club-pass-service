@@ -24,7 +24,8 @@ interface TicketFormProps {
   embedded?: boolean
 }
 
-const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFormProps) => {
+const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: TicketFormProps) => {
+  const { hasPermission } = usePermissions()
   const [loading, setLoading] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -407,17 +408,21 @@ const TicketForm = ({ open = true, ticket, onClose, embedded = false }: TicketFo
         {!embedded && (
           <DialogActions sx={{ px: 2.98 }}>
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
-            </Button>
+            {hasPermission('tickets', 'write') && (
+              <Button type="submit" variant="contained" disabled={loading}>
+                {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+              </Button>
+            )}
           </DialogActions>
         )}
         {embedded && (
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2, px: 0 }}>
             <Button onClick={onClose}>Cancel</Button>
-            <Button type="submit" variant="contained" disabled={loading}>
-              {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
-            </Button>
+            {hasPermission('tickets', 'write') && (
+              <Button type="submit" variant="contained" disabled={loading}>
+                {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+              </Button>
+            )}
           </Box>
         )}
       </form>

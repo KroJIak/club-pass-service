@@ -7,8 +7,10 @@ import FilterPanel from '../../components/filters/FilterPanel'
 import UsersFilter, { UsersFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/UsersFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const UsersList = () => {
+  const { hasPermission } = usePermissions()
   const [users, setUsers] = useState<User[]>([])
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -113,7 +115,7 @@ const UsersList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Users</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {selection.hasSelection && (
+          {hasPermission('users', 'delete') && selection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -123,11 +125,13 @@ const UsersList = () => {
               Delete Selected
             </Button>
           )}
-          <Checkbox
-            checked={selection.getSelectionState() === 'all'}
-            indeterminate={selection.getSelectionState() === 'some'}
-            onChange={selection.handleSelectAllClick}
-          />
+          {hasPermission('users', 'delete') && (
+            <Checkbox
+              checked={selection.getSelectionState() === 'all'}
+              indeterminate={selection.getSelectionState() === 'some'}
+              onChange={selection.handleSelectAllClick}
+            />
+          )}
         </Box>
       </Box>
       <Grid container spacing={3}>

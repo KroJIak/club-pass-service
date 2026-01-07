@@ -9,8 +9,10 @@ import FilterPanel from '../../components/filters/FilterPanel'
 import TicketsFilter, { TicketsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/TicketsFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const TicketsList = () => {
+  const { hasPermission } = usePermissions()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [allTickets, setAllTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
@@ -161,7 +163,7 @@ const TicketsList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Tickets</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {selection.hasSelection && (
+          {hasPermission('tickets', 'delete') && selection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -171,21 +173,25 @@ const TicketsList = () => {
               Delete Selected
             </Button>
           )}
-          <Checkbox
-            checked={selection.getSelectionState() === 'all'}
-            indeterminate={selection.getSelectionState() === 'some'}
-            onChange={selection.handleSelectAllClick}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              setEditingTicket(null)
-              setFormOpen(true)
-            }}
-          >
-            Create New
-          </Button>
+          {hasPermission('tickets', 'delete') && (
+            <Checkbox
+              checked={selection.getSelectionState() === 'all'}
+              indeterminate={selection.getSelectionState() === 'some'}
+              onChange={selection.handleSelectAllClick}
+            />
+          )}
+          {hasPermission('tickets', 'write') && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                setEditingTicket(null)
+                setFormOpen(true)
+              }}
+            >
+              Create New
+            </Button>
+          )}
         </Box>
       </Box>
       <Grid container spacing={3}>

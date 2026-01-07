@@ -15,8 +15,10 @@ import api from '../../services/api'
 import { TicketType, TicketTypeTemplate } from '../../types'
 import TicketTypeForm from './TicketTypeForm'
 import TicketTypeTemplateForm from './TicketTypeTemplateForm'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const TicketTypesList = () => {
+  const { hasPermission } = usePermissions()
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
   const [templates, setTemplates] = useState<TicketTypeTemplate[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,25 +75,29 @@ const TicketTypesList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Ticket Types</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button 
-            variant="outlined" 
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setTemplateFormOpen(true)
-            }}
-          >
-            Create Template
-          </Button>
-          <Button 
-            variant="contained" 
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setEditingTicketType(null)
-              setFormOpen(true)
-            }}
-          >
-            Create New
-          </Button>
+          {hasPermission('tickets', 'write') && (
+            <Button 
+              variant="outlined" 
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setTemplateFormOpen(true)
+              }}
+            >
+              Create Template
+            </Button>
+          )}
+          {hasPermission('tickets', 'write') && (
+            <Button 
+              variant="contained" 
+              startIcon={<AddIcon />}
+              onClick={() => {
+                setEditingTicketType(null)
+                setFormOpen(true)
+              }}
+            >
+              Create New
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -188,20 +194,23 @@ const TicketTypesList = () => {
                     setFormOpen(true)
                   }}
                   title="Edit"
+                  disabled={!hasPermission('tickets', 'write')}
                 >
                   <EditIcon />
                 </IconButton>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDelete(tt.id)
-                  }}
-                  title="Delete"
-                >
-                  <DeleteIcon />
-                </IconButton>
+                {hasPermission('tickets', 'delete') && (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDelete(tt.id)
+                    }}
+                    title="Delete"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
               </CardActions>
             </Card>
           </Grid>

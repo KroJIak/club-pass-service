@@ -225,6 +225,7 @@ async def get_event(
     event_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("events", "read"),
 ):
     """Get event by ID (admin only)."""
     event = EventRepository.get_by_id(db, event_id)
@@ -241,6 +242,7 @@ async def create_event(
     event_data: EventCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("events", "write"),
 ):
     """Create a new event."""
     from datetime import datetime
@@ -354,6 +356,7 @@ async def update_event(
     event_data: EventUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("events", "write"),
 ):
     """Update an event."""
     logger.info(f"[UPDATE EVENT] Received update request for event {event_id}: is_active={event_data.is_active}")
@@ -533,6 +536,7 @@ async def delete_event(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("events", "delete"),
 ):
     """Delete an event (soft delete by default, hard delete if hard=true)."""
     if hard:
@@ -575,6 +579,7 @@ async def delete_event(
 async def get_all_ticket_types(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get all ticket types (admin only)."""
     ticket_types = TicketTypeRepository.get_all(db)
@@ -586,6 +591,7 @@ async def get_ticket_type(
     ticket_type_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get ticket type by ID (admin only)."""
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
@@ -602,6 +608,7 @@ async def create_ticket_type(
     ticket_type_data: TicketTypeCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Create a new ticket type."""
     # Check if event exists
@@ -632,6 +639,7 @@ async def update_ticket_type(
     ticket_type_data: TicketTypeUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Update a ticket type."""
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
@@ -663,6 +671,7 @@ async def delete_ticket_type(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "delete"),
 ):
     """Delete a ticket type (soft delete by default, hard delete if hard=true)."""
     if hard:
@@ -833,6 +842,7 @@ async def delete_user(
 async def get_all_tickets(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get all tickets (admin only)."""
     from api.repositories.user_repository import UserRepository
@@ -862,6 +872,7 @@ async def create_ticket(
     ticket_data: TicketCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Create a new ticket."""
     # Validate user exists
@@ -929,6 +940,7 @@ async def get_ticket(
     ticket_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get ticket by ID (admin only)."""
     ticket = TicketRepository.get_by_id(db, ticket_id)
@@ -946,6 +958,7 @@ async def update_ticket(
     ticket_data: TicketUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Update a ticket."""
     
@@ -1079,6 +1092,7 @@ async def get_ticket_by_token(
     token: str,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get ticket by token (admin only)."""
     ticket = TicketService.get_ticket_by_token(db, token)
@@ -1095,6 +1109,7 @@ async def mark_ticket_as_used_admin(
     ticket_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Mark ticket as used (admin only)."""
     ticket = TicketService.mark_ticket_as_used(db, ticket_id)
@@ -1118,6 +1133,7 @@ async def delete_ticket(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "delete"),
 ):
     """Delete a ticket (soft delete by default, hard delete if hard=true)."""
     if hard:
@@ -1210,6 +1226,7 @@ async def update_payment(
 async def get_all_orders(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "read"),
 ):
     """Get all orders (admin only)."""
     from api.repositories.user_repository import UserRepository
@@ -1248,6 +1265,7 @@ async def get_order(
     order_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "read"),
 ):
     """Get order by ID (admin only)."""
     from api.repositories.user_repository import UserRepository
@@ -1285,6 +1303,7 @@ async def delete_order(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "delete"),
 ):
     """Delete an order (soft delete by default, hard delete if hard=true)."""
     success = OrderRepository.delete(db, order_id, hard=hard)
@@ -1365,6 +1384,7 @@ async def update_expiration_settings(
 async def get_club_settings(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "read"),
 ):
     """Get club settings."""
     settings = ClubSettingsRepository.get_settings(db)
@@ -1414,6 +1434,7 @@ async def update_club_settings(
     settings_update: ClubSettingsUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "write"),
 ):
     """Update club settings."""
     try:
@@ -1524,6 +1545,7 @@ async def get_all_support_messages(
     search: Optional[str] = None,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "read"),
 ):
     """Get all support messages (admin only)."""
     from api.models.support_message import SupportMessageStatus
@@ -1596,6 +1618,7 @@ async def get_support_message(
     message_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "read"),
 ):
     """Get a support message by ID (admin only)."""
     message = SupportMessageRepository.get_by_id(db, message_id)
@@ -1622,6 +1645,7 @@ async def get_support_message_photo(
     photo_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "read"),
 ):
     """Get a support message photo file (admin only)."""
     photo = SupportMessagePhotoRepository.get_by_id(db, photo_id)
@@ -1700,6 +1724,7 @@ async def respond_to_support_message(
     response_data: dict,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "write"),
 ):
     """Respond to a support message (admin only)."""
     from api.models.support_message import SupportMessageStatus
@@ -1832,6 +1857,7 @@ async def update_support_message(
     message_data: SupportMessageUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "write"),
 ):
     """Update a support message (admin only)."""
     message = SupportMessageRepository.get_by_id(db, message_id)
@@ -1992,6 +2018,7 @@ async def delete_support_message(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "delete"),
 ):
     """Delete a support message (soft delete by default, hard delete if hard=true)."""
     message = SupportMessageRepository.get_by_id(db, message_id)
@@ -2151,6 +2178,7 @@ async def get_admin_message_photo(
 async def get_all_staff_users(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("staff", "read"),
 ):
     """Get all staff users (admin only)."""
     staff_users = StaffUserRepository.get_all(db)
@@ -2162,6 +2190,7 @@ async def create_staff_user(
     user_data: StaffUserCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("staff", "write"),
 ):
     """Create a new staff user (admin only)."""
     # Check if staff user with this telegram_user_id already exists
@@ -2187,6 +2216,7 @@ async def update_staff_user(
     user_data: StaffUserUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("staff", "write"),
 ):
     """Update a staff user (admin only)."""
     staff_user = StaffUserRepository.get_by_id(db, staff_user_id)
@@ -2217,6 +2247,7 @@ async def delete_staff_user(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("staff", "delete"),
 ):
     """Delete a staff user (soft delete by default, hard delete if hard=true)."""
     if not StaffUserRepository.delete(db, staff_user_id, hard=hard):
@@ -2385,6 +2416,7 @@ async def reorder_menu_photos(
 async def get_music_queue(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "read"),
 ):
     """Get music queue (admin only)."""
     queue_items = MusicQueueRepository.get_all(db)
@@ -2413,6 +2445,7 @@ async def get_music_wishlist(
     event_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "read"),
 ):
     """Get music wishlist (admin only)."""
     requests = MusicRequestRepository.get_all(db, event_id=event_id)
@@ -2424,6 +2457,7 @@ async def create_music_queue_item(
     queue_data: MusicQueueCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "write"),
 ):
     """Add a track to music queue (admin only)."""
     queue_item = MusicQueueRepository.create(
@@ -2441,6 +2475,7 @@ async def reorder_music_queue(
     reorder_request: MusicQueueReorderRequest,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "write"),
 ):
     """Reorder music queue items (admin only)."""
     try:
@@ -2468,6 +2503,7 @@ async def delete_music_queue_item(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "delete"),
 ):
     """Delete a music queue item (admin only)."""
     if not MusicQueueRepository.delete(db, queue_id, hard=hard):
@@ -2484,6 +2520,7 @@ async def delete_music_request(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "delete"),
 ):
     """Delete a music request from wishlist (admin only)."""
     if not MusicRequestRepository.delete(db, request_id, hard=hard):
@@ -2499,6 +2536,7 @@ async def move_music_request_to_queue(
     request_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "write"),
 ):
     """Move a music request from wishlist to queue (admin only)."""
     music_request = MusicRequestRepository.get_by_id(db, request_id)
@@ -2551,6 +2589,7 @@ async def move_music_queue_to_wishlist(
     queue_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "write"),
 ):
     """Move a music queue item back to wishlist (admin only)."""
     queue_item = MusicQueueRepository.get_by_id(db, queue_id)
@@ -2617,6 +2656,7 @@ async def delete_music_queue_batch(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "delete"),
 ):
     """Delete multiple music queue items (admin only)."""
     count = MusicQueueRepository.delete_batch(db, queue_ids, hard=hard)
@@ -2629,6 +2669,7 @@ async def delete_music_wishlist_batch(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("music", "delete"),
 ):
     """Delete multiple music requests from wishlist (admin only)."""
     count = MusicRequestRepository.delete_batch(db, request_ids, hard=hard)

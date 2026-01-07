@@ -17,6 +17,7 @@ import api from '../../services/api'
 import { TicketType, TicketTypeTemplate, TicketTypeCreate, TicketTypeUpdate, Event } from '../../types'
 import TextField from '../../components/forms/TextField'
 import BooleanField from '../../components/forms/BooleanField'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface TicketTypeFormProps {
   open?: boolean
@@ -37,6 +38,7 @@ const TicketTypeForm = ({
   onSuccess,
   embedded = false 
 }: TicketTypeFormProps) => {
+  const { hasPermission } = usePermissions()
   const [loading, setLoading] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
 

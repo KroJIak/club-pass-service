@@ -22,6 +22,7 @@ import BooleanField from '../../components/forms/BooleanField'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
 import TicketTypeForm from './TicketTypeForm'
 import TicketTypeTemplateForm from '../TicketTypes/TicketTypeTemplateForm'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface EventFormProps {
   open?: boolean
@@ -31,6 +32,7 @@ interface EventFormProps {
 }
 
 const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormProps) => {
+  const { hasPermission } = usePermissions()
   const [loading, setLoading] = useState(false)
   const [djs, setDjs] = useState<string[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -275,12 +277,14 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           {...register('name', { required: 'Name is required' })}
           error={!!errors.name}
           helperText={errors.name?.message}
+          disabled={!hasPermission('events', 'write')}
         />
         <TextField
           label="Description"
           multiline
           rows={3}
           {...register('description')}
+          disabled={!hasPermission('events', 'write')}
         />
         <DateField
           label="Start Date"
@@ -302,6 +306,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           }}
           error={!!errors.start_date}
           helperText={errors.start_date?.message}
+          disabled={!hasPermission('events', 'write')}
         />
         <TimeField
           label="Start Time"
@@ -323,6 +328,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           }}
           error={!!errors.start_time}
           helperText={errors.start_time?.message}
+          disabled={!hasPermission('events', 'write')}
         />
         <DateField
           label="End Date"
@@ -332,6 +338,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           }}
           error={!!errors.end_date}
           helperText={errors.end_date?.message || 'Date when the event ends'}
+          disabled={!hasPermission('events', 'write')}
         />
         <TimeField
           label="End Time"
@@ -341,6 +348,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           }}
           error={!!errors.end_time}
           helperText={errors.end_time?.message || 'Time when the event ends'}
+          disabled={!hasPermission('events', 'write')}
         />
         <ArrayField
           label="DJs"
@@ -349,11 +357,13 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
             setDjs(value)
             setValue('djs', value)
           }}
+          disabled={!hasPermission('events', 'write')}
         />
         <BooleanField
           label="Active"
           value={isActive}
           onChange={(value) => setValue('is_active', value)}
+          disabled={!hasPermission('events', 'write')}
         />
 
         {eventId && (
@@ -506,9 +516,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {loading ? (event ? 'Saving...' : 'Creating...') : (event ? 'Save' : 'Create')}
-        </Button>
+        {hasPermission('events', 'write') && (
+          <Button type="submit" variant="contained" disabled={loading}>
+            {loading ? (event ? 'Saving...' : 'Creating...') : (event ? 'Save' : 'Create')}
+          </Button>
+        )}
       </DialogActions>
     </form>
   )

@@ -20,8 +20,10 @@ import FilterPanel from '../../components/filters/FilterPanel'
 import EventsFilter, { EventsFilterState, DEFAULT_FILTER_STATE } from '../../components/filters/EventsFilter'
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 const EventsList = () => {
+  const { hasPermission } = usePermissions()
   const [events, setEvents] = useState<Event[]>([])
   const [allEvents, setAllEvents] = useState<Event[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -285,7 +287,7 @@ const EventsList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6">Events</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {selection.hasSelection && (
+          {hasPermission('events', 'delete') && selection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -295,14 +297,18 @@ const EventsList = () => {
               Delete Selected
             </Button>
           )}
-          <Checkbox
-            checked={selection.getSelectionState() === 'all'}
-            indeterminate={selection.getSelectionState() === 'some'}
-            onChange={selection.handleSelectAllClick}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
-            Create New
-          </Button>
+          {hasPermission('events', 'delete') && (
+            <Checkbox
+              checked={selection.getSelectionState() === 'all'}
+              indeterminate={selection.getSelectionState() === 'some'}
+              onChange={selection.handleSelectAllClick}
+            />
+          )}
+          {hasPermission('events', 'write') && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate}>
+              Create New
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -336,6 +342,7 @@ const EventsList = () => {
                       checked={event.is_active}
                       onChange={(e) => handleToggleActive(event, e)}
                       onClick={(e) => e.stopPropagation()}
+                      disabled={!hasPermission('events', 'write')}
                     />
                     <Chip
                       label={event.is_active ? 'Active' : 'Inactive'}
@@ -350,6 +357,7 @@ const EventsList = () => {
                           e.stopPropagation()
                           toggleExpand(event.id)
                         }}
+                        disabled={!hasPermission('events', 'write')}
                       >
                         <EditIcon />
                       </IconButton>

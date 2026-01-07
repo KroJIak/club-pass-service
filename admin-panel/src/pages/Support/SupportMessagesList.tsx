@@ -42,6 +42,7 @@ import api from '../../services/api'
 import { User } from '../../types'
 import dayjs from 'dayjs'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 // Component to load authenticated images
 const AuthenticatedImage: React.FC<{
@@ -210,6 +211,7 @@ interface AdminMessage {
 type SortOption = 'newest' | 'oldest' | 'status'
 
 const SupportMessagesList: React.FC = () => {
+  const { hasPermission } = usePermissions()
   const [tabValue, setTabValue] = useState(0)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [allMessages, setAllMessages] = useState<SupportMessage[]>([])
@@ -813,7 +815,7 @@ const SupportMessagesList: React.FC = () => {
           )}
         </Grid>
         <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          {tabValue === 0 && selection.hasSelection && (
+          {hasPermission('support', 'delete') && tabValue === 0 && selection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -823,7 +825,7 @@ const SupportMessagesList: React.FC = () => {
               Delete Selected
             </Button>
           )}
-          {tabValue === 1 && adminSelection.hasSelection && (
+          {hasPermission('support', 'delete') && tabValue === 1 && adminSelection.hasSelection && (
             <Button
               variant="outlined"
               color="error"
@@ -833,14 +835,14 @@ const SupportMessagesList: React.FC = () => {
               Delete Selected
             </Button>
           )}
-          {tabValue === 0 && (
+          {hasPermission('support', 'delete') && tabValue === 0 && (
             <Checkbox
               checked={selection.getSelectionState() === 'all'}
               indeterminate={selection.getSelectionState() === 'some'}
               onChange={selection.handleSelectAllClick}
             />
           )}
-          {tabValue === 1 && (
+          {hasPermission('support', 'delete') && tabValue === 1 && (
             <Checkbox
               checked={adminSelection.getSelectionState() === 'all'}
               indeterminate={adminSelection.getSelectionState() === 'some'}

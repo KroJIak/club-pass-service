@@ -39,6 +39,7 @@ import { CSS } from '@dnd-kit/utilities'
 import api from '../../services/api'
 import { MusicRequest, MusicQueue, MusicQueueReorderRequest } from '../../types'
 import { useSelection } from '../../hooks/useSelection'
+import { usePermissions } from '../../hooks/usePermissions'
 
 // Sortable Queue Item Component
 interface SortableQueueItemProps {
@@ -118,7 +119,11 @@ const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, on
           )}
         </Box>
       </Box>
-      <IconButton onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} color="error">
+      <IconButton 
+        onClick={(e) => { e.stopPropagation(); onDelete(item.id); }} 
+        color="error"
+        disabled={disableDrag}
+      >
         <DeleteIcon />
       </IconButton>
     </Paper>
@@ -209,6 +214,7 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disab
         }} 
         color="primary"
         sx={{ pointerEvents: 'auto' }}
+        disabled={disableDrag}
       >
         <PlayArrowIcon />
       </IconButton>
@@ -219,6 +225,7 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disab
         }} 
         color="error"
         sx={{ pointerEvents: 'auto' }}
+        disabled={disableDrag}
       >
         <DeleteIcon />
       </IconButton>
@@ -265,6 +272,7 @@ const WishlistDroppable = ({ children }: { children: React.ReactNode }) => {
 }
 
 const MusicManagement = () => {
+  const { hasPermission } = usePermissions()
   const [queue, setQueue] = useState<MusicQueue[]>([])
   const [wishlist, setWishlist] = useState<MusicRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -275,8 +283,8 @@ const MusicManagement = () => {
   const wishlistSelection = useSelection(wishlist)
   const [activeId, setActiveId] = useState<string | null>(null)
 
-  // Disable drag if any items are selected
-  const disableDrag = queueSelection.hasSelection || wishlistSelection.hasSelection
+  // Disable drag if any items are selected or if user doesn't have write permission
+  const disableDrag = queueSelection.hasSelection || wishlistSelection.hasSelection || !hasPermission('music', 'write')
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -553,18 +561,20 @@ const MusicManagement = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Queue</Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
-                  <Checkbox
-                    checked={queueSelection.getSelectionState() === 'all'}
-                    indeterminate={queueSelection.getSelectionState() === 'some'}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        queueSelection.selectAll()
-                      } else {
-                        queueSelection.deselectAll()
-                      }
-                    }}
-                  />
-                  {queueSelection.hasSelection && (
+                  {hasPermission('music', 'delete') && (
+                    <Checkbox
+                      checked={queueSelection.getSelectionState() === 'all'}
+                      indeterminate={queueSelection.getSelectionState() === 'some'}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          queueSelection.selectAll()
+                        } else {
+                          queueSelection.deselectAll()
+                        }
+                      }}
+                    />
+                  )}
+                  {hasPermission('music', 'delete') && queueSelection.hasSelection && (
                     <Button
                       variant="outlined"
                       color="error"
@@ -604,18 +614,20 @@ const MusicManagement = () => {
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6">Wishlist</Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
-                  <Checkbox
-                    checked={wishlistSelection.getSelectionState() === 'all'}
-                    indeterminate={wishlistSelection.getSelectionState() === 'some'}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        wishlistSelection.selectAll()
-                      } else {
-                        wishlistSelection.deselectAll()
-                      }
-                    }}
-                  />
-                  {wishlistSelection.hasSelection && (
+                  {hasPermission('music', 'delete') && (
+                    <Checkbox
+                      checked={wishlistSelection.getSelectionState() === 'all'}
+                      indeterminate={wishlistSelection.getSelectionState() === 'some'}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          wishlistSelection.selectAll()
+                        } else {
+                          wishlistSelection.deselectAll()
+                        }
+                      }}
+                    />
+                  )}
+                  {hasPermission('music', 'delete') && wishlistSelection.hasSelection && (
                     <Button
                       variant="outlined"
                       color="error"

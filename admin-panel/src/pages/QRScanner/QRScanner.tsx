@@ -12,6 +12,7 @@ import {
 import { Html5Qrcode } from 'html5-qrcode'
 import api from '../../services/api'
 import { TicketDetailResponse } from '../../types'
+import { usePermissions } from '../../hooks/usePermissions'
 
 interface CameraDevice {
   id: string
@@ -19,6 +20,7 @@ interface CameraDevice {
 }
 
 const QRScanner = () => {
+  const { hasPermission } = usePermissions()
   const [scanning, setScanning] = useState(false)
   const [ticket, setTicket] = useState<TicketDetailResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -371,7 +373,7 @@ const QRScanner = () => {
                 variant="contained"
                 color="primary"
                 onClick={handleAccept}
-                disabled={ticket.status !== 'active' || accepting}
+                disabled={ticket.status !== 'active' || accepting || !hasPermission('qr_scanner', 'write')}
                 fullWidth
               >
                 {accepting ? <CircularProgress size={24} /> : 'Accept'}
