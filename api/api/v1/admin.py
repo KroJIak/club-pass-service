@@ -579,7 +579,7 @@ async def delete_event(
 async def get_all_ticket_types(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "read"),
+    _: bool = require_permission("events", "read"),
 ):
     """Get all ticket types (admin only)."""
     ticket_types = TicketTypeRepository.get_all(db)
@@ -591,7 +591,7 @@ async def get_ticket_type(
     ticket_type_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "read"),
+    _: bool = require_permission("events", "read"),
 ):
     """Get ticket type by ID (admin only)."""
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
@@ -608,7 +608,7 @@ async def create_ticket_type(
     ticket_type_data: TicketTypeCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "write"),
+    _: bool = require_permission("events", "write"),
 ):
     """Create a new ticket type."""
     # Check if event exists
@@ -639,7 +639,7 @@ async def update_ticket_type(
     ticket_type_data: TicketTypeUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "write"),
+    _: bool = require_permission("events", "write"),
 ):
     """Update a ticket type."""
     ticket_type = TicketTypeRepository.get_by_id(db, ticket_type_id)
@@ -671,7 +671,7 @@ async def delete_ticket_type(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "delete"),
+    _: bool = require_permission("events", "delete"),
 ):
     """Delete a ticket type (soft delete by default, hard delete if hard=true)."""
     if hard:
@@ -714,7 +714,7 @@ async def delete_ticket_type(
 async def get_all_ticket_type_templates(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "read"),
+    _: bool = require_permission("events", "read"),
 ):
     """Get all ticket type templates."""
     templates = TicketTypeTemplateRepository.get_all(db)
@@ -726,7 +726,7 @@ async def create_ticket_type_template(
     template_data: TicketTypeTemplateCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "write"),
+    _: bool = require_permission("events", "write"),
 ):
     """Create a new ticket type template."""
     template = TicketTypeTemplateRepository.create(
@@ -745,7 +745,7 @@ async def delete_ticket_type_template(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
-    _: bool = require_permission("tickets", "delete"),
+    _: bool = require_permission("events", "delete"),
 ):
     """Delete a ticket type template (soft delete by default, hard delete if hard=true)."""
     if not TicketTypeTemplateRepository.delete(db, template_id, hard=hard):
