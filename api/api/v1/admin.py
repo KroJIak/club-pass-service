@@ -714,6 +714,7 @@ async def delete_ticket_type(
 async def get_all_ticket_type_templates(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "read"),
 ):
     """Get all ticket type templates."""
     templates = TicketTypeTemplateRepository.get_all(db)
@@ -725,6 +726,7 @@ async def create_ticket_type_template(
     template_data: TicketTypeTemplateCreate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "write"),
 ):
     """Create a new ticket type template."""
     template = TicketTypeTemplateRepository.create(
@@ -743,6 +745,7 @@ async def delete_ticket_type_template(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("tickets", "delete"),
 ):
     """Delete a ticket type template (soft delete by default, hard delete if hard=true)."""
     if not TicketTypeTemplateRepository.delete(db, template_id, hard=hard):
@@ -770,6 +773,7 @@ async def get_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("users", "read"),
 ):
     """Get user by ID (admin only)."""
     user = UserRepository.get_by_id(db, user_id)
@@ -1176,6 +1180,7 @@ async def delete_ticket(
 async def get_all_payments(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "read"),
 ):
     """Get all payments (admin only)."""
     payments = PaymentRepository.get_all(db)
@@ -1187,6 +1192,7 @@ async def get_payment(
     payment_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "read"),
 ):
     """Get payment by ID (admin only)."""
     payment = PaymentRepository.get_by_id(db, payment_id)
@@ -1204,6 +1210,7 @@ async def update_payment(
     payment_data: PaymentUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("orders", "write"),
 ):
     """Update a payment."""
     if payment_data.status is None:
@@ -1319,6 +1326,7 @@ async def delete_order(
 async def get_expiration_settings(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "read"),
 ):
     """Get expiration service settings."""
     from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
@@ -1331,6 +1339,7 @@ async def update_expiration_settings(
     settings_update: ExpirationSettingsUpdate,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "write"),
 ):
     """Update expiration service settings."""
     from api.repositories.expiration_settings_repository import ExpirationSettingsRepository
@@ -1681,6 +1690,7 @@ async def upload_photo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "write"),
 ):
     """Upload a photo file and return the file path."""
     try:
@@ -1894,6 +1904,7 @@ async def send_message_to_user(
     request_data: dict,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "write"),
 ):
     """Send a direct message to a user (admin only)."""
     import os
@@ -2053,6 +2064,7 @@ async def get_admin_messages(
     offset: Optional[int] = 0,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "read"),
 ):
     """Get admin messages history (admin only)."""
     from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
@@ -2112,6 +2124,7 @@ async def delete_admin_message(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "delete"),
 ):
     """Delete an admin message (soft delete by default, hard delete if hard=true)."""
     message = AdminMessageRepository.get_by_id(db, message_id)
@@ -2143,6 +2156,7 @@ async def get_admin_message_photo(
     photo_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("support", "read"),
 ):
     """Get an admin message photo file (admin only)."""
     from api.repositories.admin_message_photo_repository import AdminMessagePhotoRepository
@@ -2263,6 +2277,7 @@ async def delete_staff_user(
 async def get_menu_photos(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "read"),
 ):
     """Get all menu photos (admin only)."""
     photos = MenuPhotoRepository.get_all(db)
@@ -2274,6 +2289,7 @@ async def get_menu_photo_file(
     photo_id: int,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "read"),
 ):
     """Get menu photo file (admin only)."""
     photo = MenuPhotoRepository.get_by_id(db, photo_id)
@@ -2303,6 +2319,7 @@ async def create_menu_photo(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "write"),
 ):
     """Upload a new menu photo (admin only)."""
     # Check current count
@@ -2367,6 +2384,7 @@ async def delete_menu_photo(
     hard: bool = False,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "delete"),
 ):
     """Delete a menu photo (admin only)."""
     if hard:
@@ -2388,6 +2406,7 @@ async def reorder_menu_photos(
     reorder_request: MenuPhotoReorderRequest,
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
+    _: bool = require_permission("club_settings", "write"),
 ):
     """Reorder menu photos (admin only)."""
     try:
@@ -2682,7 +2701,12 @@ async def get_admin_groups(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get all admin groups (admin only)."""
+    """Get all admin groups (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin groups"
+        )
     groups = AdminGroupRepository.get_all(db)
     return AdminGroupListResponse(groups=[AdminGroupResponse.model_validate(g) for g in groups])
 
@@ -2693,7 +2717,12 @@ async def create_admin_group(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Create a new admin group (admin only)."""
+    """Create a new admin group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can create admin groups"
+        )
     # Check if group with same name exists
     existing = AdminGroupRepository.get_by_name(db, group_data.name)
     if existing:
@@ -2712,7 +2741,12 @@ async def get_admin_group(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get admin group by ID with permissions (admin only)."""
+    """Get admin group by ID with permissions (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin groups"
+        )
     group = AdminGroupRepository.get_by_id(db, group_id)
     if not group:
         raise HTTPException(
@@ -2739,7 +2773,12 @@ async def update_admin_group(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Update admin group (admin only)."""
+    """Update admin group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can update admin groups"
+        )
     if group_data.name:
         # Check if another group with same name exists
         existing = AdminGroupRepository.get_by_name(db, group_data.name)
@@ -2766,7 +2805,12 @@ async def delete_admin_group(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete admin group (admin only)."""
+    """Delete admin group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can delete admin groups"
+        )
     success = AdminGroupRepository.delete(db, group_id, hard=hard)
     if not success:
         raise HTTPException(
@@ -2782,7 +2826,12 @@ async def get_admin_group_permissions(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get permissions for a group (admin only)."""
+    """Get permissions for a group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin group permissions"
+        )
     group = AdminGroupRepository.get_by_id(db, group_id)
     if not group:
         raise HTTPException(
@@ -2801,7 +2850,12 @@ async def update_admin_group_permissions(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Update permissions for a group (admin only)."""
+    """Update permissions for a group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can update admin group permissions"
+        )
     group = AdminGroupRepository.get_by_id(db, group_id)
     if not group:
         raise HTTPException(
@@ -2835,7 +2889,12 @@ async def get_admin_accounts(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get all admin accounts (admin only)."""
+    """Get all admin accounts (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin accounts"
+        )
     accounts = AdminAccountRepository.get_all(db)
     return AdminAccountListResponse(accounts=[AdminAccountResponse.model_validate(a) for a in accounts])
 
@@ -2846,7 +2905,12 @@ async def create_admin_account(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Create a new admin account (admin only)."""
+    """Create a new admin account (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can create admin accounts"
+        )
     # Check if group exists
     group = AdminGroupRepository.get_by_id(db, account_data.group_id)
     if not group:
@@ -2883,7 +2947,12 @@ async def get_admin_account(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get admin account by ID (admin only)."""
+    """Get admin account by ID (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin accounts"
+        )
     account = AdminAccountRepository.get_by_id(db, account_id)
     if not account:
         raise HTTPException(
@@ -2901,7 +2970,12 @@ async def update_admin_account(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Update admin account (admin only)."""
+    """Update admin account (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can update admin accounts"
+        )
     if account_data.group_id:
         # Check if group exists
         group = AdminGroupRepository.get_by_id(db, account_data.group_id)
@@ -2949,7 +3023,12 @@ async def delete_admin_account(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Delete admin account (admin only)."""
+    """Delete admin account (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can delete admin accounts"
+        )
     success = AdminAccountRepository.delete(db, account_id, hard=hard)
     if not success:
         raise HTTPException(
@@ -2965,7 +3044,12 @@ async def get_admin_group_accounts(
     db: Session = Depends(get_db),
     current_admin: dict = Depends(get_current_admin),
 ):
-    """Get all accounts in a group (admin only)."""
+    """Get all accounts in a group (superadmin only)."""
+    if not current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only superadmin can access admin group accounts"
+        )
     group = AdminGroupRepository.get_by_id(db, group_id)
     if not group:
         raise HTTPException(
