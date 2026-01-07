@@ -118,35 +118,37 @@ const TicketTypesList = () => {
                 setEditingTicketType(null)
                 setFormOpen(true)
               }}
-              sx={{ position: 'relative', pr: 4 }}
+              sx={{ position: 'relative', pr: hasPermission('tickets', 'delete') ? 4 : 1.5 }}
             >
               {template.name}
-              <IconButton
-                size="small"
-                color="error"
-                onClick={async (e) => {
-                  e.stopPropagation()
-                  if (confirm(`Delete template "${template.name}"?`)) {
-                    try {
-                      await api.delete(`/admin/ticket-type-templates/${template.id}`)
-                      fetchTemplates()
-                    } catch (error: any) {
-                      console.error('Failed to delete template:', error)
-                      alert(error.response?.data?.detail || 'Failed to delete template')
+              {hasPermission('tickets', 'delete') && (
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    if (confirm(`Delete template "${template.name}"?`)) {
+                      try {
+                        await api.delete(`/admin/ticket-type-templates/${template.id}`)
+                        fetchTemplates()
+                      } catch (error: any) {
+                        console.error('Failed to delete template:', error)
+                        alert(error.response?.data?.detail || 'Failed to delete template')
+                      }
                     }
-                  }
-                }}
-                title="Delete template"
-                sx={{
-                  position: 'absolute',
-                  right: 4,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  padding: 0.5,
-                }}
-              >
-                <CloseIcon fontSize="small" />
-              </IconButton>
+                  }}
+                  title="Delete template"
+                  sx={{
+                    position: 'absolute',
+                    right: 4,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    padding: 0.5,
+                  }}
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              )}
             </Button>
           ))}
         </Box>

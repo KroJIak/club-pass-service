@@ -372,27 +372,31 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Ticket Types</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => setTemplateFormOpen(true)}
-                >
-                  Create Template
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={() => {
-                    setEditingTicketType(null)
-                    setSelectedTemplate(null)
-                    setTicketTypeFormOpen(true)
-                  }}
-                  disabled={!eventId}
-                >
-                  Add Ticket Type
-                </Button>
+                {hasPermission('tickets', 'write') && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={() => setTemplateFormOpen(true)}
+                  >
+                    Create Template
+                  </Button>
+                )}
+                {hasPermission('tickets', 'write') && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setEditingTicketType(null)
+                      setSelectedTemplate(null)
+                      setTicketTypeFormOpen(true)
+                    }}
+                    disabled={!eventId}
+                  >
+                    Add Ticket Type
+                  </Button>
+                )}
               </Box>
             </Box>
             {/* Display templates as buttons */}
@@ -410,35 +414,37 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       setSelectedTemplate(template)
                       setTicketTypeFormOpen(true)
                     }}
-                    sx={{ position: 'relative', pr: 4 }}
+                    sx={{ position: 'relative', pr: hasPermission('tickets', 'delete') ? 4 : 1.5 }}
                   >
                     {template.name}
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={async (e) => {
-                        e.stopPropagation()
-                        if (confirm(`Delete template "${template.name}"?`)) {
-                          try {
-                            await api.delete(`/admin/ticket-type-templates/${template.id}`)
-                            fetchTemplates()
-                          } catch (error: any) {
-                            console.error('Failed to delete template:', error)
-                            alert(error.response?.data?.detail || 'Failed to delete template')
+                    {hasPermission('tickets', 'delete') && (
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={async (e) => {
+                          e.stopPropagation()
+                          if (confirm(`Delete template "${template.name}"?`)) {
+                            try {
+                              await api.delete(`/admin/ticket-type-templates/${template.id}`)
+                              fetchTemplates()
+                            } catch (error: any) {
+                              console.error('Failed to delete template:', error)
+                              alert(error.response?.data?.detail || 'Failed to delete template')
+                            }
                           }
-                        }
-                      }}
-                      title="Delete template"
-                      sx={{
-                        position: 'absolute',
-                        right: 4,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        padding: 0.5,
-                      }}
-                    >
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
+                        }}
+                        title="Delete template"
+                        sx={{
+                          position: 'absolute',
+                          right: 4,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          padding: 0.5,
+                        }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    )}
                   </Button>
                 ))}
               </Box>
@@ -482,30 +488,34 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setEditingTicketType(tt)
-                          setSelectedTemplate(null)
-                          setTicketTypeFormOpen(true)
-                        }}
-                        title="Edit"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setDeleteTicketTypeDialog({ open: true, ticketTypeId: tt.id })
-                        }}
-                        title="Delete"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      {hasPermission('tickets', 'write') && (
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingTicketType(tt)
+                            setSelectedTemplate(null)
+                            setTicketTypeFormOpen(true)
+                          }}
+                          title="Edit"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      )}
+                      {hasPermission('tickets', 'delete') && (
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setDeleteTicketTypeDialog({ open: true, ticketTypeId: tt.id })
+                          }}
+                          title="Delete"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      )}
                     </Box>
                   </Box>
                 ))}
