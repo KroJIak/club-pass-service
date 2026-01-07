@@ -32,7 +32,6 @@ const RESOURCES: Array<{ key: string; label: string }> = [
   { key: 'staff', label: 'Staff' },
   { key: 'music', label: 'Music' },
   { key: 'club_settings', label: 'Club Settings' },
-  { key: 'admin_accounts', label: 'Admin Accounts' },
 ]
 
 const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorProps) => {
@@ -63,11 +62,15 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
       
       // Load existing permissions
       response.data.permissions.forEach((perm) => {
-        permsMap[perm.resource] = {
-          resource: perm.resource,
-          can_read: perm.can_read,
-          can_write: perm.can_write,
-          can_delete: perm.can_delete,
+        // Only allow editing known resources from RESOURCES list.
+        // Admin accounts are superadmin-only and intentionally excluded from the UI.
+        if (permsMap[perm.resource]) {
+          permsMap[perm.resource] = {
+            resource: perm.resource,
+            can_read: perm.can_read,
+            can_write: perm.can_write,
+            can_delete: perm.can_delete,
+          }
         }
       })
       
@@ -102,7 +105,9 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
       setLoading(true)
       setError(null)
 
-      const permissionsList: AdminPermissionItem[] = Object.values(permissions)
+      const permissionsList: AdminPermissionItem[] = RESOURCES.map((r) => permissions[r.key]).filter(
+        (p): p is AdminPermissionItem => !!p
+      )
       const updateRequest: AdminPermissionUpdateRequest = {
         permissions: permissionsList,
       }
