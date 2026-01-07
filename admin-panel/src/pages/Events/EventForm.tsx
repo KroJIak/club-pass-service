@@ -372,7 +372,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
               <Typography variant="h6">Ticket Types</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                {hasPermission('tickets', 'write') && (
+                {hasPermission('events', 'write') && (
                   <Button
                     variant="outlined"
                     size="small"
@@ -382,7 +382,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                     Create Template
                   </Button>
                 )}
-                {hasPermission('tickets', 'write') && (
+                {hasPermission('events', 'write') && (
                   <Button
                     variant="outlined"
                     size="small"
@@ -400,7 +400,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
               </Box>
             </Box>
             {/* Display templates as buttons */}
-            {templates && templates.length > 0 && (
+            {hasPermission('events', 'write') && templates && templates.length > 0 && (
               <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
                   Templates:
@@ -414,10 +414,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       setSelectedTemplate(template)
                       setTicketTypeFormOpen(true)
                     }}
-                    sx={{ position: 'relative', pr: hasPermission('tickets', 'delete') ? 4 : 1.5 }}
+                    sx={{ position: 'relative', pr: hasPermission('events', 'delete') ? 4 : 1.5 }}
                   >
                     {template.name}
-                    {hasPermission('tickets', 'delete') && (
+                    {hasPermission('events', 'delete') && (
                       <IconButton
                         size="small"
                         color="error"
@@ -460,11 +460,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                 {ticketTypes.map((tt) => (
                   <Box
                     key={tt.id}
-                    onClick={() => {
+                    onClick={hasPermission('events', 'write') ? () => {
                       setEditingTicketType(tt)
                       setSelectedTemplate(null)
                       setTicketTypeFormOpen(true)
-                    }}
+                    } : undefined}
                     sx={{
                       display: 'flex',
                       justifyContent: 'space-between',
@@ -473,10 +473,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       border: '1px solid',
                       borderColor: 'divider',
                       borderRadius: 1,
-                      cursor: 'pointer',
-                      '&:hover': {
+                      cursor: hasPermission('events', 'write') ? 'pointer' : 'default',
+                      '&:hover': hasPermission('events', 'write') ? {
                         backgroundColor: 'action.hover',
-                      },
+                      } : {},
                     }}
                   >
                     <Box>
@@ -488,7 +488,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
-                      {hasPermission('tickets', 'write') && (
+                      {hasPermission('events', 'write') && (
                         <IconButton
                           size="small"
                           color="primary"
@@ -503,7 +503,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                           <EditIcon />
                         </IconButton>
                       )}
-                      {hasPermission('tickets', 'delete') && (
+                      {hasPermission('events', 'delete') && (
                         <IconButton
                           size="small"
                           color="error"

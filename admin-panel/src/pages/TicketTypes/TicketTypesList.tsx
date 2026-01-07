@@ -75,7 +75,7 @@ const TicketTypesList = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
         <Typography variant="h4">Ticket Types</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          {hasPermission('tickets', 'write') && (
+          {hasPermission('events', 'write') && (
             <Button 
               variant="outlined" 
               startIcon={<AddIcon />}
@@ -86,7 +86,7 @@ const TicketTypesList = () => {
               Create Template
             </Button>
           )}
-          {hasPermission('tickets', 'write') && (
+          {hasPermission('events', 'write') && (
             <Button 
               variant="contained" 
               startIcon={<AddIcon />}
@@ -102,7 +102,7 @@ const TicketTypesList = () => {
       </Box>
 
       {/* Display templates as buttons */}
-      {templates.length > 0 && (
+      {hasPermission('events', 'write') && templates.length > 0 && (
         <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
             Templates:
@@ -118,10 +118,10 @@ const TicketTypesList = () => {
                 setEditingTicketType(null)
                 setFormOpen(true)
               }}
-              sx={{ position: 'relative', pr: hasPermission('tickets', 'delete') ? 4 : 1.5 }}
+              sx={{ position: 'relative', pr: hasPermission('events', 'delete') ? 4 : 1.5 }}
             >
               {template.name}
-              {hasPermission('tickets', 'delete') && (
+              {hasPermission('events', 'delete') && (
                 <IconButton
                   size="small"
                   color="error"
@@ -159,16 +159,16 @@ const TicketTypesList = () => {
           <Grid item xs={12} sm={6} md={4} key={tt.id}>
             <Card
               sx={{
-                cursor: 'pointer',
-                '&:hover': {
+                cursor: hasPermission('events', 'write') ? 'pointer' : 'default',
+                '&:hover': hasPermission('events', 'write') ? {
                   boxShadow: 4,
-                },
+                } : {},
               }}
-              onClick={() => {
+              onClick={hasPermission('events', 'write') ? () => {
                 setEditingTicketType(tt)
                 setSelectedTemplate(null)
                 setFormOpen(true)
-              }}
+              } : undefined}
             >
               <CardContent>
                 <Typography variant="h6">{tt.name}</Typography>
@@ -186,21 +186,22 @@ const TicketTypesList = () => {
                 />
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setEditingTicketType(tt)
-                    setSelectedTemplate(null)
-                    setFormOpen(true)
-                  }}
-                  title="Edit"
-                  disabled={!hasPermission('tickets', 'write')}
-                >
-                  <EditIcon />
-                </IconButton>
-                {hasPermission('tickets', 'delete') && (
+                {hasPermission('events', 'write') && (
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setEditingTicketType(tt)
+                      setSelectedTemplate(null)
+                      setFormOpen(true)
+                    }}
+                    title="Edit"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                )}
+                {hasPermission('events', 'delete') && (
                   <IconButton
                     size="small"
                     color="error"
