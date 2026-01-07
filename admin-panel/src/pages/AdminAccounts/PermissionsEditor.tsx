@@ -65,11 +65,11 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
         // Only allow editing known resources from RESOURCES list.
         // Admin accounts are superadmin-only and intentionally excluded from the UI.
         if (permsMap[perm.resource]) {
-          permsMap[perm.resource] = {
-            resource: perm.resource,
-            can_read: perm.can_read,
-            can_write: perm.can_write,
-            can_delete: perm.can_delete,
+        permsMap[perm.resource] = {
+          resource: perm.resource,
+          can_read: perm.can_read,
+          can_write: perm.can_write,
+          can_delete: perm.can_delete,
           }
         }
       })
