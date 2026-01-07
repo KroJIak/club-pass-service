@@ -6,6 +6,7 @@ import {
   DialogActions,
   Button,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -16,6 +17,8 @@ interface ConfirmDialogProps {
 }
 
 const ConfirmDialog = ({ open, title, message, onConfirm, onCancel }: ConfirmDialogProps) => {
+  const { t } = useTranslation('common')
+  
   return (
     <Dialog open={open} onClose={onCancel}>
       <DialogTitle>{title}</DialogTitle>
@@ -23,9 +26,9 @@ const ConfirmDialog = ({ open, title, message, onConfirm, onCancel }: ConfirmDia
         <DialogContentText>{message}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>Cancel</Button>
+        <Button onClick={onCancel}>{t('actions.cancel')}</Button>
         <Button onClick={onConfirm} color="error" variant="contained">
-          Confirm
+          {t('actions.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

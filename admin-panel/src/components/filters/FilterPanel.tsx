@@ -8,6 +8,7 @@ import {
   IconButton,
 } from '@mui/material'
 import { ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 
 export interface FilterPanelProps {
   searchValue: string
@@ -16,6 +17,8 @@ export interface FilterPanelProps {
 }
 
 const FilterPanel = ({ searchValue, onSearchChange, children }: FilterPanelProps) => {
+  const { t } = useTranslation('common')
+  
   return (
     <Box
       sx={{
@@ -32,12 +35,12 @@ const FilterPanel = ({ searchValue, onSearchChange, children }: FilterPanelProps
     >
       <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
         <Typography variant="subtitle1" sx={{ mb: 2, fontSize: '0.875rem' }}>
-          Filters
+          {t('actions.filter')}
         </Typography>
         <TextField
           fullWidth
           size="small"
-          placeholder="Search..."
+          placeholder={t('actions.search') + '...'}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
           sx={{ mb: 2, '& .MuiInputBase-input': { fontSize: '0.84rem' } }}
