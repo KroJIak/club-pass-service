@@ -244,9 +244,11 @@ const TicketTypeForm = ({
         <Button onClick={onClose} disabled={loading}>
           Cancel
         </Button>
-        <Button type="submit" variant="contained" disabled={loading}>
-          {ticketType ? 'Update' : 'Create'}
-        </Button>
+        {hasPermission('tickets', 'write') && (
+          <Button type="submit" variant="contained" disabled={loading}>
+            {ticketType ? 'Update' : 'Create'}
+          </Button>
+        )}
       </DialogActions>
     </form>
   )
