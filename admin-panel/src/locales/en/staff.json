@@ -1,0 +1,47 @@
+{
+  "title": "Staff",
+  "adminAccounts": "Admin Panel Accounts",
+  "staffBotUsers": "Staff Bot Users",
+  "createAccount": "Create Account",
+  "editAccount": "Edit Account",
+  "createGroup": "Create Group",
+  "editGroup": "Edit Group",
+  "fields": {
+    "username": "Username",
+    "password": "Password",
+    "newPassword": "New Password",
+    "group": "Group",
+    "isActive": "Active",
+    "permissions": "Permissions",
+    "groupName": "Group Name",
+    "description": "Description",
+    "telegramId": "Telegram ID",
+    "role": "Role"
+  },
+  "permissions": {
+    "title": "Permissions",
+    "read": "Read",
+    "write": "Write",
+    "delete": "Delete",
+    "resources": {
+      "events": "Events",
+      "users": "Users",
+      "tickets": "Tickets",
+      "orders": "Orders",
+      "payments": "Payments",
+      "support": "Support",
+      "staff": "Staff",
+      "music": "Music",
+      "clubSettings": "Club Settings",
+      "qrScanner": "QR Scanner"
+    }
+  },
+  "messages": {
+    "createSuccess": "Account created successfully",
+    "updateSuccess": "Account updated successfully",
+    "deleteSuccess": "Account deleted successfully",
+    "generatePassword": "Generate random password",
+    "passwordCopied": "Password copied to clipboard"
+  }
+}
+

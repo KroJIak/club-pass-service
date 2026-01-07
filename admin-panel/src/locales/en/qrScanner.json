@@ -1,0 +1,15 @@
+{
+  "title": "QR Scanner",
+  "startScanning": "Start Scanning",
+  "stopScanning": "Stop Scanning",
+  "scanResult": "Scan Result",
+  "ticketValid": "Valid Ticket",
+  "ticketInvalid": "Invalid Ticket",
+  "ticketUsed": "Ticket Already Used",
+  "ticketExpired": "Ticket Expired",
+  "messages": {
+    "scanSuccess": "Ticket scanned successfully",
+    "scanError": "Failed to scan ticket"
+  }
+}
+

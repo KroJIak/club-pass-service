@@ -1,0 +1,22 @@
+{
+  "title": "Пользователи",
+  "createUser": "Создать пользователя",
+  "editUser": "Редактировать пользователя",
+  "fields": {
+    "telegramId": "Telegram ID",
+    "username": "Имя пользователя",
+    "firstName": "Имя",
+    "lastName": "Фамилия",
+    "phone": "Телефон",
+    "email": "Email",
+    "balance": "Баланс",
+    "role": "Роль",
+    "registeredAt": "Зарегистрирован"
+  },
+  "messages": {
+    "createSuccess": "Пользователь успешно создан",
+    "updateSuccess": "Пользователь успешно обновлен",
+    "deleteSuccess": "Пользователь успешно удален"
+  }
+}
+

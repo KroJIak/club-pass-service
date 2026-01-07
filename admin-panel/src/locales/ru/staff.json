@@ -1,0 +1,47 @@
+{
+  "title": "Персонал",
+  "adminAccounts": "Аккаунты админ панели",
+  "staffBotUsers": "Сотрудники бота",
+  "createAccount": "Создать аккаунт",
+  "editAccount": "Редактировать аккаунт",
+  "createGroup": "Создать группу",
+  "editGroup": "Редактировать группу",
+  "fields": {
+    "username": "Имя пользователя",
+    "password": "Пароль",
+    "newPassword": "Новый пароль",
+    "group": "Группа",
+    "isActive": "Активен",
+    "permissions": "Права доступа",
+    "groupName": "Название группы",
+    "description": "Описание",
+    "telegramId": "Telegram ID",
+    "role": "Роль"
+  },
+  "permissions": {
+    "title": "Права доступа",
+    "read": "Чтение",
+    "write": "Запись",
+    "delete": "Удаление",
+    "resources": {
+      "events": "События",
+      "users": "Пользователи",
+      "tickets": "Тикеты",
+      "orders": "Заказы",
+      "payments": "Платежи",
+      "support": "Поддержка",
+      "staff": "Персонал",
+      "music": "Музыка",
+      "clubSettings": "Настройки клуба",
+      "qrScanner": "QR сканер"
+    }
+  },
+  "messages": {
+    "createSuccess": "Аккаунт успешно создан",
+    "updateSuccess": "Аккаунт успешно обновлен",
+    "deleteSuccess": "Аккаунт успешно удален",
+    "generatePassword": "Сгенерировать случайный пароль",
+    "passwordCopied": "Пароль скопирован в буфер обмена"
+  }
+}
+

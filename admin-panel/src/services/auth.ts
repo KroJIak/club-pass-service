@@ -15,6 +15,7 @@ export interface AdminInfo {
   username: string
   is_superadmin: boolean
   group_id: number | null
+  language: string
   permissions: Record<string, { can_read: boolean; can_write: boolean; can_delete: boolean }> | null
 }
 

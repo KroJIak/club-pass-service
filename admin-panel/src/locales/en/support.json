@@ -1,0 +1,19 @@
+{
+  "title": "Support Messages",
+  "userMessages": "User Messages",
+  "adminMessages": "Admin Messages",
+  "sendMessage": "Send Message",
+  "reply": "Reply",
+  "fields": {
+    "user": "User",
+    "message": "Message",
+    "photo": "Photo",
+    "sentAt": "Sent At",
+    "viewPhoto": "View Photo"
+  },
+  "messages": {
+    "sendSuccess": "Message sent successfully",
+    "deleteSuccess": "Message deleted successfully"
+  }
+}
+

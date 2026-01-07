@@ -1,0 +1,32 @@
+{
+  "clubSettings": {
+    "title": "Club Settings",
+    "fields": {
+      "clubName": "Club Name",
+      "address": "Address",
+      "phone": "Phone",
+      "timezone": "Timezone",
+      "additionalInfo": "Additional Information",
+      "menuPhotos": "Menu Photos"
+    },
+    "messages": {
+      "updateSuccess": "Settings updated successfully",
+      "photoUploadSuccess": "Photo uploaded successfully",
+      "photoDeleteSuccess": "Photo deleted successfully"
+    }
+  },
+  "expirationSettings": {
+    "title": "Expiration Settings",
+    "fields": {
+      "expirationDays": "Expiration Days",
+      "checkInterval": "Check Interval (minutes)",
+      "enabled": "Enabled"
+    }
+  },
+  "ticketTypes": {
+    "title": "Ticket Type Templates",
+    "createTemplate": "Create Template",
+    "editTemplate": "Edit Template"
+  }
+}
+

@@ -1,0 +1,22 @@
+{
+  "title": "Tickets",
+  "createTicket": "Create Ticket",
+  "editTicket": "Edit Ticket",
+  "fields": {
+    "token": "Token",
+    "user": "User",
+    "ticketType": "Ticket Type",
+    "event": "Event",
+    "isUsed": "Used",
+    "usedAt": "Used At",
+    "expiresAt": "Expires At",
+    "notes": "Notes"
+  },
+  "messages": {
+    "createSuccess": "Ticket created successfully",
+    "updateSuccess": "Ticket updated successfully",
+    "deleteSuccess": "Ticket deleted successfully",
+    "markUsedSuccess": "Ticket marked as used"
+  }
+}
+

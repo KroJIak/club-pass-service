@@ -1,0 +1,23 @@
+{
+  "title": "Orders",
+  "orderDetails": "Order Details",
+  "fields": {
+    "orderId": "Order ID",
+    "user": "User",
+    "ticketType": "Ticket Type",
+    "event": "Event",
+    "quantity": "Quantity",
+    "totalAmount": "Total Amount",
+    "status": "Status",
+    "paymentMethod": "Payment Method",
+    "createdAt": "Created At"
+  },
+  "payments": {
+    "title": "Payments",
+    "paymentId": "Payment ID",
+    "amount": "Amount",
+    "status": "Status",
+    "paidAt": "Paid At"
+  }
+}
+

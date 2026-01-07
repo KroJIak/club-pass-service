@@ -1,0 +1,22 @@
+{
+  "title": "Тикеты",
+  "createTicket": "Создать тикет",
+  "editTicket": "Редактировать тикет",
+  "fields": {
+    "token": "Токен",
+    "user": "Пользователь",
+    "ticketType": "Тип тикета",
+    "event": "Событие",
+    "isUsed": "Использован",
+    "usedAt": "Использован",
+    "expiresAt": "Истекает",
+    "notes": "Примечания"
+  },
+  "messages": {
+    "createSuccess": "Тикет успешно создан",
+    "updateSuccess": "Тикет успешно обновлен",
+    "deleteSuccess": "Тикет успешно удален",
+    "markUsedSuccess": "Тикет отмечен как использованный"
+  }
+}
+

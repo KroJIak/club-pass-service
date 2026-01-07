@@ -1,0 +1,18 @@
+{
+  "menu": {
+    "qrScanner": "QR Scanner",
+    "events": "Events",
+    "users": "Users",
+    "tickets": "Tickets",
+    "music": "Music",
+    "support": "Support",
+    "orders": "Orders",
+    "staff": "Staff",
+    "clubSettings": "Club Settings"
+  },
+  "header": {
+    "adminPanel": "Admin Panel",
+    "logout": "Logout"
+  }
+}
+

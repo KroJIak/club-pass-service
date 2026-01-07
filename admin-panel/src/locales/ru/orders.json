@@ -1,0 +1,23 @@
+{
+  "title": "Заказы",
+  "orderDetails": "Детали заказа",
+  "fields": {
+    "orderId": "ID заказа",
+    "user": "Пользователь",
+    "ticketType": "Тип тикета",
+    "event": "Событие",
+    "quantity": "Количество",
+    "totalAmount": "Общая сумма",
+    "status": "Статус",
+    "paymentMethod": "Метод оплаты",
+    "createdAt": "Создан"
+  },
+  "payments": {
+    "title": "Платежи",
+    "paymentId": "ID платежа",
+    "amount": "Сумма",
+    "status": "Статус",
+    "paidAt": "Оплачен"
+  }
+}
+

@@ -1,0 +1,38 @@
+{
+  "title": "События",
+  "createEvent": "Создать событие",
+  "editEvent": "Редактировать событие",
+  "eventDetails": "Детали события",
+  "fields": {
+    "name": "Название события",
+    "description": "Описание",
+    "startDate": "Дата начала",
+    "startTime": "Время начала",
+    "endDate": "Дата окончания",
+    "endTime": "Время окончания",
+    "location": "Место проведения",
+    "poster": "Постер",
+    "additionalInfo": "Дополнительная информация",
+    "ticketTypes": "Типы билетов"
+  },
+  "ticketTypes": {
+    "title": "Типы билетов",
+    "create": "Создать тип билета",
+    "edit": "Редактировать тип билета",
+    "name": "Название типа",
+    "price": "Цена",
+    "availableQuantity": "Доступное количество",
+    "totalQuantity": "Общее количество",
+    "isActive": "Активен",
+    "templates": "Шаблоны",
+    "useTemplate": "Использовать шаблон",
+    "saveAsTemplate": "Сохранить как шаблон"
+  },
+  "messages": {
+    "createSuccess": "Событие успешно создано",
+    "updateSuccess": "Событие успешно обновлено",
+    "deleteSuccess": "Событие успешно удалено",
+    "deleteConfirm": "Вы уверены, что хотите удалить это событие?"
+  }
+}
+

@@ -1,0 +1,17 @@
+{
+  "title": "Управление музыкой",
+  "queue": "Очередь",
+  "wishlist": "Список желаний",
+  "fields": {
+    "artist": "Исполнитель",
+    "title": "Название",
+    "requestedBy": "Запросил",
+    "requestCount": "Количество запросов",
+    "status": "Статус"
+  },
+  "messages": {
+    "deleteSuccess": "Трек успешно удален",
+    "reorderSuccess": "Очередь успешно изменена"
+  }
+}
+

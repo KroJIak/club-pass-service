@@ -1,0 +1,17 @@
+{
+  "title": "Music Management",
+  "queue": "Queue",
+  "wishlist": "Wishlist",
+  "fields": {
+    "artist": "Artist",
+    "title": "Title",
+    "requestedBy": "Requested By",
+    "requestCount": "Request Count",
+    "status": "Status"
+  },
+  "messages": {
+    "deleteSuccess": "Track deleted successfully",
+    "reorderSuccess": "Queue reordered successfully"
+  }
+}
+

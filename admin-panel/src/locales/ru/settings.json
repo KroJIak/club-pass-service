@@ -1,0 +1,32 @@
+{
+  "clubSettings": {
+    "title": "Настройки клуба",
+    "fields": {
+      "clubName": "Название клуба",
+      "address": "Адрес",
+      "phone": "Телефон",
+      "timezone": "Часовой пояс",
+      "additionalInfo": "Дополнительная информация",
+      "menuPhotos": "Фото меню"
+    },
+    "messages": {
+      "updateSuccess": "Настройки успешно обновлены",
+      "photoUploadSuccess": "Фото успешно загружено",
+      "photoDeleteSuccess": "Фото успешно удалено"
+    }
+  },
+  "expirationSettings": {
+    "title": "Настройки истечения",
+    "fields": {
+      "expirationDays": "Дни до истечения",
+      "checkInterval": "Интервал проверки (минуты)",
+      "enabled": "Включено"
+    }
+  },
+  "ticketTypes": {
+    "title": "Шаблоны типов тикетов",
+    "createTemplate": "Создать шаблон",
+    "editTemplate": "Редактировать шаблон"
+  }
+}
+

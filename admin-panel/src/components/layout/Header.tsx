@@ -1,12 +1,16 @@
-import { Box, Typography, IconButton } from '@mui/material'
+import { Box, Typography, IconButton, Button } from '@mui/material'
 import { Logout as LogoutIcon } from '@mui/icons-material'
 import { useAuth } from '../../hooks/useAuth'
 import { useState, useEffect } from 'react'
 import { authService } from '../../services/auth'
+import { useLanguage } from '../../hooks/useLanguage'
+import { useTranslation } from 'react-i18next'
 
 const Header = () => {
   const { logout } = useAuth()
   const [username, setUsername] = useState<string>('Admin')
+  const { currentLanguage, toggleLanguage, loading } = useLanguage()
+  const { t } = useTranslation('navigation')
 
   useEffect(() => {
     const fetchAdminInfo = async () => {
@@ -57,15 +61,25 @@ const Header = () => {
             }}
           />
           <Typography variant="h6" component="div">
-            Admin Panel
+            {t('header.adminPanel')}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={toggleLanguage}
+            disabled={loading}
+            sx={{ minWidth: 50 }}
+          >
+            {currentLanguage === 'ru' ? 'EN' : 'RU'}
+          </Button>
           <Typography variant="body1">{username}</Typography>
           <IconButton
             color="error"
             onClick={logout}
             size="small"
+            title={t('header.logout')}
           >
             <LogoutIcon />
           </IconButton>

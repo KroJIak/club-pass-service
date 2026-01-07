@@ -1,0 +1,22 @@
+{
+  "title": "Users",
+  "createUser": "Create User",
+  "editUser": "Edit User",
+  "fields": {
+    "telegramId": "Telegram ID",
+    "username": "Username",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "phone": "Phone",
+    "email": "Email",
+    "balance": "Balance",
+    "role": "Role",
+    "registeredAt": "Registered At"
+  },
+  "messages": {
+    "createSuccess": "User created successfully",
+    "updateSuccess": "User updated successfully",
+    "deleteSuccess": "User deleted successfully"
+  }
+}
+

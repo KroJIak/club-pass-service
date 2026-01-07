@@ -1,0 +1,18 @@
+{
+  "menu": {
+    "qrScanner": "QR сканер",
+    "events": "События",
+    "users": "Пользователи",
+    "tickets": "Тикеты",
+    "music": "Музыка",
+    "support": "Поддержка",
+    "orders": "Заказы",
+    "staff": "Персонал",
+    "clubSettings": "Настройки клуба"
+  },
+  "header": {
+    "adminPanel": "Админ панель",
+    "logout": "Выход"
+  }
+}
+
