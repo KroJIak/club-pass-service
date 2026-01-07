@@ -7,6 +7,7 @@ import {
   Button,
 } from '@mui/material'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { TicketType, TicketTypeCreate, TicketTypeUpdate, TicketTypeTemplate } from '../../types'
 import TextField from '../../components/forms/TextField'
@@ -21,6 +22,8 @@ interface TicketTypeFormProps {
 }
 
 const TicketTypeForm = ({ open, eventId, ticketType, template, onClose, onSuccess }: TicketTypeFormProps) => {
+  const { t } = useTranslation('events')
+  const { t: tCommon } = useTranslation('common')
   const [loading, setLoading] = useState(false)
 
   const {
@@ -101,52 +104,52 @@ const TicketTypeForm = ({ open, eventId, ticketType, template, onClose, onSucces
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>{ticketType ? 'Edit Ticket Type' : 'Create Ticket Type'}</DialogTitle>
+        <DialogTitle>{ticketType ? t('ticketTypes.edit') : t('ticketTypes.create')}</DialogTitle>
         <DialogContent>
           <TextField
-            label="Name"
-            {...register('name', { required: 'Name is required' })}
+            label={t('ticketTypes.name')}
+            {...register('name', { required: t('ticketTypes.name') + ' ' + tCommon('messages.required') })}
             error={!!errors.name}
             helperText={errors.name?.message}
           />
           <TextField
-            label="Price"
+            label={t('ticketTypes.price')}
             type="number"
             {...register('price', { 
-              required: 'Price is required',
+              required: t('ticketTypes.price') + ' ' + tCommon('messages.required'),
               valueAsNumber: true,
-              min: { value: 0, message: 'Price must be positive' }
+              min: { value: 0, message: tCommon('messages.invalidFormat') }
             })}
             error={!!errors.price}
             helperText={errors.price?.message}
           />
           <TextField
-            label="Total Quantity"
+            label={t('ticketTypes.totalQuantity')}
             type="number"
             {...register('total_quantity', { 
-              required: 'Total quantity is required',
+              required: t('ticketTypes.totalQuantity') + ' ' + tCommon('messages.required'),
               valueAsNumber: true,
-              min: { value: 1, message: 'Quantity must be at least 1' }
+              min: { value: 1, message: tCommon('messages.invalidFormat') }
             })}
             error={!!errors.total_quantity}
             helperText={errors.total_quantity?.message}
           />
           <TextField
-            label="Available Quantity"
+            label={t('ticketTypes.availableQuantity')}
             type="number"
             {...register('available_quantity', { 
-              required: 'Available quantity is required',
+              required: t('ticketTypes.availableQuantity') + ' ' + tCommon('messages.required'),
               valueAsNumber: true,
-              min: { value: 0, message: 'Available quantity must be non-negative' }
+              min: { value: 0, message: tCommon('messages.invalidFormat') }
             })}
             error={!!errors.available_quantity}
             helperText={errors.available_quantity?.message}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{tCommon('actions.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? (ticketType ? 'Updating...' : 'Creating...') : (ticketType ? 'Update' : 'Create')}
+            {loading ? (ticketType ? tCommon('status.saving') : tCommon('status.loading')) : (ticketType ? tCommon('actions.save') : tCommon('actions.create'))}
           </Button>
         </DialogActions>
       </form>

@@ -16,8 +16,11 @@ import { TicketType, TicketTypeTemplate } from '../../types'
 import TicketTypeForm from './TicketTypeForm'
 import TicketTypeTemplateForm from './TicketTypeTemplateForm'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const TicketTypesList = () => {
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
   const { hasPermission } = usePermissions()
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
   const [templates, setTemplates] = useState<TicketTypeTemplate[]>([])
@@ -54,7 +57,7 @@ const TicketTypesList = () => {
   }, [])
 
   const handleDelete = async (ticketTypeId: number) => {
-    if (!confirm('Are you sure you want to delete this ticket type?')) {
+    if (!confirm(tCommon('messages.confirmDelete'))) {
       return
     }
     try {
@@ -62,18 +65,18 @@ const TicketTypesList = () => {
       fetchTicketTypes()
     } catch (error: any) {
       console.error('Failed to delete ticket type:', error)
-      alert(error.response?.data?.detail || 'Failed to delete ticket type')
+      alert(error.response?.data?.detail || t('ticketTypes.messages.deleteError'))
     }
   }
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return <Typography>{tCommon('messages.loading')}</Typography>
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Ticket Types</Typography>
+        <Typography variant="h4">{t('ticketTypes.title')}</Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           {hasPermission('events', 'write') && (
             <Button 
@@ -83,7 +86,7 @@ const TicketTypesList = () => {
                 setTemplateFormOpen(true)
               }}
             >
-              Create Template
+              {t('ticketTypes.actions.createTemplate')}
             </Button>
           )}
           {hasPermission('events', 'write') && (
@@ -95,7 +98,7 @@ const TicketTypesList = () => {
                 setFormOpen(true)
               }}
             >
-              Create New
+              {tCommon('actions.createNew')}
             </Button>
           )}
         </Box>
@@ -105,7 +108,7 @@ const TicketTypesList = () => {
       {hasPermission('events', 'write') && templates.length > 0 && (
         <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-            Templates:
+            {t('ticketTypes.fields.templates')}:
           </Typography>
           {templates.map((template) => (
             <Button
@@ -127,17 +130,17 @@ const TicketTypesList = () => {
                   color="error"
                   onClick={async (e) => {
                     e.stopPropagation()
-                    if (confirm(`Delete template "${template.name}"?`)) {
+                    if (confirm(t('ticketTypes.messages.deleteTemplateConfirm', { name: template.name }))) {
                       try {
                         await api.delete(`/admin/ticket-type-templates/${template.id}`)
                         fetchTemplates()
                       } catch (error: any) {
                         console.error('Failed to delete template:', error)
-                        alert(error.response?.data?.detail || 'Failed to delete template')
+                        alert(error.response?.data?.detail || t('ticketTypes.messages.deleteTemplateError'))
                       }
                     }
                   }}
-                  title="Delete template"
+                  title={t('ticketTypes.actions.deleteTemplate')}
                   sx={{
                     position: 'absolute',
                     right: 4,
@@ -173,13 +176,13 @@ const TicketTypesList = () => {
               <CardContent>
                 <Typography variant="h6">{tt.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Price: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽
+                  {tCommon('fields.price')}: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Available: {tt.available_quantity} / {tt.total_quantity}
+                  {tCommon('fields.available')}: {tt.available_quantity} / {tt.total_quantity}
                 </Typography>
                 <Chip
-                  label={tt.is_active ? 'Active' : 'Inactive'}
+                  label={tt.is_active ? tCommon('status.active') : tCommon('status.inactive')}
                   color={tt.is_active ? 'success' : 'default'}
                   size="small"
                   sx={{ mt: 1 }}
@@ -196,7 +199,7 @@ const TicketTypesList = () => {
                       setSelectedTemplate(null)
                       setFormOpen(true)
                     }}
-                    title="Edit"
+                    title={tCommon('actions.edit')}
                   >
                     <EditIcon />
                   </IconButton>
@@ -209,7 +212,7 @@ const TicketTypesList = () => {
                       e.stopPropagation()
                       handleDelete(tt.id)
                     }}
-                    title="Delete"
+                    title={tCommon('actions.delete')}
                   >
                     <DeleteIcon />
                   </IconButton>

@@ -4,16 +4,41 @@
   "adminMessages": "Сообщения администраторов",
   "sendMessage": "Отправить сообщение",
   "reply": "Ответить",
+  "deleteSelected": "Удалить выбранные",
+  "status": {
+    "new": "Новое",
+    "responded": "Отвечено",
+    "closed": "Закрыто"
+  },
+  "adminResponse": "Ответ администратора",
+  "byAdmin": "от {{admin}}",
+  "onDate": " ({{date}})",
+  "yourResponse": "Ваш ответ",
+  "addPhotos": "Добавить фото",
+  "photosSelected": "Выбрано фото: {{count}}",
+  "respondButton": "Ответить",
+  "toUser": "Пользователю",
+  "fromAdmin": "От администратора",
+  "sendMessageToUser": "Отправить сообщение пользователю",
+  "chooseUserPlaceholder": "Выберите пользователя...",
+  "enterYourMessagePlaceholder": "Введите ваше сообщение...",
   "fields": {
     "user": "Пользователь",
     "message": "Сообщение",
     "photo": "Фото",
     "sentAt": "Отправлено",
-    "viewPhoto": "Просмотреть фото"
+    "viewPhoto": "Просмотреть фото",
+    "toUser": "Пользователю (Telegram ID)",
+    "toAllUsers": "Всем пользователям",
+    "selectPhoto": "Выбрать фото"
   },
   "messages": {
     "sendSuccess": "Сообщение успешно отправлено",
-    "deleteSuccess": "Сообщение успешно удалено"
+    "deleteSuccess": "Сообщение успешно удалено",
+    "deleteConfirm": "Вы уверены, что хотите удалить это сообщение?",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить {{count}} сообщений? Это действие нельзя отменить.",
+    "fetchFailed": "Не удалось загрузить сообщения",
+    "sendFailed": "Не удалось отправить сообщение"
   }
 }
 

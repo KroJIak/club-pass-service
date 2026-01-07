@@ -10,9 +10,12 @@ import TicketsFilter, { TicketsFilterState, DEFAULT_FILTER_STATE } from '../../c
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const TicketsList = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('tickets')
+  const { t: tCommon } = useTranslation('common')
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [allTickets, setAllTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
@@ -132,7 +135,7 @@ const TicketsList = () => {
   }
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} ticket(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: selection.selectedCount }))) {
       return
     }
 
@@ -144,7 +147,7 @@ const TicketsList = () => {
       fetchTickets()
     } catch (error) {
       console.error('Failed to delete tickets:', error)
-      alert('Failed to delete some tickets')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
@@ -155,13 +158,13 @@ const TicketsList = () => {
   }
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return <Typography>{tCommon('status.loading')}</Typography>
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">Tickets</Typography>
+        <Typography variant="h6">{t('title')}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {hasPermission('tickets', 'delete') && selection.hasSelection && (
             <Button
@@ -170,7 +173,7 @@ const TicketsList = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelected}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('tickets', 'delete') && (
@@ -189,7 +192,7 @@ const TicketsList = () => {
                 setFormOpen(true)
               }}
             >
-              Create New
+              {t('createTicket')}
             </Button>
           )}
         </Box>
@@ -215,19 +218,19 @@ const TicketsList = () => {
                 <CardContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', py: 2 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>Ticket #{ticket.id}</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('ticketNumber', { id: ticket.id })}</Typography>
                       {ticket.event && (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          Event: {ticket.event.name}
+                          {t('fields.event')}: {ticket.event.name}
                         </Typography>
                       )}
                       {ticket.ticket_type && (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          Type: {ticket.ticket_type.name}
+                          {t('fields.ticketType')}: {ticket.ticket_type.name}
                         </Typography>
                       )}
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Token: {ticket.token}
+                        {t('fields.token')}: {ticket.token}
                       </Typography>
                       {ticket.username ? (
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -239,7 +242,7 @@ const TicketsList = () => {
                         </Typography>
                       ) : null}
                       <Chip
-                        label={ticket.status}
+                        label={t(`status.${ticket.status}`)}
                         color={
                           ticket.status === 'active' 
                             ? 'success' 
@@ -323,8 +326,8 @@ const TicketsList = () => {
 
       <ConfirmDialog
         open={deleteDialog.open}
-        title="Delete Ticket"
-        message="Are you sure you want to delete this ticket? This action cannot be undone."
+        title={tCommon('actions.delete')}
+        message={t('messages.deleteConfirm')}
         onConfirm={() => deleteDialog.ticketId && handleDelete(deleteDialog.ticketId)}
         onCancel={() => setDeleteDialog({ open: false, ticketId: null })}
       />

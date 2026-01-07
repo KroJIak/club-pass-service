@@ -43,6 +43,7 @@ import { User } from '../../types'
 import dayjs from 'dayjs'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 // Component to load authenticated images
 const AuthenticatedImage: React.FC<{
@@ -52,6 +53,7 @@ const AuthenticatedImage: React.FC<{
   onClick?: () => void
   isAdminMessage?: boolean
 }> = ({ messageId, photoId, alt, onClick, isAdminMessage = false }) => {
+  const { t } = useTranslation('common')
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -105,7 +107,7 @@ const AuthenticatedImage: React.FC<{
           bgcolor: 'grey.200',
         }}
       >
-        <Typography variant="caption">Loading...</Typography>
+        <Typography variant="caption">{t('status.loading')}</Typography>
       </Box>
     )
   }
@@ -123,7 +125,7 @@ const AuthenticatedImage: React.FC<{
         }}
       >
         <Typography variant="caption" color="error">
-          Failed to load
+          {t('status.error')}
         </Typography>
       </Box>
     )
@@ -212,6 +214,8 @@ type SortOption = 'newest' | 'oldest' | 'status'
 
 const SupportMessagesList: React.FC = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('support')
+  const { t: tCommon } = useTranslation('common')
   const [tabValue, setTabValue] = useState(0)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [allMessages, setAllMessages] = useState<SupportMessage[]>([])
@@ -332,7 +336,7 @@ const SupportMessagesList: React.FC = () => {
       setMessages(fetchedMessages)
     } catch (error: any) {
       console.error('Failed to fetch support messages:', error)
-      alert(error.response?.data?.detail || 'Failed to fetch support messages')
+      alert(error.response?.data?.detail || t('messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -351,7 +355,7 @@ const SupportMessagesList: React.FC = () => {
         break
       case 'status':
         const statusOrder = { 'new': 0, 'responded': 1, 'closed': 2 }
-        sorted.sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
+        sorted.sort((a, b) => statusOrder[a.status as 'new' | 'responded' | 'closed'] - statusOrder[b.status as 'new' | 'responded' | 'closed'])
         break
     }
     
@@ -371,35 +375,35 @@ const SupportMessagesList: React.FC = () => {
       const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
       return user.username ? `${name} (@${user.username})` : name
     }
-    return user.username || `User #${user.id}`
+    return user.username || `${t('fields.user')} #${user.id}`
   }
 
   const handleDelete = async (messageId: number) => {
-    if (!confirm('Delete this support message?')) return
+    if (!confirm(t('messages.deleteConfirm'))) return
 
     try {
       await api.delete(`/admin/support-messages/${messageId}`)
       fetchMessages()
     } catch (error: any) {
       console.error('Failed to delete message:', error)
-      alert(error.response?.data?.detail || 'Failed to delete message')
+      alert(error.response?.data?.detail || t('messages.deleteError'))
     }
   }
 
   const handleDeleteAdminMessage = async (messageId: number) => {
-    if (!confirm('Delete this admin message?')) return
+    if (!confirm(t('messages.deleteConfirm'))) return
 
     try {
       await api.delete(`/admin/admin-messages/${messageId}`)
       fetchAdminMessages()
     } catch (error: any) {
       console.error('Failed to delete admin message:', error)
-      alert(error.response?.data?.detail || 'Failed to delete admin message')
+      alert(error.response?.data?.detail || t('messages.deleteError'))
     }
   }
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} message(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: selection.selectedCount }))) {
       return
     }
 
@@ -411,12 +415,12 @@ const SupportMessagesList: React.FC = () => {
       fetchMessages()
     } catch (error: any) {
       console.error('Failed to delete messages:', error)
-      alert('Failed to delete some messages')
+      alert(t('messages.deleteFailed'))
     }
   }
 
   const handleDeleteSelectedAdmin = async () => {
-    if (!confirm(`Are you sure you want to delete ${adminSelection.selectedCount} message(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: adminSelection.selectedCount }))) {
       return
     }
 
@@ -428,7 +432,7 @@ const SupportMessagesList: React.FC = () => {
       fetchAdminMessages()
     } catch (error: any) {
       console.error('Failed to delete admin messages:', error)
-      alert('Failed to delete some messages')
+      alert(t('messages.deleteFailed'))
     }
   }
 
@@ -443,7 +447,7 @@ const SupportMessagesList: React.FC = () => {
     
     // Allow sending only photos or only text or both
     if (!response && photos.length === 0) {
-      alert('Please enter a response or add photos')
+      alert(t('messages.sendFailed'))
       return
     }
 
@@ -480,7 +484,7 @@ const SupportMessagesList: React.FC = () => {
       fetchMessages()
     } catch (error: any) {
       console.error('Failed to send response:', error)
-      alert(error.response?.data?.detail || 'Failed to send response')
+      alert(error.response?.data?.detail || t('messages.sendFailed'))
     } finally {
       // Clear sending state
       setSendingResponse((prev) => ({ ...prev, [messageId]: false }))
@@ -583,7 +587,7 @@ const SupportMessagesList: React.FC = () => {
 
   const handleSendMessage = async () => {
     if (!sendMessageUser || (!sendMessageText.trim() && sendMessagePhotos.length === 0)) {
-      setSendMessageError('Please select a user and enter a message or add photos')
+      setSendMessageError(t('messages.sendFailed'))
       return
     }
 
@@ -614,7 +618,7 @@ const SupportMessagesList: React.FC = () => {
         message: sendMessageText.trim() || '',
         photo_paths: photo_paths,
       })
-      alert('Message sent successfully!')
+      alert(t('messages.sendSuccess'))
       handleCloseSendMessage()
       // Refresh admin messages if on that tab
       if (tabValue === 1) {
@@ -622,7 +626,7 @@ const SupportMessagesList: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Failed to send message:', error)
-      const errorMessage = error.response?.data?.detail || 'Failed to send message'
+      const errorMessage = error.response?.data?.detail || t('messages.sendFailed')
       setSendMessageError(errorMessage)
     } finally {
       setSendingMessage(false)
@@ -633,7 +637,7 @@ const SupportMessagesList: React.FC = () => {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4" component="h1">
-          Support Messages
+          {t('title')}
         </Typography>
         <Button
           variant="contained"
@@ -644,15 +648,15 @@ const SupportMessagesList: React.FC = () => {
             setSendMessageText('')
           }}
         >
-          Send Message
+          {t('sendMessage')}
         </Button>
       </Box>
 
       {/* Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
-          <Tab label="User Messages" />
-          <Tab label="Admin Messages History" />
+          <Tab label={t('userMessages')} />
+          <Tab label={t('adminMessages')} />
         </Tabs>
       </Box>
 
@@ -663,7 +667,7 @@ const SupportMessagesList: React.FC = () => {
             <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <MailIcon fontSize="small" />
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>New Messages</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('status.new')}</Typography>
               </Box>
               <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.newCount}
@@ -676,7 +680,7 @@ const SupportMessagesList: React.FC = () => {
             <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CheckCircleIcon fontSize="small" />
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>Responded</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>{t('status.responded')}</Typography>
               </Box>
               <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.respondedCount}
@@ -689,7 +693,7 @@ const SupportMessagesList: React.FC = () => {
             <CardContent sx={{ py: 1.5, px: 2 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <InboxIcon fontSize="small" />
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>Total</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>{tCommon('fields.total')}</Typography>
               </Box>
               <Typography variant="h5" sx={{ mt: 0.5, fontWeight: 'bold' }}>
                 {statistics.totalCount}
@@ -706,8 +710,8 @@ const SupportMessagesList: React.FC = () => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Search"
-              placeholder="Search in messages..."
+              label={tCommon('actions.search')}
+              placeholder={tCommon('actions.search') + '...'}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               InputProps={{
@@ -733,8 +737,8 @@ const SupportMessagesList: React.FC = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Filter by User"
-                  placeholder="Select user..."
+                  label={t('fields.user')}
+                  placeholder={t('fields.user') + '...'}
                 />
               )}
             />
@@ -743,7 +747,7 @@ const SupportMessagesList: React.FC = () => {
             <TextField
               fullWidth
               type="date"
-              label="Date From"
+              label={tCommon('fields.date') + ' (' + tCommon('actions.back') + ')'}
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               InputLabelProps={{ shrink: true }}
@@ -753,24 +757,24 @@ const SupportMessagesList: React.FC = () => {
             <TextField
               fullWidth
               type="date"
-              label="Date To"
+              label={tCommon('fields.date') + ' (' + tCommon('actions.next') + ')'}
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               InputLabelProps={{ shrink: true }}
               error={!!(dateFrom && dateTo && dateFrom > dateTo)}
-              helperText={dateFrom && dateTo && dateFrom > dateTo ? 'Date To must be after Date From' : ''}
+              helperText={dateFrom && dateTo && dateFrom > dateTo ? tCommon('messages.invalidFormat') : ''}
             />
           </Grid>
           {tabValue === 0 && (
             <>
           <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
-              <InputLabel id="status-filter-label">Status</InputLabel>
+              <InputLabel id="status-filter-label">{tCommon('fields.status')}</InputLabel>
               <Select
                 labelId="status-filter-label"
                 id="status-filter-select"
                 value={statusFilter}
-                label="Status"
+                label={tCommon('fields.status')}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 MenuProps={{
                   disablePortal: false,
@@ -781,20 +785,20 @@ const SupportMessagesList: React.FC = () => {
                   },
                 }}
               >
-                <MenuItem value="all">All</MenuItem>
-                <MenuItem value="new">New</MenuItem>
-                <MenuItem value="responded">Responded</MenuItem>
+                <MenuItem value="all">{tCommon('status.all')}</MenuItem>
+                <MenuItem value="new">{t('status.new')}</MenuItem>
+                <MenuItem value="responded">{t('status.responded')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
           <Grid item xs={12} md={2.5}>
             <FormControl fullWidth>
-              <InputLabel id="sort-filter-label">Sort</InputLabel>
+              <InputLabel id="sort-filter-label">{tCommon('actions.sort')}</InputLabel>
               <Select
                 labelId="sort-filter-label"
                 id="sort-filter-select"
                 value={sortBy}
-                label="Sort"
+                label={tCommon('actions.sort')}
                 onChange={(e) => setSortBy(e.target.value as SortOption)}
                 MenuProps={{
                   disablePortal: false,
@@ -805,9 +809,9 @@ const SupportMessagesList: React.FC = () => {
                   },
                 }}
               >
-                <MenuItem value="newest">Newest First</MenuItem>
-                <MenuItem value="oldest">Oldest First</MenuItem>
-                <MenuItem value="status">By Status</MenuItem>
+                <MenuItem value="newest">{tCommon('status.newest')}</MenuItem>
+                <MenuItem value="oldest">{tCommon('status.oldest')}</MenuItem>
+                <MenuItem value="status">{tCommon('status.byStatus')}</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -822,7 +826,7 @@ const SupportMessagesList: React.FC = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelected}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('support', 'delete') && tabValue === 1 && adminSelection.hasSelection && (
@@ -832,7 +836,7 @@ const SupportMessagesList: React.FC = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelectedAdmin}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('support', 'delete') && tabValue === 0 && (
@@ -854,10 +858,10 @@ const SupportMessagesList: React.FC = () => {
             startIcon={<RefreshIcon />}
             onClick={tabValue === 0 ? fetchMessages : fetchAdminMessages}
           >
-            Refresh
+            {tCommon('actions.refresh')}
           </Button>
           <Button variant="outlined" onClick={clearFilters}>
-            Clear Filters
+            {tCommon('actions.reset')}
           </Button>
         </Box>
       </Paper>
@@ -866,9 +870,9 @@ const SupportMessagesList: React.FC = () => {
       {tabValue === 0 ? (
         <>
       {loading ? (
-        <Typography>Loading...</Typography>
+        <Typography>{t('common:status.loading')}</Typography>
       ) : messages.length === 0 ? (
-        <Typography>No support messages found</Typography>
+        <Typography>{t('messages.noResults')}</Typography>
       ) : (
         <Grid container spacing={2}>
           {messages.map((msg) => (
@@ -969,8 +973,8 @@ const SupportMessagesList: React.FC = () => {
                   {(msg.admin_response || (msg.photos && msg.photos.filter(p => p.is_admin_photo).length > 0)) ? (
                     <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
                       <Typography variant="subtitle2" gutterBottom>
-                        Admin Response {msg.responded_by && `by ${msg.responded_by}`}
-                        {msg.responded_at && ` on ${formatDate(msg.responded_at)}`}
+                        {t('adminResponse')} {msg.responded_by && t('byAdmin', { admin: msg.responded_by })}
+                        {msg.responded_at && t('onDate', { date: formatDate(msg.responded_at) })}
                       </Typography>
                       {msg.admin_response && (
                       <Typography variant="body1">{msg.admin_response}</Typography>
@@ -1019,7 +1023,7 @@ const SupportMessagesList: React.FC = () => {
                             fullWidth
                             multiline
                             rows={4}
-                            label="Your response"
+                            label={t('yourResponse')}
                             value={responseText[msg.id] || ''}
                             onChange={(e) =>
                               setResponseText((prev) => ({
@@ -1046,13 +1050,13 @@ const SupportMessagesList: React.FC = () => {
                             />
                             <label htmlFor={`photo-upload-${msg.id}`}>
                               <Button variant="outlined" component="span" size="small" sx={{ mr: 1 }}>
-                                Add Photos
+                                {t('addPhotos')}
                               </Button>
                             </label>
                             {responsePhotos[msg.id] && responsePhotos[msg.id].length > 0 && (
                               <Box sx={{ mt: 1 }}>
                                 <Typography variant="caption" color="text.secondary">
-                                  {responsePhotos[msg.id].length} photo(s) selected
+                                  {t('photosSelected', { count: responsePhotos[msg.id].length })}
                                 </Typography>
                                 <ImageList cols={3} rowHeight={80} sx={{ mt: 1 }}>
                                   {responsePhotos[msg.id].map((file, index) => (
@@ -1081,7 +1085,7 @@ const SupportMessagesList: React.FC = () => {
                               onClick={() => handleRespond(msg.id)}
                               disabled={sendingResponse[msg.id]}
                             >
-                              {sendingResponse[msg.id] ? 'Sending...' : 'Send Response'}
+                              {sendingResponse[msg.id] ? tCommon('status.loading') : t('respondButton')}
                             </Button>
                             <Button 
                               onClick={() => {
@@ -1090,7 +1094,7 @@ const SupportMessagesList: React.FC = () => {
                               }}
                               disabled={sendingResponse[msg.id]}
                             >
-                              Cancel
+                              {tCommon('actions.cancel')}
                             </Button>
                           </Box>
                         </Box>
@@ -1100,7 +1104,7 @@ const SupportMessagesList: React.FC = () => {
                           startIcon={<SendIcon />}
                           onClick={() => setRespondingTo(msg.id)}
                         >
-                          Respond
+                          {t('respondButton')}
                         </Button>
                       ) : null}
                     </Box>
@@ -1115,9 +1119,9 @@ const SupportMessagesList: React.FC = () => {
       ) : (
         <>
           {loadingAdminMessages ? (
-            <Typography>Loading...</Typography>
+            <Typography>{t('common:status.loading')}</Typography>
           ) : adminMessages.length === 0 ? (
-            <Typography>No admin messages found</Typography>
+            <Typography>{t('messages.noResults')}</Typography>
           ) : (
             <Grid container spacing={2}>
               {adminMessages.map((msg) => (
@@ -1139,11 +1143,11 @@ const SupportMessagesList: React.FC = () => {
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
                         <Box>
                           <Typography variant="h6" gutterBottom>
-                            To: {msg.first_name || msg.last_name || msg.username || `User #${msg.user_id}`}
+                            {t('toUser')}: {msg.first_name || msg.last_name || msg.username || `${t('fields.user')} #${msg.user_id}`}
                             {msg.username && ` (@${msg.username})`}
                           </Typography>
                           <Typography variant="body2" color="text.secondary" gutterBottom>
-                            From: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
+                            {t('fromAdmin')}: {msg.sent_by} • {dayjs(msg.created_at).format('DD.MM.YYYY HH:mm')}
                           </Typography>
                         </Box>
                         {!adminSelection.hasSelection && hasPermission('support', 'delete') && (
@@ -1210,7 +1214,7 @@ const SupportMessagesList: React.FC = () => {
 
       {/* Send Message Dialog */}
       <Dialog open={sendMessageOpen} onClose={handleCloseSendMessage} maxWidth="sm" fullWidth>
-        <DialogTitle>Send Message to User</DialogTitle>
+        <DialogTitle>{t('sendMessageToUser')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Autocomplete
@@ -1224,8 +1228,8 @@ const SupportMessagesList: React.FC = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Select User"
-                  placeholder="Choose user..."
+                  label={t('fields.user')}
+                  placeholder={t('chooseUserPlaceholder')}
                   required
                 />
               )}
@@ -1234,8 +1238,8 @@ const SupportMessagesList: React.FC = () => {
               fullWidth
               multiline
               rows={6}
-              label="Message"
-              placeholder="Enter your message..."
+              label={t('fields.message')}
+              placeholder={t('enterYourMessagePlaceholder')}
               value={sendMessageText}
               onChange={(e) => {
                 setSendMessageText(e.target.value)
@@ -1259,13 +1263,13 @@ const SupportMessagesList: React.FC = () => {
               />
               <label htmlFor="send-message-photo-upload">
                 <Button variant="outlined" component="span" size="small">
-                  Add Photos
+                  {t('addPhotos')}
                 </Button>
               </label>
               {sendMessagePhotos.length > 0 && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="caption" color="text.secondary">
-                    {sendMessagePhotos.length} photo(s) selected
+                    {t('photosSelected', { count: sendMessagePhotos.length })}
                   </Typography>
                   <ImageList cols={3} rowHeight={80} sx={{ mt: 1 }}>
                     {sendMessagePhotos.map((file, index) => (
@@ -1287,14 +1291,14 @@ const SupportMessagesList: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseSendMessage}>Cancel</Button>
+          <Button onClick={handleCloseSendMessage}>{tCommon('actions.cancel')}</Button>
           <Button
             variant="contained"
             onClick={handleSendMessage}
             disabled={!sendMessageUser || (!sendMessageText.trim() && sendMessagePhotos.length === 0) || sendingMessage}
             startIcon={<SendIcon />}
           >
-            {sendingMessage ? 'Sending...' : 'Send'}
+            {sendingMessage ? tCommon('status.loading') : tCommon('actions.send')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -2,6 +2,9 @@
   "title": "Music Management",
   "queue": "Queue",
   "wishlist": "Wishlist",
+  "deleteSelected": "Delete Selected",
+  "yandexMusic": "Yandex Music",
+  "otherSource": "Other Source",
   "fields": {
     "artist": "Artist",
     "title": "Title",
@@ -11,7 +14,9 @@
   },
   "messages": {
     "deleteSuccess": "Track deleted successfully",
-    "reorderSuccess": "Queue reordered successfully"
+    "reorderSuccess": "Queue reordered successfully",
+    "deleteConfirm": "Are you sure you want to delete this track?",
+    "deleteSelectedConfirm": "Are you sure you want to delete {{count}} track(s)? This action cannot be undone.",
+    "fetchFailed": "Failed to fetch music data"
   }
 }
-

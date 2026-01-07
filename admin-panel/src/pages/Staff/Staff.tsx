@@ -3,8 +3,11 @@ import { Box, Typography, Tabs, Tab } from '@mui/material'
 import StaffUsersList from '../QRScanner/StaffUsersList'
 import AdminAccountsList from '../AdminAccounts/AdminAccountsList'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const Staff = () => {
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [tabValue, setTabValue] = useState(0)
   const { isSuperAdmin, isLoading } = usePermissions()
 
@@ -20,7 +23,7 @@ const Staff = () => {
   if (isLoading) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography>Loading...</Typography>
+        <Typography>{tCommon('status.loading')}</Typography>
       </Box>
     )
   }
@@ -28,13 +31,13 @@ const Staff = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        Staff
+        {t('title')}
       </Typography>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
-          {showAdminAccountsTab && <Tab label="Admin Panel Accounts" />}
-          <Tab label="Staff Bot Users" />
+          {showAdminAccountsTab && <Tab label={t('adminAccounts')} />}
+          <Tab label={t('staffBotUsers')} />
         </Tabs>
       </Box>
 

@@ -1,26 +1,45 @@
 {
   "clubSettings": {
     "title": "Club Settings",
+    "description": "Manage club information displayed in the bot",
     "fields": {
       "clubName": "Club Name",
       "address": "Address",
+      "addressHelper": "Club address displayed in the bot",
       "phone": "Phone",
+      "phoneHelper": "Club phone number displayed in the bot",
+      "emailHelper": "Club email address displayed in the bot",
       "timezone": "Timezone",
+      "timezoneHelper": "Timezone for system time display",
       "additionalInfo": "Additional Information",
-      "menuPhotos": "Menu Photos"
+      "additionalInfoHelper": "Additional information displayed in quote format at the bottom of 'Club Info'",
+      "menuPhotos": "Menu Photos",
+      "menuPhotosHelper": "Manage food and drinks menu photos displayed in the bot. Maximum 10 photos allowed.",
+      "autoDeactivateEvents": "Auto Deactivate Events",
+      "autoDeactivateEventsHelper": "Automatically deactivate events and expire tickets when event end time is reached"
     },
     "messages": {
       "updateSuccess": "Settings updated successfully",
       "photoUploadSuccess": "Photo uploaded successfully",
-      "photoDeleteSuccess": "Photo deleted successfully"
+      "photoDeleteSuccess": "Photo deleted successfully",
+      "fetchFailed": "Failed to fetch settings",
+      "saveError": "Failed to save settings",
+      "maxPhotosReached": "Maximum 10 menu photos allowed",
+      "reorderError": "Failed to reorder photos"
     }
   },
   "expirationSettings": {
     "title": "Expiration Settings",
+    "description": "Manage expiration service functionality",
     "fields": {
       "expirationDays": "Expiration Days",
       "checkInterval": "Check Interval (minutes)",
-      "enabled": "Enabled"
+      "checkIntervalHelper": "How often the expiration service checks for expired tickets and events (minimum 1 minute)",
+      "enabled": "Enabled",
+      "ticketExpirationHours": "Ticket Expiration (hours)",
+      "ticketExpirationHelper": "Automatically mark tickets as expired if they are not used or refunded by 12:00 PM the day after the event",
+      "orderExpirationMinutes": "Order Expiration (minutes)",
+      "eventDeactivationHelper": "Automatically deactivate events after they end (at 12:00 PM the day after the event)"
     }
   },
   "ticketTypes": {
@@ -29,4 +48,3 @@
     "editTemplate": "Edit Template"
   }
 }
-

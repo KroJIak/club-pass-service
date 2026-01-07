@@ -36,6 +36,7 @@ import {
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import type { ClubSettings, ClubSettingsUpdate, MenuPhoto, MenuPhotoReorderRequest } from '../../types'
 import { usePermissions } from '../../hooks/usePermissions'
@@ -47,6 +48,7 @@ interface SortableMenuPhotoProps {
 }
 
 const SortableMenuPhoto = ({ photo, onDelete }: SortableMenuPhotoProps) => {
+  const { t } = useTranslation('common')
   const {
     attributes,
     listeners,
@@ -194,6 +196,8 @@ const SortableMenuPhoto = ({ photo, onDelete }: SortableMenuPhotoProps) => {
 
 const ClubSettings = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
   const [settings, setSettings] = useState<ClubSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -250,7 +254,7 @@ const ClubSettings = () => {
       const response = await api.get<{ photos: MenuPhoto[] }>('/admin/menu-photos')
       setMenuPhotos(response.data.photos)
     } catch (err: any) {
-      setMenuPhotosError(err.response?.data?.detail || 'Failed to load menu photos')
+      setMenuPhotosError(err.response?.data?.detail || t('clubSettings.messages.fetchFailed'))
       console.error('Failed to load menu photos:', err)
     } finally {
       setLoadingPhotos(false)
@@ -262,7 +266,7 @@ const ClubSettings = () => {
     if (!file) return
 
     if (menuPhotos.length >= 10) {
-      setError('Maximum 10 menu photos allowed')
+      setError(t('clubSettings.messages.maxPhotosReached', { defaultValue: 'Maximum 10 menu photos allowed' }))
       return
     }
 
@@ -282,21 +286,21 @@ const ClubSettings = () => {
       // Reset file input
       event.target.value = ''
     } catch (err: any) {
-      setMenuPhotosError(err.response?.data?.detail || 'Failed to upload photo')
+      setMenuPhotosError(err.response?.data?.detail || t('clubSettings.messages.photoUploadSuccess'))
     } finally {
       setUploadingPhoto(false)
     }
   }
 
   const handlePhotoDelete = async (photoId: number) => {
-    if (!window.confirm('Are you sure you want to delete this photo?')) return
+    if (!window.confirm(tCommon('messages.deleteConfirm'))) return
 
     try {
       setMenuPhotosError(null)
       await api.delete(`/admin/menu-photos/${photoId}`)
       await fetchMenuPhotos()
     } catch (err: any) {
-      setMenuPhotosError(err.response?.data?.detail || 'Failed to delete photo')
+      setMenuPhotosError(err.response?.data?.detail || t('clubSettings.messages.photoDeleteSuccess'))
     }
   }
 
@@ -323,7 +327,7 @@ const ClubSettings = () => {
       }
       await api.put('/admin/menu-photos/reorder', reorderRequest)
     } catch (err: any) {
-      setMenuPhotosError(err.response?.data?.detail || 'Failed to reorder photos')
+      setMenuPhotosError(err.response?.data?.detail || t('clubSettings.messages.reorderError', { defaultValue: 'Failed to reorder photos' }))
       // Revert on error
       await fetchMenuPhotos()
     }
@@ -344,7 +348,7 @@ const ClubSettings = () => {
         timezone: response.data.timezone || 'Europe/Moscow',
       })
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load settings')
+      setError(err.response?.data?.detail || t('clubSettings.messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -394,7 +398,7 @@ const ClubSettings = () => {
       
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save settings')
+      setError(err.response?.data?.detail || t('clubSettings.messages.saveError'))
     } finally {
       setSaving(false)
     }
@@ -414,10 +418,10 @@ const ClubSettings = () => {
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h6" component="h1" gutterBottom>
-          Club Settings
+          {t('clubSettings.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-          Manage club information displayed in the bot
+          {t('clubSettings.description')}
         </Typography>
 
         {error && (
@@ -428,30 +432,30 @@ const ClubSettings = () => {
 
         {success && (
           <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
-            Settings saved successfully!
+            {t('clubSettings.messages.updateSuccess')}
           </Alert>
         )}
 
         <Box sx={{ mb: 3 }}>
           <TextField
-            label="Address"
+            label={t('clubSettings.fields.address')}
             value={formData.address}
             onChange={handleChange('address')}
             fullWidth
             multiline
             rows={2}
-            helperText="Club address displayed in the bot"
+            helperText={t('clubSettings.fields.addressHelper')}
             sx={{ mb: 2 }}
           />
         </Box>
 
         <Box sx={{ mb: 3 }}>
           <TextField
-            label="Phone"
+            label={t('clubSettings.fields.phone')}
             value={formData.phone}
             onChange={handleChange('phone')}
             fullWidth
-            helperText="Club phone number displayed in the bot"
+            helperText={t('clubSettings.fields.phoneHelper')}
             sx={{ mb: 2 }}
             disabled={!hasPermission('club_settings', 'write')}
           />
@@ -459,12 +463,12 @@ const ClubSettings = () => {
 
         <Box sx={{ mb: 3 }}>
           <TextField
-            label="Email"
+            label={tCommon('fields.email')}
             value={formData.email}
             onChange={handleChange('email')}
             fullWidth
             type="email"
-            helperText="Club email address displayed in the bot"
+            helperText={t('clubSettings.fields.emailHelper')}
             sx={{ mb: 2 }}
             disabled={!hasPermission('club_settings', 'write')}
           />
@@ -472,13 +476,13 @@ const ClubSettings = () => {
 
         <Box sx={{ mb: 3 }}>
           <TextField
-            label="Доп. информация"
+            label={t('clubSettings.fields.additionalInfo')}
             value={formData.additional_info}
             onChange={handleChange('additional_info')}
             fullWidth
             multiline
             rows={3}
-            helperText="Дополнительная информация, отображаемая в формате цитаты внизу раздела 'Инфо о клубе'"
+            helperText={t('clubSettings.fields.additionalInfoHelper')}
             sx={{ mb: 2 }}
             disabled={!hasPermission('club_settings', 'write')}
           />
@@ -486,12 +490,12 @@ const ClubSettings = () => {
 
         <Box sx={{ mb: 3 }}>
           <FormControl fullWidth>
-            <InputLabel id="timezone-label">Часовой пояс</InputLabel>
+            <InputLabel id="timezone-label">{t('clubSettings.fields.timezone')}</InputLabel>
             <Select
               labelId="timezone-label"
               id="timezone-select"
               value={formData.timezone}
-              label="Часовой пояс"
+              label={t('clubSettings.fields.timezone')}
               onChange={handleTimezoneChange}
             >
               {timezones.map((tz) => (
@@ -502,7 +506,7 @@ const ClubSettings = () => {
             </Select>
           </FormControl>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            Часовой пояс для отображения времени в системе
+            {t('clubSettings.fields.timezoneHelper')}
           </Typography>
         </Box>
 
@@ -515,10 +519,10 @@ const ClubSettings = () => {
                 color="primary"
               />
             }
-            label="Auto Deactivate Events"
+            label={t('clubSettings.fields.autoDeactivateEvents')}
           />
           <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-            Automatically deactivate events and expire tickets when event end time is reached
+            {t('clubSettings.fields.autoDeactivateEventsHelper')}
           </Typography>
         </Box>
 
@@ -529,7 +533,7 @@ const ClubSettings = () => {
             disabled={saving || !hasPermission('club_settings', 'write')}
             size="large"
           >
-            {saving ? <CircularProgress size={24} /> : 'Save Settings'}
+            {saving ? <CircularProgress size={24} /> : tCommon('actions.save')}
           </Button>
           <Button
             variant="outlined"
@@ -537,13 +541,13 @@ const ClubSettings = () => {
             disabled={saving || loading}
             size="large"
           >
-            Reset
+            {tCommon('actions.reset')}
           </Button>
         </Box>
 
         {settings?.updated_at && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-            Last updated: {new Date(settings.updated_at).toLocaleString()}
+            {tCommon('fields.date')}: {new Date(settings.updated_at).toLocaleString()}
           </Typography>
         )}
       </Paper>
@@ -551,10 +555,10 @@ const ClubSettings = () => {
       {/* Menu Photos Section */}
       <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
         <Typography variant="h6" component="h2" gutterBottom>
-          Menu Photos
+          {t('clubSettings.fields.menuPhotos')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Manage food and drinks menu photos displayed in the bot. Maximum 10 photos allowed.
+          {t('clubSettings.fields.menuPhotosHelper')}
         </Typography>
 
         {menuPhotosError && (
@@ -632,7 +636,7 @@ const ClubSettings = () => {
                         <>
                           <AddIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
                           <Typography variant="body2" color="text.secondary">
-                            Add Photo
+                            {tCommon('actions.add')}
                           </Typography>
                         </>
                       )}
@@ -646,7 +650,7 @@ const ClubSettings = () => {
 
         {menuPhotos.length >= 10 && (
           <Alert severity="info" sx={{ mt: 2 }}>
-            Maximum number of photos (10) reached. Delete a photo to add a new one.
+            {t('clubSettings.messages.maxPhotosReached')}
           </Alert>
         )}
       </Paper>

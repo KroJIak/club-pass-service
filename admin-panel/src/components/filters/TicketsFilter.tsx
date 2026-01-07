@@ -8,6 +8,7 @@ import {
   Autocomplete,
   TextField as MuiTextField,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { FilterSection } from './FilterPanel'
 import api from '../../services/api'
 import { Event, TicketType } from '../../types'
@@ -32,6 +33,8 @@ interface TicketsFilterProps {
 }
 
 const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
+  const { t } = useTranslation('tickets')
+  const { t: tCommon } = useTranslation('common')
   const [localFilter, setLocalFilter] = useState<TicketsFilterState>(filterState)
   const [events, setEvents] = useState<Event[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -95,7 +98,7 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
 
   return (
     <Box>
-      <FilterSection title="Event">
+      <FilterSection title={t('fields.event')}>
         <Autocomplete
           options={events}
           getOptionLabel={(event) => event.name}
@@ -107,7 +110,7 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
           renderInput={(params) => (
             <MuiTextField
               {...params}
-              placeholder="All Events"
+              placeholder={t('allEvents')}
               size="small"
               sx={{ '& .MuiInputBase-root': { fontSize: '0.84rem' } }}
             />
@@ -116,7 +119,7 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
       </FilterSection>
 
       {localFilter.event_id && (
-        <FilterSection title="Ticket Type">
+        <FilterSection title={t('fields.ticketType')}>
           <Autocomplete
             options={ticketTypes}
             getOptionLabel={(tt) => tt.name}
@@ -128,7 +131,7 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
             renderInput={(params) => (
               <MuiTextField
                 {...params}
-                placeholder="All Ticket Types"
+                placeholder={t('allTicketTypes')}
                 size="small"
                 sx={{ '& .MuiInputBase-root': { fontSize: '0.84rem' } }}
               />
@@ -137,7 +140,7 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
         </FilterSection>
       )}
 
-      <FilterSection title="Status">
+      <FilterSection title={tCommon('fields.status')}>
         <RadioGroup
           value={localFilter.status}
           onChange={(e) => handleFilterChange({ status: e.target.value as TicketsFilterState['status'] })}
@@ -145,32 +148,32 @@ const TicketsFilter = ({ filterState, onFilterChange }: TicketsFilterProps) => {
           <FormControlLabel 
             value="all" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>All</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{tCommon('status.all')}</Typography>} 
           />
           <FormControlLabel 
             value="active" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Active</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('status.active')}</Typography>} 
           />
           <FormControlLabel 
             value="refunded" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Refunded</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('status.refunded')}</Typography>} 
           />
           <FormControlLabel 
             value="cancelled" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Cancelled</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('status.cancelled')}</Typography>} 
           />
           <FormControlLabel 
             value="expired" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Expired</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('status.expired')}</Typography>} 
           />
           <FormControlLabel 
             value="used" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Used</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('status.used')}</Typography>} 
           />
         </RadioGroup>
       </FilterSection>

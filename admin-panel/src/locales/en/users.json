@@ -2,6 +2,11 @@
   "title": "Users",
   "createUser": "Create User",
   "editUser": "Edit User",
+  "deleteSelected": "Delete Selected",
+  "filters": {
+    "hasUsername": "Has username",
+    "noUsername": "No username"
+  },
   "fields": {
     "telegramId": "Telegram ID",
     "username": "Username",
@@ -16,7 +21,9 @@
   "messages": {
     "createSuccess": "User created successfully",
     "updateSuccess": "User updated successfully",
-    "deleteSuccess": "User deleted successfully"
+    "deleteSuccess": "User deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this user?",
+    "deleteSelectedConfirm": "Are you sure you want to delete {{count}} user(s)? This action cannot be undone."
   }
 }
 

@@ -40,6 +40,7 @@ import api from '../../services/api'
 import { MusicRequest, MusicQueue, MusicQueueReorderRequest } from '../../types'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 // Sortable Queue Item Component
 interface SortableQueueItemProps {
@@ -52,6 +53,7 @@ interface SortableQueueItemProps {
 }
 
 const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, onToggleSelection, canDelete = true }: SortableQueueItemProps) => {
+  const { t } = useTranslation('music')
   const {
     attributes,
     listeners,
@@ -104,18 +106,18 @@ const SortableQueueItem = ({ item, isSelected, onDelete, disableDrag = false, on
         </Typography>
         {item.request_count !== undefined && item.request_count > 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
-            Requests: {item.request_count}
+            {t('fields.requestCount')}: {item.request_count}
           </Typography>
         )}
         <Box sx={{ mt: 1, display: 'flex', gap: 1, pointerEvents: 'auto' }}>
           {item.yandex_music_url && (
             <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
-              Yandex Music
+              {t('yandexMusic')}
             </Link>
           )}
           {item.other_source_url && (
             <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
-              Other Source
+              {t('otherSource')}
             </Link>
           )}
         </Box>
@@ -145,6 +147,7 @@ interface SortableWishlistItemProps {
 }
 
 const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disableDrag = false, onToggleSelection, canDelete = true }: SortableWishlistItemProps) => {
+  const { t } = useTranslation('music')
   const {
     attributes,
     listeners,
@@ -196,17 +199,17 @@ const SortableWishlistItem = ({ item, isSelected, onDelete, onMoveToQueue, disab
           {item.track_artist}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
-          Requests: {item.request_count}
+          {t('fields.requestCount')}: {item.request_count}
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
           {item.yandex_music_url && (
             <Link href={item.yandex_music_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
-              Yandex Music
+              {t('yandexMusic')}
             </Link>
           )}
           {item.other_source_url && (
             <Link href={item.other_source_url} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()}>
-              Other Source
+              {t('otherSource')}
             </Link>
           )}
         </Box>
@@ -279,6 +282,8 @@ const WishlistDroppable = ({ children }: { children: React.ReactNode }) => {
 
 const MusicManagement = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('music')
+  const { t: tCommon } = useTranslation('common')
   const [queue, setQueue] = useState<MusicQueue[]>([])
   const [wishlist, setWishlist] = useState<MusicRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -457,26 +462,26 @@ const MusicManagement = () => {
   }
 
   const handleDeleteQueueItem = async (id: number) => {
-    if (!confirm('Delete track from queue?')) return
+    if (!confirm(t('messages.deleteConfirm'))) return
 
     try {
       await api.delete(`/admin/music-queue/${id}`)
       fetchQueue()
     } catch (error) {
       console.error('Failed to delete queue item:', error)
-      alert('Error deleting')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
   const handleDeleteWishlistItem = async (id: number) => {
-    if (!confirm('Delete track from wishlist?')) return
+    if (!confirm(t('messages.deleteConfirm'))) return
 
     try {
       await api.delete(`/admin/music-wishlist/${id}`)
       fetchWishlist()
     } catch (error) {
       console.error('Failed to delete wishlist item:', error)
-      alert('Error deleting')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
@@ -487,7 +492,7 @@ const MusicManagement = () => {
       fetchWishlist()
     } catch (error) {
       console.error('Failed to move to queue:', error)
-      alert('Error moving to queue')
+      alert(tCommon('messages.saveError'))
     }
   }
 
@@ -498,12 +503,12 @@ const MusicManagement = () => {
       fetchWishlist()
     } catch (error) {
       console.error('Failed to move to wishlist:', error)
-      alert('Error moving to wishlist')
+      alert(tCommon('messages.saveError'))
     }
   }
 
   const handleDeleteSelectedQueue = async () => {
-    if (!confirm(`Delete ${queueSelection.selectedCount} tracks from queue?`)) return
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: queueSelection.selectedCount }))) return
 
     try {
       await api.delete('/admin/music-queue/batch', {
@@ -513,12 +518,12 @@ const MusicManagement = () => {
       fetchQueue()
     } catch (error) {
       console.error('Failed to delete selected queue items:', error)
-      alert('Error deleting')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
   const handleDeleteSelectedWishlist = async () => {
-    if (!confirm(`Delete ${wishlistSelection.selectedCount} tracks from wishlist?`)) return
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: wishlistSelection.selectedCount }))) return
 
     try {
       await api.delete('/admin/music-wishlist/batch', {
@@ -528,7 +533,7 @@ const MusicManagement = () => {
       fetchWishlist()
     } catch (error) {
       console.error('Failed to delete selected wishlist items:', error)
-      alert('Error deleting')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
@@ -557,7 +562,7 @@ const MusicManagement = () => {
     >
       <Box sx={{ p: 3 }}>
         <Typography variant="h4" gutterBottom>
-          Music Management
+          {t('title')}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 3, mt: 3 }}>
@@ -565,7 +570,7 @@ const MusicManagement = () => {
           <Card sx={{ flex: 1 }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Queue</Typography>
+                <Typography variant="h6">{t('queue')}</Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
                   {hasPermission('music', 'delete') && (
                     <Checkbox
@@ -587,7 +592,7 @@ const MusicManagement = () => {
                       size="small"
                       onClick={handleDeleteSelectedQueue}
                     >
-                      Delete Selected
+                      {t('deleteSelected')}
                     </Button>
                   )}
                 </Box>
@@ -619,7 +624,7 @@ const MusicManagement = () => {
           <Card sx={{ flex: 1 }}>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">Wishlist</Typography>
+                <Typography variant="h6">{t('wishlist')}</Typography>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexDirection: 'row-reverse' }}>
                   {hasPermission('music', 'delete') && (
                     <Checkbox
@@ -641,7 +646,7 @@ const MusicManagement = () => {
                       size="small"
                       onClick={handleDeleteSelectedWishlist}
                     >
-                      Delete Selected
+                      {t('deleteSelected')}
                     </Button>
                   )}
                 </Box>
@@ -697,7 +702,7 @@ const MusicManagement = () => {
               </Typography>
               {activeQueueItem.request_count !== undefined && activeQueueItem.request_count > 0 && (
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
-                  Requests: {activeQueueItem.request_count}
+                  {t('fields.requestCount')}: {activeQueueItem.request_count}
                 </Typography>
               )}
             </Box>
@@ -726,7 +731,7 @@ const MusicManagement = () => {
                 {activeWishlistItem.track_artist}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.95rem' }}>
-                Requests: {activeWishlistItem.request_count}
+                {t('fields.requestCount')}: {activeWishlistItem.request_count}
               </Typography>
             </Box>
           </Paper>

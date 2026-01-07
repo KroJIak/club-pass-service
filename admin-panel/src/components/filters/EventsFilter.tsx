@@ -10,6 +10,7 @@ import {
   Button,
   Typography,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { FilterSection } from './FilterPanel'
 import { Event, TicketType } from '../../types'
 
@@ -43,6 +44,8 @@ interface EventsFilterProps {
 }
 
 const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: EventsFilterProps) => {
+  const { t } = useTranslation('events')
+  const { t: tCommon } = useTranslation('common')
   const [localFilter, setLocalFilter] = useState<EventsFilterState>(filterState)
   const [djsExpanded, setDjsExpanded] = useState(false)
   const [ticketTypesExpanded, setTicketTypesExpanded] = useState(false)
@@ -134,12 +137,12 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
 
   return (
     <Box>
-      <FilterSection title="Price Range">
+      <FilterSection title={t('filters.priceRange')}>
         <Box sx={{ px: 1 }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
             <TextField
               size="small"
-              label="Min"
+              label={t('filters.min')}
               type="number"
               value={localFilter.minPrice}
               onChange={(e) => handleFilterChange({ minPrice: Number(e.target.value) })}
@@ -147,7 +150,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
             />
             <TextField
               size="small"
-              label="Max"
+              label={t('filters.max')}
               type="number"
               value={localFilter.maxPrice}
               onChange={(e) => handleFilterChange({ maxPrice: Number(e.target.value) })}
@@ -168,7 +171,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
         </Box>
       </FilterSection>
 
-      <FilterSection title="DJs">
+      <FilterSection title={t('filters.djs')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {visibleDjs.map((dj) => (
               <FormControlLabel
@@ -190,17 +193,17 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               onClick={() => setDjsExpanded(!djsExpanded)}
               sx={{ mt: 1, alignSelf: 'flex-start', fontSize: '0.75rem' }}
             >
-              {djsExpanded ? 'Show Less' : `Show All (${allDjs.length})`}
+              {djsExpanded ? tCommon('actions.hide') : `${tCommon('actions.show')} (${allDjs.length})`}
             </Button>
           )}
         </Box>
       </FilterSection>
 
-      <FilterSection title="Date Range">
+      <FilterSection title={t('filters.dateRange')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <TextField
             size="small"
-            label="From"
+            label={t('filters.from')}
             type="date"
             value={localFilter.dateFrom}
             onChange={(e) => handleFilterChange({ dateFrom: e.target.value })}
@@ -209,7 +212,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
           />
           <TextField
             size="small"
-            label="To"
+            label={t('filters.to')}
             type="date"
             value={localFilter.dateTo}
             onChange={(e) => handleFilterChange({ dateTo: e.target.value })}
@@ -219,7 +222,7 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
         </Box>
       </FilterSection>
 
-      <FilterSection title="Ticket Types">
+      <FilterSection title={t('filters.ticketTypes')}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {visibleTicketTypes.map((tt) => (
               <FormControlLabel
@@ -241,13 +244,13 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
               onClick={() => setTicketTypesExpanded(!ticketTypesExpanded)}
               sx={{ mt: 1, alignSelf: 'flex-start', fontSize: '0.75rem' }}
             >
-              {ticketTypesExpanded ? 'Show Less' : `Show All (${allTicketTypes.length})`}
+              {ticketTypesExpanded ? tCommon('actions.hide') : `${tCommon('actions.show')} (${allTicketTypes.length})`}
             </Button>
           )}
         </Box>
       </FilterSection>
 
-      <FilterSection title="Status">
+      <FilterSection title={t('filters.status')}>
         <RadioGroup
           value={localFilter.isActive}
           onChange={(e) => handleFilterChange({ isActive: e.target.value as 'all' | 'active' | 'inactive' })}
@@ -255,17 +258,17 @@ const EventsFilter = ({ events, ticketTypes, filterState, onFilterChange }: Even
           <FormControlLabel 
             value="all" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>All</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{tCommon('status.all')}</Typography>} 
           />
           <FormControlLabel 
             value="active" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Active</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{tCommon('status.active')}</Typography>} 
           />
           <FormControlLabel 
             value="inactive" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Inactive</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{tCommon('status.inactive')}</Typography>} 
           />
         </RadioGroup>
       </FilterSection>

@@ -13,8 +13,11 @@ import {
 } from '@mui/material'
 import api from '../../services/api'
 import type { ExpirationSettings, ExpirationSettingsUpdate } from '../../types'
+import { useTranslation } from 'react-i18next'
 
 const ExpirationSettings = () => {
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
   const [settings, setSettings] = useState<ExpirationSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -32,7 +35,7 @@ const ExpirationSettings = () => {
       const response = await api.get<ExpirationSettings>('/admin/expiration-settings')
       setSettings(response.data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load settings')
+      setError(err.response?.data?.detail || t('clubSettings.messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -79,7 +82,7 @@ const ExpirationSettings = () => {
       
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save settings')
+      setError(err.response?.data?.detail || t('clubSettings.messages.saveError'))
     } finally {
       setSaving(false)
     }
@@ -98,7 +101,7 @@ const ExpirationSettings = () => {
   if (!settings) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">Failed to load settings</Alert>
+        <Alert severity="error">{t('clubSettings.messages.fetchFailed')}</Alert>
       </Container>
     )
   }
@@ -107,10 +110,10 @@ const ExpirationSettings = () => {
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
               <Typography variant="h6" component="h1" gutterBottom>
-                Expiration Service Settings
+                {t('expirationSettings.title')}
               </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-          Manage expiration service functionality
+          {t('expirationSettings.description')}
         </Typography>
 
         {error && (
@@ -121,7 +124,7 @@ const ExpirationSettings = () => {
 
         {success && (
           <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(false)}>
-            Settings saved successfully!
+            {t('clubSettings.messages.updateSuccess')}
           </Alert>
         )}
 
@@ -134,10 +137,10 @@ const ExpirationSettings = () => {
                 color="primary"
               />
             }
-            label="Ticket Expiration"
+            label={t('expirationSettings.fields.enabled') + ' (' + t('expirationSettings.fields.ticketExpirationHours') + ')'}
           />
           <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-            Automatically mark tickets as expired if they are not used or refunded by 12:00 PM the day after the event
+            {t('expirationSettings.fields.ticketExpirationHelper')}
           </Typography>
         </Box>
 
@@ -150,21 +153,21 @@ const ExpirationSettings = () => {
                 color="primary"
               />
             }
-            label="Event Deactivation"
+            label={t('clubSettings.fields.autoDeactivateEvents')}
           />
           <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 1 }}>
-            Automatically deactivate events after they end (at 12:00 PM the day after the event)
+            {t('expirationSettings.fields.eventDeactivationHelper')}
           </Typography>
         </Box>
 
         <Box sx={{ mb: 4 }}>
           <TextField
-            label="Check Interval (minutes)"
+            label={t('expirationSettings.fields.checkInterval')}
             type="number"
             value={settings.check_interval_minutes}
             onChange={(e) => handleIntervalChange(e.target.value)}
             inputProps={{ min: 1 }}
-            helperText="How often the expiration service checks for expired tickets and events (minimum 1 minute)"
+            helperText={t('expirationSettings.fields.checkIntervalHelper')}
             sx={{ width: '100%', maxWidth: 400 }}
           />
         </Box>
@@ -176,7 +179,7 @@ const ExpirationSettings = () => {
             disabled={saving}
             size="large"
           >
-            {saving ? <CircularProgress size={24} /> : 'Save Settings'}
+            {saving ? <CircularProgress size={24} /> : tCommon('actions.save')}
           </Button>
           <Button
             variant="outlined"
@@ -198,7 +201,7 @@ const ExpirationSettings = () => {
                 setSuccess(true)
                 setTimeout(() => setSuccess(false), 3000)
               } catch (err: any) {
-                setError(err.response?.data?.detail || 'Failed to reset settings')
+                setError(err.response?.data?.detail || tCommon('messages.saveError'))
               } finally {
                 setSaving(false)
               }
@@ -206,13 +209,13 @@ const ExpirationSettings = () => {
             disabled={saving || loading}
             size="large"
           >
-            Reset
+            {tCommon('actions.reset')}
           </Button>
         </Box>
 
         {settings.updated_at && (
           <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
-            Last updated: {new Date(settings.updated_at).toLocaleString()}
+            {tCommon('fields.date')}: {new Date(settings.updated_at).toLocaleString()}
           </Typography>
         )}
       </Paper>

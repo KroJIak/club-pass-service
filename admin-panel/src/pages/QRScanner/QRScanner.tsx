@@ -13,6 +13,7 @@ import { Html5Qrcode } from 'html5-qrcode'
 import api from '../../services/api'
 import { TicketDetailResponse } from '../../types'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 interface CameraDevice {
   id: string
@@ -20,6 +21,8 @@ interface CameraDevice {
 }
 
 const QRScanner = () => {
+  const { t } = useTranslation('qrScanner')
+  const { t: tCommon } = useTranslation('common')
   const { hasPermission } = usePermissions()
   const [scanning, setScanning] = useState(false)
   const [ticket, setTicket] = useState<TicketDetailResponse | null>(null)
@@ -136,9 +139,9 @@ const QRScanner = () => {
       setScanning(false)
     } catch (err: any) {
       if (err.response?.status === 404) {
-        setError('Ticket not found')
+        setError(t('messages.invalidTicket'))
       } else {
-        setError(err.response?.data?.detail || 'Error fetching ticket')
+        setError(err.response?.data?.detail || tCommon('messages.error'))
       }
       setTicket(null)
       // Restart scanning on error
@@ -162,7 +165,7 @@ const QRScanner = () => {
       const response = await api.get(`/admin/tickets/token/${ticket.token}`)
       setTicket(response.data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Error accepting ticket')
+      setError(err.response?.data?.detail || t('messages.useFailed'))
     } finally {
       setAccepting(false)
     }
@@ -205,26 +208,13 @@ const QRScanner = () => {
   }
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'Active'
-      case 'used':
-        return 'Used'
-      case 'refunded':
-        return 'Refunded'
-      case 'expired':
-        return 'Expired'
-      case 'cancelled':
-        return 'Cancelled'
-      default:
-        return status
-    }
+    return tCommon(`status.${status}`)
   }
 
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" gutterBottom>
-        QR Scanner
+        {t('title')}
       </Typography>
 
       {!ticket && (
@@ -272,7 +262,7 @@ const QRScanner = () => {
                       boxShadow: selectedCameraId === camera.id ? '0 0 12px rgba(25, 118, 210, 0.7)' : '0 0 4px rgba(0, 0, 0, 0.2)',
                     },
                   }}
-                  title={camera.label || `Camera ${index + 1}`}
+                  title={camera.label || `${t('camera')} ${index + 1}`}
                 />
               ))}
             </Box>
@@ -296,19 +286,19 @@ const QRScanner = () => {
         <Card sx={{ mt: 3, maxWidth: '600px', margin: '0 auto' }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
-              Ticket Information
+              {t('ticketInfo')}
             </Typography>
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Ticket ID
+                {tCommon('fields.id')}
               </Typography>
               <Typography variant="body1">{ticket.id}</Typography>
             </Box>
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Token
+                {t('fields.token')}
               </Typography>
               <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
                 {ticket.token}
@@ -317,7 +307,7 @@ const QRScanner = () => {
 
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                Status
+                {tCommon('fields.status')}
               </Typography>
               <Chip
                 label={getStatusLabel(ticket.status)}
@@ -329,7 +319,7 @@ const QRScanner = () => {
             {ticket.event && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Event
+                  {t('fields.event')}
                 </Typography>
                 <Typography variant="body1">{ticket.event.name}</Typography>
               </Box>
@@ -338,7 +328,7 @@ const QRScanner = () => {
             {ticket.ticket_type && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Ticket Type
+                  {t('fields.ticketType')}
                 </Typography>
                 <Typography variant="body1">{ticket.ticket_type.name}</Typography>
               </Box>
@@ -347,7 +337,7 @@ const QRScanner = () => {
             {ticket.user && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  User
+                  {t('fields.user')}
                 </Typography>
                 <Typography variant="body1">
                   {ticket.user.username ||
@@ -360,7 +350,7 @@ const QRScanner = () => {
             {ticket.used_at && (
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Used At
+                  {t('fields.usedAt')}
                 </Typography>
                 <Typography variant="body1">
                   {new Date(ticket.used_at).toLocaleString()}
@@ -376,21 +366,23 @@ const QRScanner = () => {
                 disabled={ticket.status !== 'active' || accepting || !hasPermission('qr_scanner', 'write')}
                 fullWidth
               >
-                {accepting ? <CircularProgress size={24} /> : 'Accept'}
+                {accepting ? <CircularProgress size={24} /> : t('actions.accept')}
               </Button>
               <Button variant="outlined" onClick={handleReset} fullWidth>
-                Scan Again
+                {t('actions.scanAgain')}
               </Button>
             </Box>
 
             {ticket.status !== 'active' && (
               <Alert severity="info" sx={{ mt: 2 }}>
-                Ticket cannot be accepted because its status is: {getStatusLabel(ticket.status)}
+                {t('messages.ticketCannotBeAccepted', { status: getStatusLabel(ticket.status) })}
               </Alert>
             )}
           </CardContent>
         </Card>
       )}
+    </Box>
+  )
     </Box>
   )
 }

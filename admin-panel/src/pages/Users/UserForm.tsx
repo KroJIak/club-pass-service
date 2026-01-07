@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form'
 import api from '../../services/api'
 import { User, UserCreate, UserUpdate } from '../../types'
 import TextField from '../../components/forms/TextField'
+import { useTranslation } from 'react-i18next'
 
 interface UserFormProps {
   open: boolean
@@ -18,6 +19,8 @@ interface UserFormProps {
 }
 
 const UserForm = ({ open, user, onClose }: UserFormProps) => {
+  const { t } = useTranslation('users')
+  const { t: tCommon } = useTranslation('common')
   const [loading, setLoading] = useState(false)
 
   const {
@@ -64,8 +67,9 @@ const UserForm = ({ open, user, onClose }: UserFormProps) => {
         await api.post('/admin/users', data)
       }
       onClose()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save user:', error)
+      alert(error.response?.data?.detail || t('messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -74,44 +78,44 @@ const UserForm = ({ open, user, onClose }: UserFormProps) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <DialogTitle>{user ? 'Edit User' : 'Create User'}</DialogTitle>
+        <DialogTitle>{user ? t('actions.edit') : t('actions.create')}</DialogTitle>
         <DialogContent>
           {!user && (
             <TextField
-              label="Telegram User ID"
+              label={t('fields.telegramId')}
               type="number"
               {...register('telegram_user_id' as keyof UserCreate, {
-                required: 'Telegram User ID is required',
+                required: t('validation.telegramIdRequired'),
                 valueAsNumber: true,
-                min: { value: 1, message: 'Telegram User ID must be positive' },
+                min: { value: 1, message: t('validation.telegramIdPositive') },
               })}
               error={!!(errors as any).telegram_user_id}
               helperText={(errors as any).telegram_user_id?.message}
             />
           )}
           <TextField
-            label="Username"
+            label={t('fields.username')}
             {...register('username')}
             error={!!errors.username}
             helperText={errors.username?.message}
           />
           <TextField
-            label="First Name"
+            label={t('fields.firstName')}
             {...register('first_name')}
             error={!!errors.first_name}
             helperText={errors.first_name?.message}
           />
           <TextField
-            label="Last Name"
+            label={t('fields.lastName')}
             {...register('last_name')}
             error={!!errors.last_name}
             helperText={errors.last_name?.message}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{tCommon('actions.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? tCommon('actions.saving') : tCommon('actions.save')}
           </Button>
         </DialogActions>
       </form>

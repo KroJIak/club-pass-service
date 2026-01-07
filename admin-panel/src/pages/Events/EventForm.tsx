@@ -23,6 +23,7 @@ import ConfirmDialog from '../../components/common/ConfirmDialog'
 import TicketTypeForm from './TicketTypeForm'
 import TicketTypeTemplateForm from '../TicketTypes/TicketTypeTemplateForm'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 interface EventFormProps {
   open?: boolean
@@ -33,6 +34,8 @@ interface EventFormProps {
 
 const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormProps) => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('events')
+  const { t: tCommon } = useTranslation('common')
   const [loading, setLoading] = useState(false)
   const [djs, setDjs] = useState<string[]>([])
   const [ticketTypes, setTicketTypes] = useState<TicketType[]>([])
@@ -135,11 +138,11 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
 
   // Register date and time for validation
   useEffect(() => {
-    register('start_date', { required: 'Start date is required' })
-    register('start_time', { required: 'Start time is required' })
-    register('end_date', { required: 'End date is required' })
-    register('end_time', { required: 'End time is required' })
-  }, [register])
+    register('start_date', { required: t('fields.startDate') + ' ' + tCommon('messages.required') })
+    register('start_time', { required: t('fields.startTime') + ' ' + tCommon('messages.required') })
+    register('end_date', { required: t('fields.endDate') + ' ' + tCommon('messages.required') })
+    register('end_time', { required: t('fields.endTime') + ' ' + tCommon('messages.required') })
+  }, [register, t, tCommon])
 
   const fetchTicketTypes = async (eventId: number) => {
     setLoadingTicketTypes(true)
@@ -169,7 +172,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       const endDt = parseDate(endDate, endTime)
       
       if (endDt <= startDt) {
-        return 'End date and time must be later than start date and time'
+        return t('messages.cannotActivatePastEvent')
       }
     } catch (e) {
       // Invalid format will be caught by other validators
@@ -209,7 +212,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         const now = new Date()
         
         if (endDt <= now) {
-          alert('Cannot activate event with end date and time in the past')
+          alert(t('messages.cannotActivatePastEvent'))
           setValue('is_active', false, { shouldValidate: true })
           return
         }
@@ -264,30 +267,30 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
     <form onSubmit={handleSubmit(onSubmit)}>
       {embedded && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Event Settings</Typography>
+          <Typography variant="h6">{t('eventDetails')}</Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
       )}
-      {!embedded && <DialogTitle>{event ? 'Edit Event' : 'Create Event'}</DialogTitle>}
+      {!embedded && <DialogTitle>{event ? t('editEvent') : t('createEvent')}</DialogTitle>}
       <DialogContent>
         <TextField
-          label="Name"
-          {...register('name', { required: 'Name is required' })}
+          label={t('fields.name')}
+          {...register('name', { required: t('fields.name') + ' ' + tCommon('messages.required') })}
           error={!!errors.name}
           helperText={errors.name?.message}
           disabled={!hasPermission('events', 'write')}
         />
         <TextField
-          label="Description"
+          label={t('fields.description')}
           multiline
           rows={3}
           {...register('description')}
           disabled={!hasPermission('events', 'write')}
         />
         <DateField
-          label="Start Date"
+          label={t('fields.startDate')}
           value={watch('start_date') || null}
           onChange={(value) => {
             setValue('start_date', value || '', { shouldValidate: true })
@@ -309,7 +312,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           disabled={!hasPermission('events', 'write')}
         />
         <TimeField
-          label="Start Time"
+          label={t('fields.startTime')}
           value={watch('start_time') || null}
           onChange={(value) => {
             setValue('start_time', value || '', { shouldValidate: true })
@@ -331,27 +334,27 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           disabled={!hasPermission('events', 'write')}
         />
         <DateField
-          label="End Date"
+          label={t('fields.endDate')}
           value={watch('end_date') || null}
           onChange={(value) => {
             setValue('end_date', value || '', { shouldValidate: true })
           }}
           error={!!errors.end_date}
-          helperText={errors.end_date?.message || 'Date when the event ends'}
+          helperText={errors.end_date?.message}
           disabled={!hasPermission('events', 'write')}
         />
         <TimeField
-          label="End Time"
+          label={t('fields.endTime')}
           value={watch('end_time') || null}
           onChange={(value) => {
             setValue('end_time', value || '', { shouldValidate: true })
           }}
           error={!!errors.end_time}
-          helperText={errors.end_time?.message || 'Time when the event ends'}
+          helperText={errors.end_time?.message}
           disabled={!hasPermission('events', 'write')}
         />
         <ArrayField
-          label="DJs"
+          label={t('fields.djs')}
           value={djs}
           onChange={(value) => {
             setDjs(value)
@@ -360,7 +363,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           disabled={!hasPermission('events', 'write')}
         />
         <BooleanField
-          label="Active"
+          label={t('ticketTypes.isActive')}
           value={isActive}
           onChange={(value) => setValue('is_active', value)}
           disabled={!hasPermission('events', 'write')}
@@ -370,7 +373,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
           <>
             <Divider sx={{ my: 3 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">Ticket Types</Typography>
+              <Typography variant="h6">{t('ticketTypes.title')}</Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
                 {hasPermission('events', 'write') && (
                   <Button
@@ -379,7 +382,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                     startIcon={<AddIcon />}
                     onClick={() => setTemplateFormOpen(true)}
                   >
-                    Create Template
+                    {t('ticketTypes.saveAsTemplate')}
                   </Button>
                 )}
                 {hasPermission('events', 'write') && (
@@ -394,7 +397,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                     }}
                     disabled={!eventId}
                   >
-                    Add Ticket Type
+                    {t('ticketTypes.create')}
                   </Button>
                 )}
               </Box>
@@ -403,7 +406,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
             {hasPermission('events', 'write') && templates && templates.length > 0 && (
               <Box sx={{ mb: 2, display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
-                  Templates:
+                  {t('ticketTypes.templates')}:
                 </Typography>
                 {templates.map((template) => (
                   <Button
@@ -423,17 +426,17 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                         color="error"
                         onClick={async (e) => {
                           e.stopPropagation()
-                          if (confirm(`Delete template "${template.name}"?`)) {
+                          if (confirm(t('messages.deleteConfirm'))) {
                             try {
                               await api.delete(`/admin/ticket-type-templates/${template.id}`)
                               fetchTemplates()
                             } catch (error: any) {
                               console.error('Failed to delete template:', error)
-                              alert(error.response?.data?.detail || 'Failed to delete template')
+                              alert(error.response?.data?.detail || tCommon('messages.deleteError'))
                             }
                           }
                         }}
-                        title="Delete template"
+                        title={tCommon('actions.delete')}
                         sx={{
                           position: 'absolute',
                           right: 4,
@@ -450,10 +453,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
               </Box>
             )}
             {loadingTicketTypes ? (
-              <Typography>Loading ticket types...</Typography>
+              <Typography>{tCommon('status.loading')}</Typography>
             ) : ticketTypes.length === 0 ? (
               <Typography variant="body2" color="text.secondary">
-                No ticket types yet. Click "Add Ticket Type" to create one.
+                {t('ticketTypes.noTicketTypes', 'No ticket types yet.')}
               </Typography>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -484,7 +487,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                         {tt.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        Price: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽ | Available: {tt.available_quantity} / {tt.total_quantity}
+                        {tCommon('fields.price')}: {tt.price % 1 === 0 ? Math.floor(tt.price) : tt.price} ₽ | {t('ticketTypes.available')}: {tt.available_quantity} / {tt.total_quantity}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 0.5 }}>
@@ -498,7 +501,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                             setSelectedTemplate(null)
                             setTicketTypeFormOpen(true)
                           }}
-                          title="Edit"
+                          title={tCommon('actions.edit')}
                         >
                           <EditIcon />
                         </IconButton>
@@ -511,7 +514,7 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
                             e.stopPropagation()
                             setDeleteTicketTypeDialog({ open: true, ticketTypeId: tt.id })
                           }}
-                          title="Delete"
+                          title={tCommon('actions.delete')}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -525,10 +528,10 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{tCommon('actions.cancel')}</Button>
         {hasPermission('events', 'write') && (
           <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? (event ? 'Saving...' : 'Creating...') : (event ? 'Save' : 'Create')}
+            {loading ? (event ? tCommon('status.saving') : tCommon('status.loading')) : (event ? tCommon('actions.save') : tCommon('actions.create'))}
           </Button>
         )}
       </DialogActions>
@@ -564,8 +567,8 @@ const EventForm = ({ open = true, event, onClose, embedded = false }: EventFormP
       )}
       <ConfirmDialog
         open={deleteTicketTypeDialog.open}
-        title="Delete Ticket Type"
-        message="Are you sure you want to delete this ticket type? This action cannot be undone."
+        title={t('ticketTypes.delete')}
+        message={tCommon('messages.confirmDelete')}
         onConfirm={() => deleteTicketTypeDialog.ticketTypeId && handleDeleteTicketType(deleteTicketTypeDialog.ticketTypeId)}
         onCancel={() => setDeleteTicketTypeDialog({ open: false, ticketTypeId: null })}
       />

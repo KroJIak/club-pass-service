@@ -14,6 +14,7 @@ import { useForm, Controller } from 'react-hook-form'
 import api from '../../services/api'
 import { TicketTypeTemplateCreate } from '../../types'
 import TextField from '../../components/forms/TextField'
+import { useTranslation } from 'react-i18next'
 
 interface TicketTypeTemplateFormProps {
   open?: boolean
@@ -26,6 +27,8 @@ const TicketTypeTemplateForm = ({
   onClose, 
   onSuccess,
 }: TicketTypeTemplateFormProps) => {
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
   const [loading, setLoading] = useState(false)
 
   const {
@@ -62,7 +65,7 @@ const TicketTypeTemplateForm = ({
       onClose()
     } catch (error: any) {
       console.error('Failed to save template:', error)
-      alert(error.response?.data?.detail || 'Failed to save template')
+      alert(error.response?.data?.detail || t('ticketTypes.messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -73,7 +76,7 @@ const TicketTypeTemplateForm = ({
       <form onSubmit={handleSubmit(onSubmit)}>
         <DialogTitle>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Create Template</Typography>
+            <Typography variant="h6">{t('ticketTypes.actions.createTemplate')}</Typography>
             <IconButton onClick={onClose} size="small">
               <CloseIcon />
             </IconButton>
@@ -81,18 +84,18 @@ const TicketTypeTemplateForm = ({
         </DialogTitle>
         <DialogContent>
           <TextField
-            label="Name"
-            {...register('name', { required: 'Name is required' })}
+            label={tCommon('fields.name')}
+            {...register('name', { required: t('ticketTypes.validation.nameRequired') })}
             error={!!errors.name}
             helperText={errors.name?.message}
           />
           <Controller
             name="price"
             control={control}
-            rules={{ required: 'Price is required', min: { value: 0, message: 'Price must be positive' } }}
+            rules={{ required: t('ticketTypes.validation.priceRequired'), min: { value: 0, message: t('ticketTypes.validation.pricePositive') } }}
             render={({ field }) => (
               <TextField
-                label="Price"
+                label={tCommon('fields.price')}
                 type="number"
                 {...field}
                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -104,10 +107,10 @@ const TicketTypeTemplateForm = ({
           <Controller
             name="available_quantity"
             control={control}
-            rules={{ required: 'Available quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+            rules={{ required: t('ticketTypes.validation.availableQuantityRequired'), min: { value: 0, message: t('ticketTypes.validation.availableQuantityNonNegative') } }}
             render={({ field }) => (
               <TextField
-                label="Available Quantity"
+                label={t('ticketTypes.fields.availableQuantity')}
                 type="number"
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -119,10 +122,10 @@ const TicketTypeTemplateForm = ({
           <Controller
             name="total_quantity"
             control={control}
-            rules={{ required: 'Total quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+            rules={{ required: t('ticketTypes.validation.totalQuantityRequired'), min: { value: 0, message: t('ticketTypes.validation.availableQuantityNonNegative') } }}
             render={({ field }) => (
               <TextField
-                label="Total Quantity"
+                label={t('ticketTypes.fields.totalQuantity')}
                 type="number"
                 {...field}
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -134,14 +137,15 @@ const TicketTypeTemplateForm = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose} disabled={loading}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            Create
+            {tCommon('actions.create')}
           </Button>
         </DialogActions>
       </form>
     </Dialog>
+  )
   )
 }
 

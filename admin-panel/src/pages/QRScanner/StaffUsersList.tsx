@@ -21,6 +21,7 @@ import {
   Autocomplete,
 } from '@mui/material'
 import { Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { User } from '../../types/index'
 import { usePermissions } from '../../hooks/usePermissions'
@@ -36,6 +37,8 @@ interface StaffUser {
 
 const StaffUsersList = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([])
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
@@ -57,7 +60,7 @@ const StaffUsersList = () => {
       const response = await api.get('/admin/staff-users')
       setStaffUsers(response.data.staff_users)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load staff users')
+      setError(err.response?.data?.detail || t('messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -89,7 +92,7 @@ const StaffUsersList = () => {
 
   const handleSubmit = async () => {
     if (!selectedUser) {
-      setError('Please select a user')
+      setError(tCommon('fields.user') + ' ' + tCommon('messages.required'))
       return
     }
 
@@ -103,20 +106,20 @@ const StaffUsersList = () => {
       handleCloseDialog()
       loadStaffUsers()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create staff user')
+      setError(err.response?.data?.detail || tCommon('messages.saveError'))
     }
   }
 
   const getUserDisplayName = (user: User) => {
     const name = [user.first_name, user.last_name].filter(Boolean).join(' ')
     if (name) {
-      return `${name} (@${user.username || 'N/A'}) - ID: ${user.telegram_user_id}`
+      return `${name} (@${user.username || tCommon('fields.notApplicable')}) - ${tCommon('fields.id')}: ${user.telegram_user_id}`
     }
-    return `@${user.username || 'N/A'} - ID: ${user.telegram_user_id}`
+    return `@${user.username || tCommon('fields.notApplicable')} - ${tCommon('fields.id')}: ${user.telegram_user_id}`
   }
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this staff user?')) {
+    if (!window.confirm(t('messages.deleteConfirm'))) {
       return
     }
 
@@ -125,7 +128,7 @@ const StaffUsersList = () => {
       await api.delete(`/admin/staff-users/${id}`)
       loadStaffUsers()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete staff user')
+      setError(err.response?.data?.detail || tCommon('messages.deleteError'))
     } finally {
       setDeletingId(null)
     }
@@ -133,16 +136,16 @@ const StaffUsersList = () => {
 
   const getFullName = (user: StaffUser) => {
     const parts = [user.first_name, user.last_name].filter(Boolean)
-    return parts.length > 0 ? parts.join(' ') : 'N/A'
+    return parts.length > 0 ? parts.join(' ') : tCommon('fields.notApplicable')
   }
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Staff Users</Typography>
+        <Typography variant="h4">{t('staffBotUsers')}</Typography>
         {hasPermission('staff', 'write') && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleAdd}>
-            Add User
+            {tCommon('actions.add')}
           </Button>
         )}
       </Box>
@@ -162,11 +165,11 @@ const StaffUsersList = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Telegram User ID</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Created At</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{tCommon('fields.id')}</TableCell>
+                <TableCell>{t('fields.telegramId')}</TableCell>
+                <TableCell>{tCommon('fields.name')}</TableCell>
+                <TableCell>{tCommon('fields.date')}</TableCell>
+                <TableCell>{tCommon('actions.actions')}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -174,7 +177,7 @@ const StaffUsersList = () => {
                 <TableRow>
                   <TableCell colSpan={5} align="center">
                     <Typography variant="body2" color="text.secondary">
-                      No staff users found
+                      {tCommon('messages.noData')}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -190,6 +193,7 @@ const StaffUsersList = () => {
                         color="error"
                         onClick={() => handleDelete(user.id)}
                         disabled={!hasPermission('staff', 'delete') || deletingId === user.id}
+                        title={tCommon('actions.delete')}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -203,7 +207,7 @@ const StaffUsersList = () => {
       )}
 
       <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>Add Staff User</DialogTitle>
+        <DialogTitle>{tCommon('actions.add')}</DialogTitle>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
             <Autocomplete
@@ -218,8 +222,8 @@ const StaffUsersList = () => {
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Select User"
-                  placeholder="Search by name, username, or Telegram ID"
+                  label={tCommon('fields.user')}
+                  placeholder={tCommon('fields.user') + '...'}
                   required
                 />
               )}
@@ -240,25 +244,25 @@ const StaffUsersList = () => {
             {selectedUser && (
               <Box sx={{ mt: 1, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Selected User:
+                  {tCommon('fields.user')}:
                 </Typography>
                 <Typography variant="body1">
-                  {[selectedUser.first_name, selectedUser.last_name].filter(Boolean).join(' ') || 'N/A'}
+                  {[selectedUser.first_name, selectedUser.last_name].filter(Boolean).join(' ') || tCommon('fields.notApplicable')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Username: @{selectedUser.username || 'N/A'}
+                  {t('fields.username')}: @{selectedUser.username || tCommon('fields.notApplicable')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Telegram ID: {selectedUser.telegram_user_id}
+                  {t('fields.telegramId')}: {selectedUser.telegram_user_id}
                 </Typography>
               </Box>
             )}
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>{tCommon('actions.cancel')}</Button>
           <Button onClick={handleSubmit} variant="contained" disabled={!selectedUser}>
-            Add
+            {tCommon('actions.add')}
           </Button>
         </DialogActions>
       </Dialog>

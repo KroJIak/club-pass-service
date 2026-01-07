@@ -6,6 +6,7 @@ import {
   RadioGroup,
   Typography,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { FilterSection } from './FilterPanel'
 
 export interface UsersFilterState {
@@ -24,6 +25,8 @@ interface UsersFilterProps {
 }
 
 const UsersFilter = ({ filterState, onFilterChange }: UsersFilterProps) => {
+  const { t } = useTranslation('users')
+  const { t: tCommon } = useTranslation('common')
   const [localFilter, setLocalFilter] = useState<UsersFilterState>(filterState)
 
   useEffect(() => {
@@ -38,7 +41,7 @@ const UsersFilter = ({ filterState, onFilterChange }: UsersFilterProps) => {
 
   return (
     <Box>
-      <FilterSection title="Username">
+      <FilterSection title={tCommon('fields.username')}>
         <RadioGroup
           value={localFilter.hasUsername}
           onChange={(e) => handleFilterChange({ hasUsername: e.target.value as 'all' | 'yes' | 'no' })}
@@ -46,17 +49,17 @@ const UsersFilter = ({ filterState, onFilterChange }: UsersFilterProps) => {
           <FormControlLabel 
             value="all" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>All</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{tCommon('status.all')}</Typography>} 
           />
           <FormControlLabel 
             value="yes" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>Has username</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('filters.hasUsername')}</Typography>} 
           />
           <FormControlLabel 
             value="no" 
             control={<Radio size="small" sx={{ '& .MuiSvgIcon-root': { fontSize: '1rem' } }} />} 
-            label={<Typography sx={{ fontSize: '0.84rem' }}>No username</Typography>} 
+            label={<Typography sx={{ fontSize: '0.84rem' }}>{t('filters.noUsername')}</Typography>} 
           />
         </RadioGroup>
       </FilterSection>

@@ -20,6 +20,7 @@ import {
   Delete as DeleteIcon,
   People as PeopleIcon,
 } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { AdminGroup, AdminAccount } from '../../types'
 import GroupForm from './GroupForm'
@@ -27,6 +28,8 @@ import AccountForm from './AccountForm'
 import PermissionsEditor from './PermissionsEditor'
 
 const AdminAccountsList = () => {
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [groups, setGroups] = useState<AdminGroup[]>([])
   const [accounts, setAccounts] = useState<Record<number, AdminAccount[]>>({})
   const [loading, setLoading] = useState(false)
@@ -58,7 +61,7 @@ const AdminAccountsList = () => {
       }
       setAccounts(accountsMap)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load groups')
+      setError(err.response?.data?.detail || t('messages.fetchFailed'))
     } finally {
       setLoading(false)
     }
@@ -79,7 +82,7 @@ const AdminAccountsList = () => {
   }
 
   const handleDeleteGroup = async (groupId: number) => {
-    if (!window.confirm('Are you sure you want to delete this group? All accounts in this group will also be deleted.')) {
+    if (!window.confirm(t('messages.deleteConfirm'))) {
       return
     }
     
@@ -87,7 +90,7 @@ const AdminAccountsList = () => {
       await api.delete(`/admin/groups/${groupId}`)
       await loadGroups()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete group')
+      setError(err.response?.data?.detail || tCommon('messages.deleteError'))
     }
   }
 
@@ -104,7 +107,7 @@ const AdminAccountsList = () => {
   }
 
   const handleDeleteAccount = async (accountId: number) => {
-    if (!window.confirm('Are you sure you want to delete this account?')) {
+    if (!window.confirm(t('messages.deleteConfirm'))) {
       return
     }
     
@@ -112,7 +115,7 @@ const AdminAccountsList = () => {
       await api.delete(`/admin/accounts/${accountId}`)
       await loadGroups()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete account')
+      setError(err.response?.data?.detail || tCommon('messages.deleteError'))
     }
   }
 
@@ -140,13 +143,13 @@ const AdminAccountsList = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Admin Panel Accounts</Typography>
+        <Typography variant="h4">{t('adminAccounts')}</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={handleCreateGroup}
         >
-          Create Group
+          {t('createGroup')}
         </Button>
       </Box>
 
@@ -174,12 +177,13 @@ const AdminAccountsList = () => {
                 onClick={() => handleEditPermissions(group)}
                 sx={{ mr: 1 }}
               >
-                Edit Permissions
+                {t('fields.permissions')}
               </Button>
               <IconButton
                 size="small"
                 onClick={() => handleEditGroup(group)}
                 sx={{ mr: 1 }}
+                title={tCommon('actions.edit')}
               >
                 <EditIcon />
               </IconButton>
@@ -187,6 +191,7 @@ const AdminAccountsList = () => {
                 size="small"
                 onClick={() => handleDeleteGroup(group.id)}
                 color="error"
+                title={tCommon('actions.delete')}
               >
                 <DeleteIcon />
               </IconButton>
@@ -200,7 +205,7 @@ const AdminAccountsList = () => {
               startIcon={<AddIcon />}
               onClick={() => handleCreateAccount(group.id)}
             >
-              Add Account
+              {t('createAccount')}
             </Button>
           </Box>
 
@@ -208,17 +213,17 @@ const AdminAccountsList = () => {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Username</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Created</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell>{t('fields.username')}</TableCell>
+                  <TableCell>{tCommon('fields.status')}</TableCell>
+                  <TableCell>{tCommon('fields.date')}</TableCell>
+                  <TableCell align="right">{tCommon('actions.actions')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {accounts[group.id]?.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} align="center">
-                      No accounts in this group
+                      {tCommon('messages.noData')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -227,7 +232,7 @@ const AdminAccountsList = () => {
                       <TableCell>{account.username}</TableCell>
                       <TableCell>
                         <Chip
-                          label={account.is_active ? 'Active' : 'Inactive'}
+                          label={account.is_active ? tCommon('status.active') : tCommon('status.inactive')}
                           color={account.is_active ? 'success' : 'default'}
                           size="small"
                         />
@@ -239,6 +244,7 @@ const AdminAccountsList = () => {
                         <IconButton
                           size="small"
                           onClick={() => handleEditAccount(account)}
+                          title={tCommon('actions.edit')}
                         >
                           <EditIcon />
                         </IconButton>
@@ -246,6 +252,7 @@ const AdminAccountsList = () => {
                           size="small"
                           onClick={() => handleDeleteAccount(account.id)}
                           color="error"
+                          title={tCommon('actions.delete')}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -262,7 +269,7 @@ const AdminAccountsList = () => {
       {groups.length === 0 && !loading && (
         <Paper sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body1" color="text.secondary">
-            No groups found. Create your first group to get started.
+            {tCommon('messages.noData')}
           </Typography>
         </Paper>
       )}

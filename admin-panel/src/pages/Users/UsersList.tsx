@@ -8,9 +8,12 @@ import UsersFilter, { UsersFilterState, DEFAULT_FILTER_STATE } from '../../compo
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const UsersList = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('users')
+  const { t: tCommon } = useTranslation('common')
   const [users, setUsers] = useState<User[]>([])
   const [allUsers, setAllUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
@@ -90,7 +93,7 @@ const UsersList = () => {
   }, [allUsers, filterState])
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} user(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: selection.selectedCount }))) {
       return
     }
 
@@ -102,18 +105,18 @@ const UsersList = () => {
       fetchUsers()
     } catch (error) {
       console.error('Failed to delete users:', error)
-      alert('Failed to delete some users')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return <Typography>{tCommon('status.loading')}</Typography>
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">Users</Typography>
+        <Typography variant="h6">{t('title')}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {hasPermission('users', 'delete') && selection.hasSelection && (
             <Button
@@ -122,7 +125,7 @@ const UsersList = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelected}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('users', 'delete') && (
@@ -154,13 +157,13 @@ const UsersList = () => {
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     {user.first_name || user.last_name 
                       ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
-                      : 'No name'}
+                      : t('fields.noName')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    @{user.username || 'N/A'}
+                    @{user.username || tCommon('fields.notApplicable')}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Telegram ID: {user.telegram_user_id}
+                    {t('fields.telegramId')}: {user.telegram_user_id}
                   </Typography>
                 </Box>
               </CardContent>

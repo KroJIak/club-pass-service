@@ -18,6 +18,7 @@ import { TicketType, TicketTypeTemplate, TicketTypeCreate, TicketTypeUpdate, Eve
 import TextField from '../../components/forms/TextField'
 import BooleanField from '../../components/forms/BooleanField'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 interface TicketTypeFormProps {
   open?: boolean
@@ -38,6 +39,8 @@ const TicketTypeForm = ({
   onSuccess,
   embedded = false 
 }: TicketTypeFormProps) => {
+  const { t } = useTranslation('settings')
+  const { t: tCommon } = useTranslation('common')
   const { hasPermission } = usePermissions()
   const [loading, setLoading] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
@@ -131,7 +134,7 @@ const TicketTypeForm = ({
       onClose()
     } catch (error: any) {
       console.error('Failed to save ticket type:', error)
-      alert(error.response?.data?.detail || 'Failed to save ticket type')
+      alert(error.response?.data?.detail || t('ticketTypes.messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -141,19 +144,19 @@ const TicketTypeForm = ({
     <form onSubmit={handleSubmit(onSubmit)}>
       {embedded && (
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">{ticketType ? 'Edit Ticket Type' : 'Create Ticket Type'}</Typography>
+          <Typography variant="h6">{ticketType ? t('ticketTypes.actions.edit') : t('ticketTypes.actions.create')}</Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
         </Box>
       )}
-      {!embedded && <DialogTitle>{ticketType ? 'Edit Ticket Type' : 'Create Ticket Type'}</DialogTitle>}
+      {!embedded && <DialogTitle>{ticketType ? t('ticketTypes.actions.edit') : t('ticketTypes.actions.create')}</DialogTitle>}
       <DialogContent>
         {!eventId && (
           <Controller
             name="event_id"
             control={control}
-            rules={{ required: !ticketType ? 'Event is required' : false }}
+            rules={{ required: !ticketType ? t('ticketTypes.validation.eventRequired') : false }}
             render={({ field }) => (
               <Autocomplete
                 {...field}
@@ -165,7 +168,7 @@ const TicketTypeForm = ({
                 renderInput={(params) => (
                   <MuiTextField
                     {...params}
-                    label="Event"
+                    label={t('ticketTypes.fields.event')}
                     error={!!(errors as any).event_id}
                     helperText={(errors as any).event_id?.message}
                     required={!ticketType}
@@ -178,8 +181,8 @@ const TicketTypeForm = ({
         )}
 
         <TextField
-          label="Name"
-          {...register('name', { required: 'Name is required' })}
+          label={tCommon('fields.name')}
+          {...register('name', { required: t('ticketTypes.validation.nameRequired') })}
           error={!!errors.name}
           helperText={errors.name?.message}
           disabled={!hasPermission('tickets', 'write')}
@@ -187,10 +190,10 @@ const TicketTypeForm = ({
         <Controller
           name="price"
           control={control}
-          rules={{ required: 'Price is required', min: { value: 0, message: 'Price must be positive' } }}
+          rules={{ required: t('ticketTypes.validation.priceRequired'), min: { value: 0, message: t('ticketTypes.validation.pricePositive') } }}
           render={({ field }) => (
             <TextField
-              label="Price"
+              label={tCommon('fields.price')}
               type="number"
               {...field}
               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -203,10 +206,10 @@ const TicketTypeForm = ({
         <Controller
           name="available_quantity"
           control={control}
-          rules={{ required: 'Available quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+          rules={{ required: t('ticketTypes.validation.availableQuantityRequired'), min: { value: 0, message: t('ticketTypes.validation.availableQuantityNonNegative') } }}
           render={({ field }) => (
             <TextField
-              label="Available Quantity"
+              label={t('ticketTypes.fields.availableQuantity')}
               type="number"
               {...field}
               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -219,10 +222,10 @@ const TicketTypeForm = ({
         <Controller
           name="total_quantity"
           control={control}
-          rules={{ required: 'Total quantity is required', min: { value: 0, message: 'Quantity must be non-negative' } }}
+          rules={{ required: t('ticketTypes.validation.totalQuantityRequired'), min: { value: 0, message: t('ticketTypes.validation.availableQuantityNonNegative') } }}
           render={({ field }) => (
             <TextField
-              label="Total Quantity"
+              label={t('ticketTypes.fields.totalQuantity')}
               type="number"
               {...field}
               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
@@ -237,7 +240,7 @@ const TicketTypeForm = ({
           control={control}
           render={({ field }) => (
             <BooleanField
-              label="Active"
+              label={tCommon('status.active')}
               {...field}
               value={field.value ?? true}
               disabled={!hasPermission('tickets', 'write')}
@@ -247,11 +250,11 @@ const TicketTypeForm = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {tCommon('actions.cancel')}
         </Button>
         {hasPermission('tickets', 'write') && (
           <Button type="submit" variant="contained" disabled={loading}>
-            {ticketType ? 'Update' : 'Create'}
+            {ticketType ? tCommon('actions.update') : tCommon('actions.create')}
           </Button>
         )}
       </DialogActions>

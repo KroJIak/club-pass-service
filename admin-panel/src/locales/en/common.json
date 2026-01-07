@@ -31,7 +31,9 @@
     "import": "Import",
     "copy": "Copy",
     "view": "View",
-    "generate": "Generate"
+    "generate": "Generate",
+    "show": "Show",
+    "hide": "Hide"
   },
   "status": {
     "active": "Active",
@@ -72,7 +74,8 @@
     "notes": "Notes",
     "username": "Username",
     "password": "Password",
-    "confirmPassword": "Confirm Password"
+    "confirmPassword": "Confirm Password",
+    "notApplicable": "N/A"
   },
   "messages": {
     "confirmDelete": "Are you sure you want to delete this item?",

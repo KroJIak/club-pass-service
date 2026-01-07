@@ -6,7 +6,9 @@ import {
   DialogActions,
   Button,
   TextField,
+  Alert,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { AdminGroup, AdminGroupCreate, AdminGroupUpdate } from '../../types'
 
@@ -18,6 +20,8 @@ interface GroupFormProps {
 }
 
 const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
@@ -36,7 +40,7 @@ const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      setError('Name is required')
+      setError(t('fields.groupName') + ' ' + tCommon('messages.required'))
       return
     }
 
@@ -61,7 +65,7 @@ const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
       onSave()
       onClose()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save group')
+      setError(err.response?.data?.detail || tCommon('messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -69,15 +73,15 @@ const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{group ? 'Edit Group' : 'Create Group'}</DialogTitle>
+      <DialogTitle>{group ? t('editGroup') : t('createGroup')}</DialogTitle>
       <DialogContent>
         {error && (
-          <div style={{ color: 'red', marginBottom: '16px' }}>{error}</div>
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         )}
         <TextField
           autoFocus
           margin="dense"
-          label="Name"
+          label={t('fields.groupName')}
           fullWidth
           variant="outlined"
           value={name}
@@ -87,7 +91,7 @@ const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
         />
         <TextField
           margin="dense"
-          label="Description"
+          label={t('fields.description')}
           fullWidth
           variant="outlined"
           multiline
@@ -98,10 +102,10 @@ const GroupForm = ({ open, onClose, onSave, group }: GroupFormProps) => {
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {tCommon('actions.cancel')}
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {group ? 'Update' : 'Create'}
+          {group ? tCommon('actions.save') : tCommon('actions.create')}
         </Button>
       </DialogActions>
     </Dialog>

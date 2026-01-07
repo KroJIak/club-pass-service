@@ -4,16 +4,41 @@
   "adminMessages": "Admin Messages",
   "sendMessage": "Send Message",
   "reply": "Reply",
+  "deleteSelected": "Delete Selected",
+  "status": {
+    "new": "New",
+    "responded": "Responded",
+    "closed": "Closed"
+  },
+  "adminResponse": "Admin Response",
+  "byAdmin": "by {{admin}}",
+  "onDate": " ({{date}})",
+  "yourResponse": "Your response",
+  "addPhotos": "Add photos",
+  "photosSelected": "{{count}} photos selected",
+  "respondButton": "Respond",
+  "toUser": "To user",
+  "fromAdmin": "From admin",
+  "sendMessageToUser": "Send message to user",
+  "chooseUserPlaceholder": "Choose user...",
+  "enterYourMessagePlaceholder": "Enter your message...",
   "fields": {
     "user": "User",
     "message": "Message",
     "photo": "Photo",
     "sentAt": "Sent At",
-    "viewPhoto": "View Photo"
+    "viewPhoto": "View Photo",
+    "toUser": "To User (Telegram ID)",
+    "toAllUsers": "To All Users",
+    "selectPhoto": "Select Photo"
   },
   "messages": {
     "sendSuccess": "Message sent successfully",
-    "deleteSuccess": "Message deleted successfully"
+    "deleteSuccess": "Message deleted successfully",
+    "deleteConfirm": "Are you sure you want to delete this message?",
+    "deleteSelectedConfirm": "Are you sure you want to delete {{count}} message(s)? This action cannot be undone.",
+    "fetchFailed": "Failed to fetch messages",
+    "sendFailed": "Failed to send message"
   }
 }
 

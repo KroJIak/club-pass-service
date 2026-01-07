@@ -9,6 +9,17 @@
   "inactive": "Inactive",
   "djs": "DJs",
   "noEvents": "No events found",
+  "filters": {
+    "priceRange": "Price Range",
+    "min": "Min",
+    "max": "Max",
+    "djs": "DJs",
+    "dateRange": "Date Range",
+    "from": "From",
+    "to": "To",
+    "ticketTypes": "Ticket Types",
+    "status": "Status"
+  },
   "fields": {
     "name": "Event Name",
     "description": "Description",

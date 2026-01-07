@@ -9,9 +9,12 @@ import OrdersFilter, { OrdersFilterState, DEFAULT_FILTER_STATE } from '../../com
 import { useFilterPanel } from '../../hooks/useFilterPanel'
 import { useSelection } from '../../hooks/useSelection'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 const OrdersList = () => {
   const { hasPermission } = usePermissions()
+  const { t } = useTranslation('orders')
+  const { t: tCommon } = useTranslation('common')
   const [orders, setOrders] = useState<Order[]>([])
   const [allOrders, setAllOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,7 +95,7 @@ const OrdersList = () => {
   }
 
   const handleDeleteSelected = async () => {
-    if (!confirm(`Are you sure you want to delete ${selection.selectedCount} order(s)? This action cannot be undone.`)) {
+    if (!confirm(t('messages.deleteSelectedConfirm', { count: selection.selectedCount }))) {
       return
     }
 
@@ -104,18 +107,18 @@ const OrdersList = () => {
       fetchOrders()
     } catch (error) {
       console.error('Failed to delete orders:', error)
-      alert('Failed to delete some orders')
+      alert(tCommon('messages.deleteError'))
     }
   }
 
   if (loading) {
-    return <Typography>Loading...</Typography>
+    return <Typography>{tCommon('status.loading')}</Typography>
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">Orders</Typography>
+        <Typography variant="h6">{t('title')}</Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {hasPermission('orders', 'delete') && selection.hasSelection && (
             <Button
@@ -124,7 +127,7 @@ const OrdersList = () => {
               startIcon={<DeleteIcon />}
               onClick={handleDeleteSelected}
             >
-              Delete Selected
+              {t('deleteSelected')}
             </Button>
           )}
           {hasPermission('orders', 'delete') && (
@@ -174,28 +177,28 @@ const OrdersList = () => {
                       </Typography>
                     ) : null}
                     <Typography variant="body2" color="text.secondary">
-                      Quantity: {order.quantity}
+                      {tCommon('fields.quantity')}: {order.quantity}
                     </Typography>
                     {order.amount !== null && (
                       <Typography variant="body2" color="text.secondary">
-                        Amount: {order.amount} ₽
+                        {tCommon('fields.price')}: {order.amount} ₽
                       </Typography>
                     )}
                     {order.payment_status && (
                       <Typography variant="body2" color="text.secondary">
-                        Payment: {order.payment_status}
+                        {t('payments.status')}: {tCommon(`status.${order.payment_status}`)}
                       </Typography>
                     )}
                     <Typography variant="body2" color="text.secondary">
                       {order.event_name 
-                        ? `Event: ${order.event_name} (ID: ${order.event_id})`
-                        : `Event ID: ${order.event_id}`
+                        ? `${t('fields.event')}: ${order.event_name} (${tCommon('fields.id')}: ${order.event_id})`
+                        : `${t('fields.event')} ${tCommon('fields.id')}: ${order.event_id}`
                       }
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       {order.ticket_type_name 
-                        ? `Type: ${order.ticket_type_name} (ID: ${order.ticket_type_id})`
-                        : `Ticket Type ID: ${order.ticket_type_id}`
+                        ? `${t('fields.ticketType')}: ${order.ticket_type_name} (${tCommon('fields.id')}: ${order.ticket_type_id})`
+                        : `${t('fields.ticketType')} ${tCommon('fields.id')}: ${order.ticket_type_id}`
                       }
                     </Typography>
                   </Box>
@@ -221,8 +224,8 @@ const OrdersList = () => {
 
       <ConfirmDialog
         open={deleteDialog.open}
-        title="Delete Order"
-        message="Are you sure you want to delete this order? This action cannot be undone."
+        title={tCommon('actions.delete')}
+        message={t('messages.deleteConfirm')}
         onConfirm={() => deleteDialog.orderId && handleDelete(deleteDialog.orderId)}
         onCancel={() => setDeleteDialog({ open: false, orderId: null })}
       />

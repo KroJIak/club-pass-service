@@ -16,6 +16,7 @@ import {
   IconButton,
 } from '@mui/material'
 import { Refresh as RefreshIcon, Visibility, VisibilityOff } from '@mui/icons-material'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { AdminAccount, AdminAccountCreate, AdminAccountUpdate, AdminGroup } from '../../types'
 
@@ -29,6 +30,8 @@ interface AccountFormProps {
 }
 
 const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: AccountFormProps) => {
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -81,17 +84,17 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
 
   const handleSubmit = async () => {
     if (!username.trim()) {
-      setError('Username is required')
+      setError(t('fields.username') + ' ' + tCommon('messages.required'))
       return
     }
 
     if (!account && !password.trim()) {
-      setError('Password is required for new accounts')
+      setError(t('fields.password') + ' ' + tCommon('messages.required'))
       return
     }
 
     if (!selectedGroupId) {
-      setError('Group is required')
+      setError(t('fields.group') + ' ' + tCommon('messages.required'))
       return
     }
 
@@ -122,7 +125,7 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
       onSave()
       onClose()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save account')
+      setError(err.response?.data?.detail || tCommon('messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -130,15 +133,15 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{account ? 'Edit Account' : 'Create Account'}</DialogTitle>
+      <DialogTitle>{account ? t('editAccount') : t('createAccount')}</DialogTitle>
       <DialogContent>
         {error && (
-          <div style={{ color: 'red', marginBottom: '16px' }}>{error}</div>
+          <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         )}
         <TextField
           autoFocus
           margin="dense"
-          label="Username"
+          label={t('fields.username')}
           fullWidth
           variant="outlined"
           value={username}
@@ -148,7 +151,7 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
         />
         <TextField
           margin="dense"
-          label={account ? 'New Password (leave empty to keep current)' : 'Password'}
+          label={account ? t('fields.newPassword') : t('fields.password')}
           type={showPassword ? 'text' : 'password'}
           fullWidth
           variant="outlined"
@@ -162,7 +165,7 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
                 <IconButton
                   onClick={generateRandomPassword}
                   edge="end"
-                  title="Generate random password"
+                  title={t('messages.generatePassword')}
                   sx={{ mr: 0.5 }}
                 >
                   <RefreshIcon />
@@ -170,7 +173,7 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
                 <IconButton
                   onClick={() => setShowPassword(!showPassword)}
                   edge="end"
-                  title={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? tCommon('actions.hide') : tCommon('actions.show')}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
@@ -179,11 +182,11 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
           }}
         />
         <FormControl fullWidth margin="dense" sx={{ mb: 2 }}>
-          <InputLabel>Group</InputLabel>
+          <InputLabel>{t('fields.group')}</InputLabel>
           <Select
             value={selectedGroupId || ''}
             onChange={(e) => setSelectedGroupId(e.target.value as number)}
-            label="Group"
+            label={t('fields.group')}
             required
           >
             {groups.map((group) => (
@@ -200,15 +203,15 @@ const AccountForm = ({ open, onClose, onSave, account, groupId, groups }: Accoun
               onChange={(e) => setIsActive(e.target.checked)}
             />
           }
-          label="Active"
+          label={t('fields.isActive')}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {tCommon('actions.cancel')}
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {account ? 'Update' : 'Create'}
+          {account ? tCommon('actions.save') : tCommon('actions.create')}
         </Button>
       </DialogActions>
     </Dialog>

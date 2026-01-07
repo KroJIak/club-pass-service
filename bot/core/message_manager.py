@@ -11,26 +11,50 @@ from aiogram.types import BufferedInputFile, CallbackQuery, FSInputFile, InlineK
 from bot.core.middleware import temporary_messages_middleware
 from bot.core.i18n import t
 from bot.core.assets import get_locale_image_path
-from bot.core.image_cache import get_cached_image
+from bot.core.image_cache import get_cached_image, get_cached_file_id, set_cached_file_id
 
 logger = logging.getLogger(__name__)
 
 
-def get_screen_image(locale: str, screen_key: str) -> BufferedInputFile | FSInputFile:
+def get_screen_image(locale: str, screen_key: str) -> BufferedInputFile | FSInputFile | str:
     """
-    Get image for a screen - uses cache if available, otherwise falls back to file path.
-    Returns BufferedInputFile (from cache) or FSInputFile (from disk).
+    Get image for a screen - uses file_id if available, then cache, then disk.
+    Returns string (file_id), BufferedInputFile (from cache) or FSInputFile (from disk).
     """
     filename = t(locale, f"screens.{screen_key}.image")
     
-    # Try to get from cache first
+    # 1. Try file_id cache first (fastest)
+    file_id = get_cached_file_id(locale, filename)
+    if file_id:
+        return file_id
+    
+    # 2. Try to get from bytes cache
     cached = get_cached_image(locale, filename)
     if cached:
         return BufferedInputFile(cached.read(), filename=filename)
     
-    # Fallback to file path if not in cache
+    # 3. Fallback to file path if not in cache
     filepath = get_locale_image_path(locale, filename)
     return FSInputFile(filepath)
+
+
+def _extract_file_id(message: Message) -> Optional[str]:
+    """Extract file_id from message with photo."""
+    if message and message.photo:
+        # Get highest resolution photo file_id
+        return message.photo[-1].file_id
+    return None
+
+
+def _update_image_cache_from_message(locale: str, screen_key: str, message: Message):
+    """If message has photo, cache its file_id for the given screen."""
+    if not locale or not screen_key:
+        return
+        
+    file_id = _extract_file_id(message)
+    if file_id:
+        filename = t(locale, f"screens.{screen_key}.image")
+        set_cached_file_id(locale, filename, file_id)
 
 
 async def remove_inline_keyboard(bot, chat_id: int, message_id: int) -> bool:
@@ -82,7 +106,7 @@ async def _edit_callback_message(
     text: str,
     reply_markup: Optional[InlineKeyboardMarkup],
     parse_mode: Optional[str],
-    photo_input: Optional[BufferedInputFile | FSInputFile] = None,
+    photo_input: Optional[BufferedInputFile | FSInputFile | str] = None,
 ) -> Optional[Message]:
     """
     Edit callback message. Returns new Message if photo was sent, None if edited in place.
@@ -94,13 +118,13 @@ async def _edit_callback_message(
         if photo_input:
             # Need to change photo - use edit_message_media to replace photo without deleting
             media = InputMediaPhoto(media=photo_input, caption=text if text else None, parse_mode=parse_mode)
-            await callback.bot.edit_message_media(
+            res = await callback.bot.edit_message_media(
                 chat_id=callback.message.chat.id,
                 message_id=callback.message.message_id,
                 media=media,
                 reply_markup=reply_markup,
             )
-            return None
+            return res if isinstance(res, Message) else None
         else:
             # Just edit caption
             await callback.message.edit_caption(
@@ -144,7 +168,7 @@ async def _delete_and_send_new_from_callback(
     text: str,
     reply_markup: Optional[InlineKeyboardMarkup],
     parse_mode: Optional[str],
-    photo_input: Optional[BufferedInputFile | FSInputFile] = None,
+    photo_input: Optional[BufferedInputFile | FSInputFile | str] = None,
 ) -> Message:
     """
     Send new message first, then delete old one.
@@ -180,7 +204,7 @@ async def safe_edit_message(
     parse_mode: Optional[str] = "HTML",
     locale: Optional[str] = None,
     screen_key: Optional[str] = None,
-    photo_input: Optional[BufferedInputFile | FSInputFile] = None,
+    photo_input: Optional[BufferedInputFile | FSInputFile | str] = None,
 ) -> bool:
     """
     Safely edit message. If editing fails (e.g., different content types),
@@ -212,6 +236,7 @@ async def safe_edit_message(
             msg for msg in pending if msg != (chat_id, message_id)
         ]
         new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
+        _update_image_cache_from_message(locale, screen_key, new_message)
         await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
         return False
     
@@ -226,18 +251,24 @@ async def safe_edit_message(
         new_message = await _edit_callback_message(callback, text, reply_markup, parse_mode, photo_input)
         # If photo was sent, new_message contains the new message, otherwise use original
         if new_message:
+            # Update cache if it was a system screen
+            _update_image_cache_from_message(locale, screen_key, new_message)
             # New message was sent (photo was added), so delete old system message
             if old_system and not (old_chat_id == new_message.chat.id and old_message_id == new_message.message_id):
                 await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
             await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
         else:
             # Message was edited in place - update tracking
+            # If it's a photo message, we should try to update cache (though file_id won't change)
+            if callback.message.photo:
+                _update_image_cache_from_message(locale, screen_key, callback.message)
+                
             # If old system message is different from the one being edited, delete it
             if old_system and not (old_chat_id == chat_id and old_message_id == message_id):
                 await temporary_messages_middleware.delete_system_message(bot, old_chat_id, old_message_id)
             await _after_system_action(bot, user_id, chat_id, callback.message.message_id)
         return True
-    except TelegramBadRequest as e:
+    except Exception as e:
         error_msg = str(e).lower()
         
         # If message is not modified, just leave it as is
@@ -246,22 +277,13 @@ async def safe_edit_message(
             await temporary_messages_middleware.flush_pending_user_messages(bot, user_id)
             return True
         
-        # If message was deleted (not found), send new message
-        if "message to edit not found" in error_msg or "message not found" in error_msg:
-            # Message was already deleted, send new one
-            old_message_id = callback.message.message_id
-            new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
-            await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
-            return False
-        
-        # If editing fails for other reasons (e.g., different content type),
-        # send new message first, then delete old one (handled in _delete_and_send_new_from_callback)
+        # If message was deleted (not found), or any other error (including timeout)
+        # send new message first, then delete old one
         old_message_id = callback.message.message_id
         new_message = await _delete_and_send_new_from_callback(callback, text, reply_markup, parse_mode, photo_input)
+        _update_image_cache_from_message(locale, screen_key, new_message)
 
         await _after_system_action(bot, user_id, new_message.chat.id, new_message.message_id)
-
-        # Old message deletion is already handled in _delete_and_send_new_from_callback
         return False
 
 
@@ -293,7 +315,7 @@ async def safe_edit_or_send(
         # It's a Message, send new system message with photo if needed
         photo_input = None
         if locale and screen_key:
-            photo_input = _get_screen_image(locale, screen_key)
+            photo_input = get_screen_image(locale, screen_key)
         
         if photo_input:
             new_message = await message_or_callback.answer_photo(
@@ -302,6 +324,7 @@ async def safe_edit_or_send(
                 reply_markup=reply_markup,
                 parse_mode=parse_mode,
             )
+            _update_image_cache_from_message(locale, screen_key, new_message)
         else:
             new_message = await message_or_callback.answer(
                 text=text,

@@ -17,6 +17,7 @@ import api from '../../services/api'
 import { Ticket, TicketCreate, TicketUpdate, Event, TicketType, User } from '../../types'
 import TextField from '../../components/forms/TextField'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useTranslation } from 'react-i18next'
 
 interface TicketFormProps {
   open?: boolean
@@ -26,6 +27,8 @@ interface TicketFormProps {
 }
 
 const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: TicketFormProps) => {
+  const { t } = useTranslation('tickets')
+  const { t: tCommon } = useTranslation('common')
   const { hasPermission } = usePermissions()
   const [loading, setLoading] = useState(false)
   const [events, setEvents] = useState<Event[]>([])
@@ -192,7 +195,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
           updateData.event_id = eventId
         } else {
           console.error('Cannot update ticket: event_id is missing')
-          alert('Cannot update ticket: Event is required')
+          alert(t('messages.updateErrorEventMissing'))
           setLoading(false)
           return
         }
@@ -203,7 +206,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
           updateData.ticket_type_id = ticketTypeId
         } else {
           console.error('Cannot update ticket: ticket_type_id is missing')
-          alert('Cannot update ticket: Ticket Type is required')
+          alert(t('messages.updateErrorTicketTypeMissing'))
           setLoading(false)
           return
         }
@@ -214,7 +217,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
           updateData.user_id = userId
         } else {
           console.error('Cannot update ticket: user_id is missing')
-          alert('Cannot update ticket: User is required')
+          alert(t('messages.updateErrorUserMissing'))
           setLoading(false)
           return
         }
@@ -231,7 +234,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
       } else {
         // Create mode - validate required fields
         if (!selectedEvent || !selectedTicketType || !selectedUser) {
-          alert('Please fill in all required fields: Event, Ticket Type, and User')
+          alert(t('messages.fillRequiredFields'))
           setLoading(false)
           return
         }
@@ -247,7 +250,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
       onClose()
     } catch (error: any) {
       console.error('Failed to save ticket:', error)
-      const errorMessage = error.response?.data?.detail || error.message || 'Failed to save ticket'
+      const errorMessage = error.response?.data?.detail || error.message || t('messages.saveError')
       alert(errorMessage)
     } finally {
       setLoading(false)
@@ -264,12 +267,12 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
     if (user.username) return `@${user.username}`
     const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim()
     if (fullName) return fullName
-    return `ID: ${user.telegram_user_id}`
+    return `${tCommon('fields.id')}: ${user.telegram_user_id}`
   }
 
   const content = (
     <form onSubmit={handleSubmit(onSubmit)}>
-      {!embedded && <DialogTitle>{isEditMode ? 'Edit Ticket' : 'Create Ticket'}</DialogTitle>}
+      {!embedded && <DialogTitle>{isEditMode ? t('actions.edit') : t('actions.create')}</DialogTitle>}
       <DialogContent sx={{ px: embedded ? 0 : 2.98 }}>
           {/* Event selection - show in both create and edit modes */}
           <Autocomplete
@@ -294,7 +297,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             renderInput={(params) => (
               <MuiTextField
                 {...params}
-                label="Event"
+                label={t('fields.event')}
                 error={!!(errors as any).event_id}
                 helperText={(errors as any).event_id?.message}
                 required={!isEditMode}
@@ -322,7 +325,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
               renderInput={(params) => (
                 <MuiTextField
                   {...params}
-                  label="Ticket Type"
+                  label={t('fields.ticketType')}
                   error={!!(errors as any).ticket_type_id}
                   helperText={(errors as any).ticket_type_id?.message}
                   required={!isEditMode}
@@ -350,7 +353,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             renderInput={(params) => (
               <MuiTextField
                 {...params}
-                label="User"
+                label={t('fields.user')}
                 error={!!(errors as any).user_id}
                 helperText={(errors as any).user_id?.message}
                 required={!isEditMode}
@@ -364,11 +367,11 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             <Controller
               name={"token" as any}
               control={control}
-              rules={{ required: !isEditMode ? 'Token is required' : false }}
+              rules={{ required: !isEditMode ? t('validation.tokenRequired') : false }}
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Token"
+                  label={t('fields.token')}
                   error={!!(errors as any).token}
                   helperText={(errors as any).token?.message}
                   required={!isEditMode}
@@ -380,7 +383,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             />
             <IconButton
               onClick={generateToken}
-              title="Generate Token"
+              title={t('actions.generateToken')}
               sx={{ alignSelf: 'center' }}
               disabled={!hasPermission('tickets', 'write')}
             >
@@ -393,47 +396,48 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
           <Controller
             name="status"
             control={control}
-            rules={{ required: 'Status is required' }}
+            rules={{ required: t('validation.statusRequired') }}
             render={({ field }) => (
               <TextField
                 {...field}
                 select
-                label="Status"
+                label={tCommon('fields.status')}
                 error={!!errors.status}
                 helperText={errors.status?.message}
                 sx={{ mt: 2 }}
                 disabled={!hasPermission('tickets', 'write')}
               >
-                <MenuItem value="active">Active</MenuItem>
-                <MenuItem value="refunded">Refunded</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
-                <MenuItem value="expired">Expired</MenuItem>
-                <MenuItem value="used">Used</MenuItem>
+                <MenuItem value="active">{tCommon('status.active')}</MenuItem>
+                <MenuItem value="refunded">{tCommon('status.refunded')}</MenuItem>
+                <MenuItem value="cancelled">{tCommon('status.cancelled')}</MenuItem>
+                <MenuItem value="expired">{tCommon('status.expired')}</MenuItem>
+                <MenuItem value="used">{tCommon('status.used')}</MenuItem>
               </TextField>
             )}
           />
         </DialogContent>
         {!embedded && (
           <DialogActions sx={{ px: 2.98 }}>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose}>{tCommon('actions.cancel')}</Button>
             {hasPermission('tickets', 'write') && (
               <Button type="submit" variant="contained" disabled={loading}>
-                {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+                {loading ? tCommon('actions.saving') : isEditMode ? tCommon('actions.save') : tCommon('actions.create')}
               </Button>
             )}
           </DialogActions>
         )}
         {embedded && (
           <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 2, px: 0 }}>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose}>{tCommon('actions.cancel')}</Button>
             {hasPermission('tickets', 'write') && (
               <Button type="submit" variant="contained" disabled={loading}>
-                {loading ? 'Saving...' : isEditMode ? 'Save' : 'Create'}
+                {loading ? tCommon('actions.saving') : isEditMode ? tCommon('actions.save') : tCommon('actions.create')}
               </Button>
             )}
           </Box>
         )}
       </form>
+    )
     )
 
   if (embedded) {

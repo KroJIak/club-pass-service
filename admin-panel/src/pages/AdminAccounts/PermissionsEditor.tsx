@@ -12,6 +12,7 @@ import {
   Typography,
   Divider,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import api from '../../services/api'
 import { AdminGroup, AdminPermission, AdminPermissionItem, AdminPermissionUpdateRequest } from '../../types'
 
@@ -35,6 +36,8 @@ const RESOURCES: Array<{ key: string; label: string }> = [
 ]
 
 const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorProps) => {
+  const { t } = useTranslation('staff')
+  const { t: tCommon } = useTranslation('common')
   const [permissions, setPermissions] = useState<Record<string, AdminPermissionItem>>({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +79,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
       
       setPermissions(permsMap)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load permissions')
+      setError(err.response?.data?.detail || t('messages.fetchFailed'))
     }
   }
 
@@ -116,7 +119,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
       onSave()
       onClose()
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to save permissions')
+      setError(err.response?.data?.detail || tCommon('messages.saveError'))
     } finally {
       setLoading(false)
     }
@@ -124,7 +127,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Edit Permissions: {group.name}</DialogTitle>
+      <DialogTitle>{t('fields.permissions')}: {group.name}</DialogTitle>
       <DialogContent>
         {error && (
           <Box sx={{ color: 'error.main', mb: 2, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
@@ -140,7 +143,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
             return (
               <Box key={resource.key} sx={{ mb: 3 }}>
                 <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 'bold' }}>
-                  {resource.label}
+                  {t(`permissions.resources.${resource.key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())}`)}
                 </Typography>
                 <FormGroup>
                   <FormControlLabel
@@ -150,7 +153,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
                         onChange={(e) => handlePermissionChange(resource.key, 'can_read', e.target.checked)}
                       />
                     }
-                    label="Read"
+                    label={t('permissions.read')}
                   />
                   <FormControlLabel
                     control={
@@ -160,7 +163,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
                         disabled={!perm.can_read}
                       />
                     }
-                    label="Write"
+                    label={t('permissions.write')}
                   />
                   <FormControlLabel
                     control={
@@ -170,7 +173,7 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
                         disabled={!perm.can_read}
                       />
                     }
-                    label="Delete"
+                    label={t('permissions.delete')}
                   />
                 </FormGroup>
                 <Divider sx={{ mt: 2 }} />
@@ -181,10 +184,10 @@ const PermissionsEditor = ({ open, onClose, group, onSave }: PermissionsEditorPr
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={loading}>
-          Cancel
+          {tCommon('actions.cancel')}
         </Button>
         <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          Save Permissions
+          {tCommon('actions.save')}
         </Button>
       </DialogActions>
     </Dialog>

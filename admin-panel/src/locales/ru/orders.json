@@ -1,6 +1,7 @@
 {
   "title": "Заказы",
   "orderDetails": "Детали заказа",
+  "deleteSelected": "Удалить выбранные",
   "fields": {
     "orderId": "ID заказа",
     "user": "Пользователь",
@@ -12,9 +13,15 @@
     "paymentMethod": "Метод оплаты",
     "createdAt": "Создан"
   },
+  "messages": {
+    "deleteConfirm": "Вы уверены, что хотите удалить этот заказ?",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить {{count}} заказов? Это действие нельзя отменить.",
+    "fetchFailed": "Не удалось загрузить заказы"
+  },
   "payments": {
     "title": "Платежи",
     "paymentId": "ID платежа",
+    "paymentNumber": "Платеж №{{id}}",
     "amount": "Сумма",
     "status": "Статус",
     "paidAt": "Оплачен"

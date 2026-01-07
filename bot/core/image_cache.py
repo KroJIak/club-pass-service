@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 # Cache: {locale: {filename: bytes}}
 _image_cache: Dict[str, Dict[str, bytes]] = {}
 
+# Cache: {locale: {filename: file_id}}
+_file_id_cache: Dict[str, Dict[str, str]] = {}
+
 
 def _load_image_bytes(filepath: str) -> bytes:
     """Load image file into memory as bytes."""
@@ -89,15 +92,32 @@ def get_cached_image(locale: str, filename: str) -> Optional[BytesIO]:
     Returns None if image not found in cache.
     """
     if locale not in _image_cache:
-        logger.warning(f"Locale {locale} not in cache")
         return None
     
     if filename not in _image_cache[locale]:
-        logger.warning(f"Image {locale}/{filename} not in cache")
         return None
     
     # Return BytesIO wrapper around cached bytes
     return BytesIO(_image_cache[locale][filename])
+
+
+def get_cached_file_id(locale: str, filename: str) -> Optional[str]:
+    """
+    Get cached file_id for an image.
+    """
+    return _file_id_cache.get(locale, {}).get(filename)
+
+
+def set_cached_file_id(locale: str, filename: str, file_id: str) -> None:
+    """
+    Set cached file_id for an image.
+    """
+    if locale not in _file_id_cache:
+        _file_id_cache[locale] = {}
+    
+    if _file_id_cache[locale].get(filename) != file_id:
+        _file_id_cache[locale][filename] = file_id
+        logger.debug(f"Cached file_id for {locale}/{filename}: {file_id}")
 
 
 def clear_cache() -> None:

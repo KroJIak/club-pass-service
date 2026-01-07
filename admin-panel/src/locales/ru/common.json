@@ -31,7 +31,9 @@
     "import": "Импорт",
     "copy": "Копировать",
     "view": "Просмотр",
-    "generate": "Сгенерировать"
+    "generate": "Сгенерировать",
+    "show": "Показать",
+    "hide": "Скрыть"
   },
   "status": {
     "active": "Активный",
@@ -72,7 +74,8 @@
     "notes": "Примечания",
     "username": "Имя пользователя",
     "password": "Пароль",
-    "confirmPassword": "Подтвердите пароль"
+    "confirmPassword": "Подтвердите пароль",
+    "notApplicable": "Н/Д"
   },
   "messages": {
     "confirmDelete": "Вы уверены, что хотите удалить этот элемент?",

@@ -1,7 +1,28 @@
 {
   "title": "Тикеты",
+  "ticketNumber": "Тикет №{{id}}",
+  "allEvents": "Все события",
+  "allTicketTypes": "Все типы тикетов",
+  "event": "Событие",
+  "token": "Токен",
   "createTicket": "Создать тикет",
   "editTicket": "Редактировать тикет",
+  "deleteTicketTitle": "Удалить тикет",
+  "deleteTicketMessage": "Вы уверены, что хотите удалить этот тикет? Это действие нельзя отменить.",
+  "confirmDeleteSelected": "Вы уверены, что хотите удалить {{count}} тикетов?",
+  "deleteFailed": "Не удалось удалить тикет(ы)",
+  "actions": {
+    "create": "Создать",
+    "edit": "Редактировать",
+    "delete": "Удалить"
+  },
+  "status": {
+    "active": "Активен",
+    "used": "Использован",
+    "refunded": "Возвращен",
+    "expired": "Истек",
+    "cancelled": "Отменен"
+  },
   "fields": {
     "token": "Токен",
     "user": "Пользователь",
@@ -16,7 +37,10 @@
     "createSuccess": "Тикет успешно создан",
     "updateSuccess": "Тикет успешно обновлен",
     "deleteSuccess": "Тикет успешно удален",
-    "markUsedSuccess": "Тикет отмечен как использованный"
+    "markUsedSuccess": "Тикет отмечен как использованный",
+    "deleteConfirm": "Вы уверены, что хотите удалить этот тикет?",
+    "deleteSelectedConfirm": "Вы уверены, что хотите удалить {{count}} тикетов? Это действие нельзя отменить.",
+    "markUsedConfirm": "Отметить тикет как использованный?"
   }
 }
 

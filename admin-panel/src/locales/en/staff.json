@@ -41,7 +41,9 @@
     "updateSuccess": "Account updated successfully",
     "deleteSuccess": "Account deleted successfully",
     "generatePassword": "Generate random password",
-    "passwordCopied": "Password copied to clipboard"
+    "passwordCopied": "Password copied to clipboard",
+    "deleteConfirm": "Are you sure? This action cannot be undone.",
+    "fetchFailed": "Failed to fetch staff data"
   }
 }
 
