@@ -14,6 +14,7 @@ import Staff from './pages/Staff/Staff'
 import MusicManagement from './pages/Music/MusicManagement'
 import { useAuth } from './hooks/useAuth'
 import { FilterPanelProvider } from './hooks/useFilterPanel'
+import './i18n' // Initialize i18next
 
 const theme = createTheme({
   palette: {

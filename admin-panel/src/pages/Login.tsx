@@ -10,6 +10,7 @@ import {
   Alert,
 } from '@mui/material'
 import { useAuth } from '../hooks/useAuth'
+import { useTranslation } from 'react-i18next'
 
 const Login = () => {
   const [username, setUsername] = useState('')
@@ -18,6 +19,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const { login, isLoading } = useAuth()
   const navigate = useNavigate()
+  const { t } = useTranslation('auth')
 
   // Redirect if already authenticated (only check once on mount)
   useEffect(() => {
@@ -81,10 +83,10 @@ const Login = () => {
             />
           </Box>
           <Typography variant="h4" component="h1" gutterBottom align="center">
-            Admin Login
+            {t('login.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
-            FLAME Admin Panel
+            {t('login.subtitle')}
           </Typography>
 
           {error && (
@@ -96,7 +98,7 @@ const Login = () => {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Username"
+              label={t('login.username')}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               margin="normal"
@@ -105,7 +107,7 @@ const Login = () => {
             />
             <TextField
               fullWidth
-              label="Password"
+              label={t('login.password')}
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -119,7 +121,7 @@ const Login = () => {
               sx={{ mt: 3, mb: 2 }}
               disabled={loading}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? t('login.loggingIn') : t('login.loginButton')}
             </Button>
           </form>
         </Paper>

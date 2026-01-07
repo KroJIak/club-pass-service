@@ -20,30 +20,32 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom'
 import { usePermissions } from '../../hooks/usePermissions'
 import { ResourceName } from '../../types'
+import { useTranslation } from 'react-i18next'
 
 interface MenuItem {
-  text: string
+  textKey: string
   icon: JSX.Element
   path: string
   resource: ResourceName
 }
 
 const allMenuItems: MenuItem[] = [
-  { text: 'QR Scanner', icon: <QrCodeIcon />, path: '/qr-scanner', resource: 'qr_scanner' },
-  { text: 'Events', icon: <EventIcon />, path: '/events', resource: 'events' },
-  { text: 'Users', icon: <UsersIcon />, path: '/users', resource: 'users' },
-  { text: 'Tickets', icon: <TicketIcon />, path: '/tickets', resource: 'tickets' },
-  { text: 'Music', icon: <MusicIcon />, path: '/music', resource: 'music' },
-  { text: 'Support', icon: <SupportIcon />, path: '/support', resource: 'support' },
-  { text: 'Orders', icon: <OrderIcon />, path: '/orders', resource: 'orders' },
-  { text: 'Staff', icon: <StaffIcon />, path: '/staff', resource: 'staff' },
-  { text: 'Club Settings', icon: <BusinessIcon />, path: '/club-settings', resource: 'club_settings' },
+  { textKey: 'menu.qrScanner', icon: <QrCodeIcon />, path: '/qr-scanner', resource: 'qr_scanner' },
+  { textKey: 'menu.events', icon: <EventIcon />, path: '/events', resource: 'events' },
+  { textKey: 'menu.users', icon: <UsersIcon />, path: '/users', resource: 'users' },
+  { textKey: 'menu.tickets', icon: <TicketIcon />, path: '/tickets', resource: 'tickets' },
+  { textKey: 'menu.music', icon: <MusicIcon />, path: '/music', resource: 'music' },
+  { textKey: 'menu.support', icon: <SupportIcon />, path: '/support', resource: 'support' },
+  { textKey: 'menu.orders', icon: <OrderIcon />, path: '/orders', resource: 'orders' },
+  { textKey: 'menu.staff', icon: <StaffIcon />, path: '/staff', resource: 'staff' },
+  { textKey: 'menu.clubSettings', icon: <BusinessIcon />, path: '/club-settings', resource: 'club_settings' },
 ]
 
 const Sidebar = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { canAccessResource } = usePermissions()
+  const { t } = useTranslation('navigation')
   
   // Filter menu items based on permissions
   const menuItems = allMenuItems.filter(item => canAccessResource(item.resource))
@@ -77,7 +79,7 @@ const Sidebar = () => {
             >
               <ListItemIcon sx={{ justifyContent: 'center' }}>{item.icon}</ListItemIcon>
               <ListItemText 
-                primary={item.text} 
+                primary={t(item.textKey)} 
                 primaryTypographyProps={{ 
                   variant: 'caption',
                   sx: { textAlign: 'center', fontSize: '0.7rem' }
