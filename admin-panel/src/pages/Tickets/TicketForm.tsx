@@ -334,6 +334,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
             options={users}
             getOptionLabel={getUserLabel}
             loading={loadingUsers}
+            disabled={!hasPermission('tickets', 'write')}
             value={selectedUser}
             onChange={(_, newValue) => {
               setSelectedUser(newValue)
@@ -369,6 +370,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
                   helperText={(errors as any).token?.message}
                   required={!isEditMode}
                   fullWidth
+                  disabled={!hasPermission('tickets', 'write')}
                 />
               )}
             />
@@ -395,6 +397,7 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
                 error={!!errors.status}
                 helperText={errors.status?.message}
                 sx={{ mt: 2 }}
+                disabled={!hasPermission('tickets', 'write')}
               >
                 <MenuItem value="active">Active</MenuItem>
                 <MenuItem value="refunded">Refunded</MenuItem>

@@ -161,7 +161,7 @@ const TicketTypeForm = ({
                 getOptionLabel={(option) => option.name}
                 value={events.find(e => e.id === field.value) || null}
                 onChange={(_, value) => field.onChange(value?.id || null)}
-                disabled={!!ticketType}
+                disabled={!!ticketType || !hasPermission('tickets', 'write')}
                 renderInput={(params) => (
                   <MuiTextField
                     {...params}
@@ -182,6 +182,7 @@ const TicketTypeForm = ({
           {...register('name', { required: 'Name is required' })}
           error={!!errors.name}
           helperText={errors.name?.message}
+          disabled={!hasPermission('tickets', 'write')}
         />
         <Controller
           name="price"
@@ -195,6 +196,7 @@ const TicketTypeForm = ({
               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
               error={!!errors.price}
               helperText={errors.price?.message}
+              disabled={!hasPermission('tickets', 'write')}
             />
           )}
         />
@@ -210,6 +212,7 @@ const TicketTypeForm = ({
               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
               error={!!errors.available_quantity}
               helperText={errors.available_quantity?.message}
+              disabled={!hasPermission('tickets', 'write')}
             />
           )}
         />
@@ -225,6 +228,7 @@ const TicketTypeForm = ({
               onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
               error={!!errors.total_quantity}
               helperText={errors.total_quantity?.message}
+              disabled={!hasPermission('tickets', 'write')}
             />
           )}
         />
@@ -236,6 +240,7 @@ const TicketTypeForm = ({
               label="Active"
               {...field}
               value={field.value ?? true}
+              disabled={!hasPermission('tickets', 'write')}
             />
           )}
         />
