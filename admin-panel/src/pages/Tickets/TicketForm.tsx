@@ -438,7 +438,6 @@ const TicketForm = ({ open = true, ticket, onClose,   embedded = false }: Ticket
         )}
       </form>
     )
-    )
 
   if (embedded) {
     return content

@@ -383,8 +383,6 @@ const QRScanner = () => {
       )}
     </Box>
   )
-    </Box>
-  )
 }
 
 export default QRScanner

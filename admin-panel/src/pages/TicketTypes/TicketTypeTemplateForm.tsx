@@ -146,7 +146,6 @@ const TicketTypeTemplateForm = ({
       </form>
     </Dialog>
   )
-  )
 }
 
 export default TicketTypeTemplateForm
