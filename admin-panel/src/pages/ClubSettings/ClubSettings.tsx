@@ -48,7 +48,6 @@ interface SortableMenuPhotoProps {
 }
 
 const SortableMenuPhoto = ({ photo, onDelete }: SortableMenuPhotoProps) => {
-  const { t } = useTranslation('common')
   const {
     attributes,
     listeners,
