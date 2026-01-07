@@ -9,7 +9,6 @@ const Staff = () => {
   const { isSuperAdmin, isLoading } = usePermissions()
 
   const showAdminAccountsTab = isSuperAdmin
-  const staffTabIndex = showAdminAccountsTab ? 1 : 0
 
   useEffect(() => {
     // If the user is not superadmin, ensure we never stay on the Admin Accounts tab.
