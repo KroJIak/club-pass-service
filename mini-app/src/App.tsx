@@ -6,8 +6,6 @@ import CssBaseline from '@mui/material/CssBaseline'
 import { useTelegramWebApp } from './hooks/useTelegramWebApp'
 import { checkStaffAccess } from './services/api'
 import ScannerPage from './pages/ScannerPage'
-import ListsPage from './pages/ListsPage'
-import BottomNav from './components/BottomNavigation'
 
 const theme = createTheme({
   palette: {
@@ -27,7 +25,6 @@ const theme = createTheme({
 
 function App() {
   const { userId, webApp, user, initData } = useTelegramWebApp()
-  const [tabValue, setTabValue] = useState(0)
   const [loading, setLoading] = useState(true)
   const [hasAccess, setHasAccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -202,9 +199,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ height: '100vh', overflow: 'hidden', position: 'relative' }}>
-        {tabValue === 0 ? <ScannerPage /> : <ListsPage />}
+        <ScannerPage />
       </Box>
-      <BottomNav value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} />
     </ThemeProvider>
   )
 }
