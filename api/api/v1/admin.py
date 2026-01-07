@@ -80,6 +80,7 @@ from api.api.v1.schemas import (
     AdminAccountUpdate,
     AdminAccountResponse,
     AdminAccountListResponse,
+    LanguageUpdateRequest,
     AdminPermissionItem,
     AdminPermissionUpdateRequest,
     AdminPermissionResponse,
@@ -3004,7 +3005,8 @@ async def update_admin_account(
         account_data.group_id,
         account_data.username,
         password_hash,
-        account_data.is_active
+        account_data.is_active,
+        account_data.language
     )
     
     if not account:
@@ -3014,6 +3016,41 @@ async def update_admin_account(
         )
     
     return AdminAccountResponse.model_validate(account)
+
+
+@router.put("/admin/accounts/me/language")
+async def update_my_language(
+    language_data: LanguageUpdateRequest,
+    db: Session = Depends(get_db),
+    current_admin: dict = Depends(get_current_admin),
+):
+    """Update current admin's language preference."""
+    # Validate language
+    if language_data.language not in ['ru', 'en']:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid language. Must be 'ru' or 'en'"
+        )
+    
+    # Superadmin cannot change language (not stored in DB)
+    if current_admin.get("is_superadmin"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Superadmin language cannot be changed"
+        )
+    
+    # Get current account
+    account = AdminAccountRepository.get_by_username(db, current_admin.get("sub"))
+    if not account:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account not found"
+        )
+    
+    # Update language
+    AdminAccountRepository.update(db, account.id, language=language_data.language)
+    
+    return {"message": "Language updated successfully", "language": language_data.language}
 
 
 @router.delete("/admin/accounts/{account_id}", status_code=status.HTTP_200_OK)

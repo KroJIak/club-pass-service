@@ -32,6 +32,7 @@ class AdminInfo(BaseModel):
     username: str
     is_superadmin: bool
     group_id: Optional[int] = None
+    language: str = 'ru'
     permissions: Optional[Dict[str, Dict[str, bool]]] = None
 
 
@@ -116,12 +117,21 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/admin/me", response_model=AdminInfo)
-async def get_current_admin_info(current_admin: dict = Depends(get_current_admin)):
+async def get_current_admin_info(current_admin: dict = Depends(get_current_admin), db: Session = Depends(get_db)):
     """Get current admin information with permissions."""
+    language = 'ru'  # Default language
+    
+    # Get language from database if not superadmin
+    if not current_admin.get("is_superadmin", False):
+        account = AdminAccountRepository.get_by_username(db, current_admin.get("sub"))
+        if account:
+            language = account.language
+    
     return AdminInfo(
         username=current_admin.get("sub"),
         is_superadmin=current_admin.get("is_superadmin", False),
         group_id=current_admin.get("group_id"),
+        language=language,
         permissions=current_admin.get("permissions")
     )
 

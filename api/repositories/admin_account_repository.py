@@ -54,7 +54,7 @@ class AdminAccountRepository:
     
     @staticmethod
     def update(db: Session, account_id: int, group_id: Optional[int] = None, username: Optional[str] = None, 
-               password_hash: Optional[str] = None, is_active: Optional[bool] = None) -> Optional[AdminAccount]:
+               password_hash: Optional[str] = None, is_active: Optional[bool] = None, language: Optional[str] = None) -> Optional[AdminAccount]:
         """Update account."""
         account = AdminAccountRepository.get_by_id(db, account_id)
         if not account:
@@ -68,6 +68,8 @@ class AdminAccountRepository:
             account.password_hash = password_hash
         if is_active is not None:
             account.is_active = is_active
+        if language is not None:
+            account.language = language
         
         db.commit()
         db.refresh(account)

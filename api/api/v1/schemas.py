@@ -583,6 +583,7 @@ class AdminAccountUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    language: Optional[str] = None
 
 
 class AdminAccountResponse(BaseModel):
@@ -591,6 +592,7 @@ class AdminAccountResponse(BaseModel):
     group_id: int
     username: str
     is_active: bool
+    language: str
     created_at: datetime
     updated_at: datetime
 
@@ -601,6 +603,11 @@ class AdminAccountResponse(BaseModel):
 class AdminAccountListResponse(BaseModel):
     """Schema for list of admin accounts."""
     accounts: List[AdminAccountResponse]
+
+
+class LanguageUpdateRequest(BaseModel):
+    """Schema for updating language preference."""
+    language: str
 
 
 # Admin Permission schemas
