@@ -44,6 +44,7 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
     logger.debug(f"initData length: {len(init_data)}")
     logger.debug(f"initData preview: {init_data[:100]}...")
     
+    # Try with STAFF_BOT_TOKEN first
     try:
         validated_data = validate_telegram_init_data(init_data, settings.STAFF_BOT_TOKEN)
         user = validated_data.get('user')
@@ -58,7 +59,26 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
     except HTTPException:
         raise
     except ValueError as e:
-        logger.warning(f"InitData validation failed: {e}")
+        logger.warning(f"InitData validation failed with STAFF_BOT_TOKEN: {e}")
+        
+        # Try with main bot token as fallback
+        if settings.TELEGRAM_BOT_TOKEN:
+            logger.debug(f"Trying with main bot token...")
+            try:
+                validated_data = validate_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
+                user = validated_data.get('user')
+                
+                if not user or 'id' not in user:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="User data not found in initData"
+                    )
+                
+                logger.info(f"InitData validated successfully with main bot token")
+                return int(user['id'])
+            except (ValueError, HTTPException) as e2:
+                logger.warning(f"InitData validation also failed with main bot token: {e2}")
+        
         logger.debug(f"Full initData: {init_data}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
