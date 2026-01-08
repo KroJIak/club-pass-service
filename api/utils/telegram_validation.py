@@ -51,11 +51,7 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     
     received_hash = params_raw.pop('hash')
     params_decoded.pop('hash', None)
-    
-    # Remove 'signature' parameter - it's a separate signature and should not be included in hash validation
-    # According to Telegram docs, only hash should be validated, signature is for additional verification
-    params_raw.pop('signature', None)
-    params_decoded.pop('signature', None)
+    # Note: 'signature' parameter should REMAIN in params for hash validation!
     logger.debug(f"Received hash: {received_hash[:20]}...")
     
     # Sort parameters and create data_check_string with ORIGINAL URL-encoded values
