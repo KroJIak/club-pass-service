@@ -39,11 +39,6 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
             detail="Server configuration error: STAFF_BOT_TOKEN not set"
         )
     
-    logger.debug(f"STAFF_BOT_TOKEN length: {len(settings.STAFF_BOT_TOKEN)}")
-    logger.debug(f"STAFF_BOT_TOKEN prefix: {settings.STAFF_BOT_TOKEN[:10]}...")
-    logger.debug(f"initData length: {len(init_data)}")
-    logger.debug(f"initData preview: {init_data[:100]}...")
-    
     try:
         validated_data = validate_telegram_init_data(init_data, settings.STAFF_BOT_TOKEN)
         user = validated_data.get('user')
@@ -59,7 +54,6 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
         raise
     except ValueError as e:
         logger.warning(f"InitData validation failed: {e}")
-        logger.debug(f"Full initData: {init_data}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid initData signature: {str(e)}"
