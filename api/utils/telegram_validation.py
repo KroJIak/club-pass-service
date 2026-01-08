@@ -60,18 +60,25 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     
     # Sort parameters and create data_check_string with ORIGINAL URL-encoded values
     # Format: "auth_date=1234567890\nquery_id=abc\nuser=%7B%22id%22%3A123%7D"
-    sorted_params = sorted(params_raw.items())
+    # Important: Sort by KEY name, not by value!
+    sorted_params = sorted(params_raw.items(), key=lambda x: x[0])
     data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted_params])
     
+    logger.debug(f"Sorted params: {[k for k, v in sorted_params]}")
     logger.debug(f"Data check string (first 200 chars): {data_check_string[:200]}")
+    logger.debug(f"Data check string (full): {data_check_string}")
     logger.debug(f"Bot token (first 10 chars): {bot_token[:10]}...")
+    logger.debug(f"Bot token (full length): {len(bot_token)}")
     
     # Create secret key: HMAC-SHA256('WebAppData', bot_token)
+    # Note: 'WebAppData' is the key, bot_token is the message
     secret_key = hmac.new(
         'WebAppData'.encode('utf-8'),
         bot_token.encode('utf-8'),
         hashlib.sha256
     ).digest()
+    
+    logger.debug(f"Secret key (hex): {secret_key.hex()[:40]}...")
     
     # Calculate signature: HMAC-SHA256(secret_key, data_check_string)
     calculated_hash = hmac.new(
@@ -79,6 +86,9 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
         data_check_string.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()
+    
+    logger.debug(f"Calculated hash: {calculated_hash}")
+    logger.debug(f"Received hash: {received_hash}")
     
     # Compare hashes
     if calculated_hash != received_hash:
