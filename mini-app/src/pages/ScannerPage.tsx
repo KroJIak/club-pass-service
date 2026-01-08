@@ -36,7 +36,7 @@ interface Ticket {
 }
 
 const ScannerPage = () => {
-  const { userId, initData } = useTelegramWebApp()
+  const { initData } = useTelegramWebApp()
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
