@@ -63,7 +63,7 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
         
         # Try with main bot token as fallback
         if settings.TELEGRAM_BOT_TOKEN:
-            logger.debug(f"Trying with main bot token...")
+            logger.debug(f"Trying with main bot token (length: {len(settings.TELEGRAM_BOT_TOKEN)})...")
             try:
                 validated_data = validate_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
                 user = validated_data.get('user')
@@ -78,6 +78,8 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
                 return int(user['id'])
             except (ValueError, HTTPException) as e2:
                 logger.warning(f"InitData validation also failed with main bot token: {e2}")
+        else:
+            logger.warning("TELEGRAM_BOT_TOKEN not configured, cannot try fallback")
         
         logger.debug(f"Full initData: {init_data}")
         raise HTTPException(
