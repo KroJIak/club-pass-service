@@ -49,6 +49,7 @@ services:
       BOT_API_URL: ${BOT_API_URL:-http://bot:8002}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      STAFF_BOT_TOKEN: ${STAFF_BOT_TOKEN}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
