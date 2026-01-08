@@ -41,9 +41,6 @@ class Settings(BaseSettings):
     # Staff Bot Token (for Mini App validation)
     STAFF_BOT_TOKEN: Optional[str] = None
     
-    # Temporary: Skip initData validation for debugging (ONLY FOR TESTING!)
-    SKIP_INITDATA_VALIDATION: bool = False
-    
     # Expiration Service
     EXPIRATION_SERVICE_URL: str = "http://expiration-service:8001"
     
