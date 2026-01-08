@@ -44,6 +44,32 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
     logger.debug(f"initData length: {len(init_data)}")
     logger.debug(f"initData preview: {init_data[:100]}...")
     
+    # TEMPORARY: Skip validation for debugging (ONLY FOR TESTING!)
+    if settings.SKIP_INITDATA_VALIDATION:
+        logger.warning("⚠️ SKIP_INITDATA_VALIDATION is enabled - validation is DISABLED for debugging!")
+        # Extract user_id directly from initData without validation
+        from urllib.parse import unquote
+        import json
+        params = {}
+        for pair in init_data.split('&'):
+            if '=' in pair:
+                key, value = pair.split('=', 1)
+                params[key] = unquote(value)
+        
+        if 'user' in params:
+            try:
+                user_data = json.loads(params['user'])
+                if 'id' in user_data:
+                    logger.warning(f"⚠️ Returning user_id={user_data['id']} WITHOUT validation!")
+                    return int(user_data['id'])
+            except (json.JSONDecodeError, ValueError, KeyError):
+                pass
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot extract user_id from initData (validation disabled)"
+        )
+    
     # Try with STAFF_BOT_TOKEN first
     try:
         validated_data = validate_telegram_init_data(init_data, settings.STAFF_BOT_TOKEN)
@@ -63,7 +89,7 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
         
         # Try with main bot token as fallback
         if settings.TELEGRAM_BOT_TOKEN:
-            logger.debug(f"Trying with main bot token (length: {len(settings.TELEGRAM_BOT_TOKEN)})...")
+            logger.debug(f"Trying with main bot token...")
             try:
                 validated_data = validate_telegram_init_data(init_data, settings.TELEGRAM_BOT_TOKEN)
                 user = validated_data.get('user')
@@ -78,8 +104,6 @@ def validate_init_data_and_get_user_id(init_data: str) -> int:
                 return int(user['id'])
             except (ValueError, HTTPException) as e2:
                 logger.warning(f"InitData validation also failed with main bot token: {e2}")
-        else:
-            logger.warning("TELEGRAM_BOT_TOKEN not configured, cannot try fallback")
         
         logger.debug(f"Full initData: {init_data}")
         raise HTTPException(
