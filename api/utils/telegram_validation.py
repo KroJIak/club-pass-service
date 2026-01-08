@@ -54,12 +54,12 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     # Note: 'signature' parameter should REMAIN in params for hash validation!
     logger.debug(f"Received hash: {received_hash[:20]}...")
     
-    # Sort parameters and create data_check_string with ORIGINAL URL-encoded values
-    # Format: "auth_date=1234567890\nquery_id=abc\nuser=%7B%22id%22%3A123%7D"
-    # Important: According to official Telegram documentation, we MUST use
-    # ORIGINAL URL-encoded values from initData string, not decoded!
+    # Sort parameters and create data_check_string with DECODED values
+    # Format: "auth_date=1234567890\nquery_id=abc\nuser={\"id\":123}"
+    # Important: According to Telegram docs and JavaScript URLSearchParams example,
+    # URLSearchParams automatically decodes values, so we need to use DECODED values!
     # Sort by KEY name, not by value!
-    sorted_params = sorted(params_raw.items(), key=lambda x: x[0])
+    sorted_params = sorted(params_decoded.items(), key=lambda x: x[0])
     data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted_params])
     
     logger.debug(f"Sorted params: {[k for k, v in sorted_params]}")
