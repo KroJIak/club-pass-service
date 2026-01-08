@@ -34,6 +34,7 @@ from api.repositories.music_queue_repository import MusicQueueRepository
 from api.repositories.admin_group_repository import AdminGroupRepository
 from api.repositories.admin_account_repository import AdminAccountRepository
 from api.repositories.admin_permission_repository import AdminPermissionRepository
+from api.repositories.superadmin_settings_repository import SuperadminSettingsRepository
 from api.core.auth import hash_password
 from api.services.telegram_service import download_file_from_telegram
 from api.services.file_storage_service import save_support_photo, get_full_file_path
@@ -3032,15 +3033,15 @@ async def update_my_language(
             detail="Invalid language. Must be 'ru' or 'en'"
         )
     
-    # Superadmin cannot change language (not stored in DB)
-    if current_admin.get("is_superadmin"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Superadmin language cannot be changed"
-        )
+    username = current_admin.get("sub")
     
-    # Get current account
-    account = AdminAccountRepository.get_by_username(db, current_admin.get("sub"))
+    # Handle superadmin
+    if current_admin.get("is_superadmin"):
+        SuperadminSettingsRepository.update_language(db, username, language_data.language)
+        return {"message": "Language updated successfully", "language": language_data.language}
+    
+    # Handle regular admin account
+    account = AdminAccountRepository.get_by_username(db, username)
     if not account:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

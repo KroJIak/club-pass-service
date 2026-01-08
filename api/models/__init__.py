@@ -20,6 +20,7 @@ from api.models.music_request_limit import MusicRequestLimit
 from api.models.admin_group import AdminGroup
 from api.models.admin_account import AdminAccount
 from api.models.admin_permission import AdminPermission
+from api.models.superadmin_settings import SuperadminSettings
 
 __all__ = [
     "User",
@@ -46,5 +47,6 @@ __all__ = [
     "AdminGroup",
     "AdminAccount",
     "AdminPermission",
+    "SuperadminSettings",
 ]
 

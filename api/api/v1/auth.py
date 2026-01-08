@@ -8,6 +8,7 @@ from api.core.config import settings
 from api.core.db import get_db
 from api.repositories.admin_account_repository import AdminAccountRepository
 from api.repositories.admin_permission_repository import AdminPermissionRepository
+from api.repositories.superadmin_settings_repository import SuperadminSettingsRepository
 from datetime import timedelta
 import logging
 
@@ -120,15 +121,22 @@ async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
 async def get_current_admin_info(current_admin: dict = Depends(get_current_admin), db: Session = Depends(get_db)):
     """Get current admin information with permissions."""
     language = 'ru'  # Default language
+    username = current_admin.get("sub")
     
-    # Get language from database if not superadmin
-    if not current_admin.get("is_superadmin", False):
-        account = AdminAccountRepository.get_by_username(db, current_admin.get("sub"))
+    # Get language from database
+    if current_admin.get("is_superadmin", False):
+        # For superadmin, get from superadmin_settings table
+        settings = SuperadminSettingsRepository.get_by_username(db, username)
+        if settings:
+            language = settings.language
+    else:
+        # For regular admin, get from admin_accounts table
+        account = AdminAccountRepository.get_by_username(db, username)
         if account:
             language = account.language
     
     return AdminInfo(
-        username=current_admin.get("sub"),
+        username=username,
         is_superadmin=current_admin.get("is_superadmin", False),
         group_id=current_admin.get("group_id"),
         language=language,
