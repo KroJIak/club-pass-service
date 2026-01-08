@@ -29,24 +29,37 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     if not bot_token:
         raise ValueError("bot_token is required for validation")
     
-    # Parse initData (it's URL-encoded query string)
+    # Parse initData manually to preserve URL encoding for signature validation
     # Format: "user=%7B%22id%22%3A123%7D&auth_date=1234567890&hash=abc123..."
-    params = {}
+    # Important: For signature validation, we MUST use original URL-encoded values!
+    from urllib.parse import unquote
+    
+    params_raw = {}  # For signature validation (URL-encoded)
+    params_decoded = {}  # For data extraction (decoded)
+    
     for pair in init_data.split('&'):
         if '=' in pair:
             key, value = pair.split('=', 1)
-            params[key] = value
+            params_raw[key] = value  # Keep original URL-encoded value
+            params_decoded[key] = unquote(value)  # Decoded value for parsing
+    
+    logger.debug(f"Parsed params keys: {list(params_raw.keys())}")
     
     # Extract hash
-    if 'hash' not in params:
+    if 'hash' not in params_raw:
         raise ValueError("hash parameter missing in initData")
     
-    received_hash = params.pop('hash')
+    received_hash = params_raw.pop('hash')
+    params_decoded.pop('hash', None)
+    logger.debug(f"Received hash: {received_hash[:20]}...")
     
-    # Sort parameters and create data_check_string
-    # Format: "auth_date=1234567890\nquery_id=abc\nuser=..."
-    sorted_params = sorted(params.items())
+    # Sort parameters and create data_check_string with ORIGINAL URL-encoded values
+    # Format: "auth_date=1234567890\nquery_id=abc\nuser=%7B%22id%22%3A123%7D"
+    sorted_params = sorted(params_raw.items())
     data_check_string = '\n'.join([f"{key}={value}" for key, value in sorted_params])
+    
+    logger.debug(f"Data check string (first 200 chars): {data_check_string[:200]}")
+    logger.debug(f"Bot token (first 10 chars): {bot_token[:10]}...")
     
     # Create secret key: HMAC-SHA256('WebAppData', bot_token)
     secret_key = hmac.new(
@@ -65,12 +78,15 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     # Compare hashes
     if calculated_hash != received_hash:
         logger.warning(f"Invalid signature: calculated={calculated_hash}, received={received_hash}")
+        logger.debug(f"Data check string length: {len(data_check_string)}")
+        logger.debug(f"Data check string: {data_check_string}")
+        logger.debug(f"Bot token length: {len(bot_token)}")
         raise ValueError("Invalid signature - data may be tampered")
     
     # Check auth_date (should be within last 5 minutes)
-    if 'auth_date' in params:
+    if 'auth_date' in params_decoded:
         try:
-            auth_date = int(params['auth_date'])
+            auth_date = int(params_decoded['auth_date'])
             current_time = int(datetime.now(timezone.utc).timestamp())
             time_diff = current_time - auth_date
             
@@ -86,11 +102,10 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     
     # Parse user data if present
     user_data = None
-    if 'user' in params:
+    if 'user' in params_decoded:
         import json
-        from urllib.parse import unquote
         try:
-            user_json = unquote(params['user'])
+            user_json = params_decoded['user']  # Already decoded
             user_data = json.loads(user_json)
         except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"Failed to parse user data: {e}")
@@ -100,9 +115,9 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Dict[str, str
     
     return {
         'user': user_data,
-        'auth_date': int(params['auth_date']),
-        'query_id': params.get('query_id'),
-        'all_params': params
+        'auth_date': int(params_decoded['auth_date']),
+        'query_id': params_decoded.get('query_id'),
+        'all_params': params_decoded
     }
 
 
