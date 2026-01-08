@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     # Telegram Bot (for notifications)
     TELEGRAM_BOT_TOKEN: Optional[str] = None
     
+    # Staff Bot Token (for Mini App validation)
+    STAFF_BOT_TOKEN: Optional[str] = None
+    
     # Expiration Service
     EXPIRATION_SERVICE_URL: str = "http://expiration-service:8001"
     

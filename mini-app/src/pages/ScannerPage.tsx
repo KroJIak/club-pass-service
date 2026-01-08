@@ -36,7 +36,7 @@ interface Ticket {
 }
 
 const ScannerPage = () => {
-  const { userId } = useTelegramWebApp()
+  const { userId, initData } = useTelegramWebApp()
   const [ticket, setTicket] = useState<Ticket | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -48,17 +48,17 @@ const ScannerPage = () => {
 
   // Initialize camera only once
   useEffect(() => {
-    if (userId && !initRef.current) {
+    if (initData && !initRef.current) {
       initRef.current = true
       startScanning()
     }
     return () => {
       // Don't stop camera on unmount - keep it running
     }
-  }, [userId])
+  }, [initData])
 
   const startScanning = async () => {
-    if (!userId || cameraActiveRef.current) {
+    if (!initData || cameraActiveRef.current) {
       return
     }
 
@@ -107,14 +107,14 @@ const ScannerPage = () => {
   }
 
   const handleScan = async (token: string) => {
-    if (loading || !userId) return
+    if (loading || !initData) return
 
     setLoading(true)
     setError(null)
 
     // Don't stop camera - keep it running
     try {
-      const ticketData = await getTicketByToken(token, userId)
+      const ticketData = await getTicketByToken(token, initData)
       setTicket(ticketData)
     } catch (err: any) {
       if (err.response?.status === 404) {
@@ -131,14 +131,14 @@ const ScannerPage = () => {
   }
 
   const handleAccept = async () => {
-    if (!ticket || accepting || !userId) return
+    if (!ticket || accepting || !initData) return
 
     setAccepting(true)
     setError(null)
 
     try {
-      await markTicketAsUsed(ticket.id, userId)
-      const ticketData = await getTicketByToken(ticket.token, userId)
+      await markTicketAsUsed(ticket.id, initData)
+      const ticketData = await getTicketByToken(ticket.token, initData)
       setTicket(ticketData)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Ошибка при принятии билета')
@@ -187,10 +187,10 @@ const ScannerPage = () => {
     }
   }
 
-  if (!userId) {
+  if (!initData) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
-        <Alert severity="error">Ошибка авторизации</Alert>
+        <Alert severity="error">Ошибка авторизации: initData не получен</Alert>
       </Box>
     )
   }

@@ -52,54 +52,36 @@ function App() {
       addLog(`webApp exists: ${!!webApp}`)
       addLog(`initData: ${initData ? 'present' : 'missing'}`)
       
-      // Wait a bit for user to be loaded from Telegram WebApp
-      if (!userId && !user) {
-        addLog('Waiting for user data...')
-        // Try to get from URL params for testing
+      // Wait for initData from Telegram WebApp
+      if (!initData) {
+        addLog('Waiting for initData...')
+        // Try to get from URL params for testing (fallback for development)
         const urlParams = new URLSearchParams(window.location.search)
         const testUserId = urlParams.get('test_user_id')
         if (testUserId) {
-          addLog(`Using test_user_id from URL: ${testUserId}`)
-          try {
-            const result = await checkStaffAccess(parseInt(testUserId))
-            addLog(`API Response received: ${JSON.stringify(result)}`)
-            setApiResponse(result)
-            const accessGranted = result.has_access === true
-            setHasAccess(accessGranted)
-            if (!accessGranted) {
-              setError('У вас нет доступа к этому приложению')
-            }
-          } catch (err: any) {
-            addLog(`ERROR: Exception caught: ${err.message}`)
-            setError(err.response?.data?.detail || 'Ошибка при проверке доступа')
-          } finally {
-            setLoading(false)
-          }
+          addLog(`WARNING: Using test_user_id from URL (development mode only)`)
+          addLog(`In production, initData validation is required for security`)
+          // For testing, we can't validate without real initData, so skip
+          setLoading(false)
+          setError('Для тестирования требуется реальный initData от Telegram')
           return
         }
         
-        // If no test_user_id and no user, wait a bit more
+        // If no initData, wait a bit more
         setTimeout(() => {
-          if (!userId && !user) {
-            addLog('ERROR: userId is still null after waiting')
+          if (!initData) {
+            addLog('ERROR: initData is still missing after waiting')
             setLoading(false)
-            setError('Не удалось получить ID пользователя')
+            setError('Не удалось получить данные авторизации от Telegram')
           }
         }, 1000)
         return
       }
-      
-      const finalUserId = userId || user?.id
-      if (!finalUserId) {
-        addLog('ERROR: userId is null or undefined')
-        setLoading(false)
-        setError('Не удалось получить ID пользователя')
-        return
-      }
 
       try {
-        addLog(`Calling API: /v1/staff/check-access?telegram_user_id=${finalUserId}`)
-        const result = await checkStaffAccess(finalUserId)
+        addLog(`Calling API: /v1/staff/check-access with initData`)
+        addLog(`initData length: ${initData.length} characters`)
+        const result = await checkStaffAccess(initData)
         addLog(`API Response received: ${JSON.stringify(result)}`)
         setApiResponse(result)
         
@@ -132,7 +114,7 @@ function App() {
     }
 
     verifyAccess()
-  }, [userId, user])
+  }, [initData])
 
   if (loading) {
     return (

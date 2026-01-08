@@ -10,25 +10,25 @@ const api = axios.create({
 })
 
 // Check staff access
-export const checkStaffAccess = async (telegramUserId: number) => {
-  const response = await api.get('/v1/staff/check-access', {
-    params: { telegram_user_id: telegramUserId },
+export const checkStaffAccess = async (initData: string) => {
+  const response = await api.post('/v1/staff/check-access', {
+    init_data: initData,
   })
   return response.data
 }
 
 // Get ticket by token
-export const getTicketByToken = async (token: string, telegramUserId: number) => {
-  const response = await api.get(`/v1/staff/tickets/token/${token}`, {
-    params: { telegram_user_id: telegramUserId },
+export const getTicketByToken = async (token: string, initData: string) => {
+  const response = await api.post(`/v1/staff/tickets/token/${token}`, {
+    init_data: initData,
   })
   return response.data
 }
 
 // Mark ticket as used
-export const markTicketAsUsed = async (ticketId: number, telegramUserId: number) => {
-  const response = await api.post(`/v1/staff/tickets/${ticketId}/mark-used`, null, {
-    params: { telegram_user_id: telegramUserId },
+export const markTicketAsUsed = async (ticketId: number, initData: string) => {
+  const response = await api.post(`/v1/staff/tickets/${ticketId}/mark-used`, {
+    init_data: initData,
   })
   return response.data
 }

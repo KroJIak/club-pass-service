@@ -8,10 +8,14 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 from api.core.db import get_db
+from api.core.config import settings
 from api.repositories.staff_user_repository import StaffUserRepository
 from api.repositories.ticket_repository import TicketRepository
 from api.services.ticket_service import TicketService
+from api.utils.telegram_validation import validate_telegram_init_data, extract_user_id_from_init_data
 from api.api.v1.schemas import (
+    StaffAccessCheckRequest,
+    StaffRequestWithInitData,
     StaffAccessCheckResponse,
     StaffUserResponse,
     TicketDetailResponse,
@@ -21,33 +25,72 @@ from api.api.v1.schemas import (
 router = APIRouter()
 
 
+def validate_init_data_and_get_user_id(init_data: str) -> int:
+    """
+    Validate initData and extract user_id.
+    
+    Raises:
+        HTTPException: If validation fails
+    """
+    if not settings.STAFF_BOT_TOKEN:
+        logger.error("STAFF_BOT_TOKEN not configured")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server configuration error: STAFF_BOT_TOKEN not set"
+        )
+    
+    try:
+        validated_data = validate_telegram_init_data(init_data, settings.STAFF_BOT_TOKEN)
+        user = validated_data.get('user')
+        
+        if not user or 'id' not in user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User data not found in initData"
+            )
+        
+        return int(user['id'])
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(f"InitData validation failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid initData signature: {str(e)}"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during initData validation: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error validating initData"
+        )
+
+
 def verify_staff_access(telegram_user_id: int, db: Session) -> bool:
     """Verify if user has staff access."""
     staff_user = StaffUserRepository.get_by_telegram_id(db, telegram_user_id)
     return staff_user is not None
 
 
-@router.get("/staff/check-access", response_model=StaffAccessCheckResponse)
+@router.post("/staff/check-access", response_model=StaffAccessCheckResponse)
 async def check_staff_access(
-    telegram_user_id: int = Query(..., description="Telegram user ID"),
+    request: StaffAccessCheckRequest,
     db: Session = Depends(get_db),
 ):
-    """Check if user has staff access."""
+    """Check if user has staff access. Validates Telegram initData signature."""
     logger.info(f"=== Staff access check started ===")
-    logger.info(f"Requested telegram_user_id: {telegram_user_id}")
-    logger.info(f"Type of telegram_user_id: {type(telegram_user_id)}")
     
+    # Validate initData signature and extract user_id
+    telegram_user_id = validate_init_data_and_get_user_id(request.init_data)
+    logger.info(f"Validated telegram_user_id: {telegram_user_id}")
+    
+    # Check if user has staff access
     staff_user = StaffUserRepository.get_by_telegram_id(db, telegram_user_id)
     logger.info(f"Staff user found: {staff_user is not None}")
     if staff_user:
         logger.info(f"Staff user details: id={staff_user.id}, telegram_user_id={staff_user.telegram_user_id}, first_name={staff_user.first_name}, last_name={staff_user.last_name}")
     else:
         logger.warning(f"No staff user found for telegram_user_id={telegram_user_id}")
-        # Log all staff users for debugging
-        all_staff_users = StaffUserRepository.get_all(db)
-        logger.info(f"Total staff users in DB: {len(all_staff_users)}")
-        for su in all_staff_users:
-            logger.info(f"  - Staff user: id={su.id}, telegram_user_id={su.telegram_user_id}")
     
     has_access = staff_user is not None
     logger.info(f"has_access result: {has_access}")
@@ -62,13 +105,16 @@ async def check_staff_access(
     return response
 
 
-@router.get("/staff/tickets/token/{token}", response_model=TicketDetailResponse)
+@router.post("/staff/tickets/token/{token}", response_model=TicketDetailResponse)
 async def get_ticket_by_token_staff(
     token: str,
-    telegram_user_id: int = Query(..., description="Telegram user ID"),
+    request: StaffRequestWithInitData,
     db: Session = Depends(get_db),
 ):
-    """Get ticket by token (staff only)."""
+    """Get ticket by token (staff only). Validates Telegram initData signature."""
+    # Validate initData signature and extract user_id
+    telegram_user_id = validate_init_data_and_get_user_id(request.init_data)
+    
     # Verify staff access
     if not verify_staff_access(telegram_user_id, db):
         raise HTTPException(
@@ -88,10 +134,13 @@ async def get_ticket_by_token_staff(
 @router.post("/staff/tickets/{ticket_id}/mark-used", response_model=TicketMarkUsedResponse)
 async def mark_ticket_as_used_staff(
     ticket_id: int,
-    telegram_user_id: int = Query(..., description="Telegram user ID"),
+    request: StaffRequestWithInitData,
     db: Session = Depends(get_db),
 ):
-    """Mark ticket as used (staff only)."""
+    """Mark ticket as used (staff only). Validates Telegram initData signature."""
+    # Validate initData signature and extract user_id
+    telegram_user_id = validate_init_data_and_get_user_id(request.init_data)
+    
     # Verify staff access
     if not verify_staff_access(telegram_user_id, db):
         raise HTTPException(

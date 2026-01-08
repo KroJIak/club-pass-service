@@ -443,6 +443,16 @@ class StaffUserListResponse(BaseModel):
     staff_users: List[StaffUserResponse]
 
 
+class StaffAccessCheckRequest(BaseModel):
+    """Schema for staff access check request with initData."""
+    init_data: str = Field(..., description="Telegram WebApp initData string")
+
+
+class StaffRequestWithInitData(BaseModel):
+    """Schema for staff requests that require initData validation."""
+    init_data: str = Field(..., description="Telegram WebApp initData string")
+
+
 class StaffAccessCheckResponse(BaseModel):
     """Schema for staff access check response."""
     has_access: bool
