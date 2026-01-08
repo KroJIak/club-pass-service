@@ -72,7 +72,7 @@ const Header = () => {
             disabled={loading}
             sx={{ minWidth: 50 }}
           >
-            {currentLanguage === 'ru' ? 'EN' : 'RU'}
+            {currentLanguage === 'ru' ? 'RU' : 'EN'}
           </Button>
           <Typography variant="body1">{username}</Typography>
           <IconButton
