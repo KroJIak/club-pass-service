@@ -30,7 +30,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    command: python -m api.scripts.init_db
+    command: sh -c "python -m api.scripts.init_db && tail -f /dev/null"
     restart: "no"
 
   api:
@@ -56,7 +56,7 @@ services:
       db:
         condition: service_healthy
       db-init:
-        condition: service_completed_successfully
+        condition: service_started
     volumes:
       - ./api:/app/api
       - ./uploads:/app/uploads
@@ -146,7 +146,7 @@ services:
       db:
         condition: service_healthy
       db-init:
-        condition: service_completed_successfully
+        condition: service_started
     restart: unless-stopped
 
   music-search:
