@@ -44,7 +44,7 @@ services:
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
       DB_NAME: ${DB_NAME:-club_pass}
-      EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:8001}
+      EXPIRATION_SERVICE_URL: ${EXPIRATION_SERVICE_URL:-http://expiration-service:10102}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
       BOT_API_URL: ${BOT_API_URL:-http://bot:8002}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
@@ -75,7 +75,7 @@ services:
       I18N_SUPPORTED_LOCALES: ${I18N_SUPPORTED_LOCALES:-ru_ru,en_us}
       I18N_DEFAULT_LOCALE: ${I18N_DEFAULT_LOCALE:-ru_ru}
     ports:
-      - "${BOT_API_PORT:-8002}:8002"
+      - "${BOT_API_PORT:-10104}:8002"
     depends_on:
       - api
     volumes:
@@ -139,9 +139,9 @@ services:
       DB_NAME: ${DB_NAME:-club_pass}
       CHECK_INTERVAL_MINUTES: ${EXPIRATION_CHECK_INTERVAL:-30}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      API_PORT: ${EXPIRATION_API_PORT:-8001}
+      API_PORT: ${EXPIRATION_API_PORT:-10102}
     ports:
-      - "${EXPIRATION_API_PORT:-8001}:${EXPIRATION_API_PORT:-8001}"
+      - "${EXPIRATION_API_PORT:-10102}:${EXPIRATION_API_PORT:-10102}"
     depends_on:
       db:
         condition: service_healthy
@@ -157,52 +157,8 @@ services:
     environment:
       YANDEX_MUSIC_TOKEN: ${YANDEX_MUSIC_TOKEN}
     ports:
-      - "8004:8004"
+      - "10106:8004"
     restart: unless-stopped
-
-  cloudpub-init:
-    image: alpine:latest
-    container_name: club-pass-cloudpub-init
-    volumes:
-      - ./cloudpub-config:/cloudpub-config
-    command: sh -c "mkdir -p /cloudpub-config/cloudpub-admin-panel /cloudpub-config/cloudpub-mini-app && chmod -R 777 /cloudpub-config"
-    restart: "no"
-
-  cloudpub-admin-panel:
-    image: cloudpub/cloudpub:latest-arm64
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    environment:
-      - TOKEN=${CLOUDPUB_TOKEN}
-      - HTTP=localhost:${ADMIN_PORT:-3000}
-    command: run
-    depends_on:
-      admin:
-        condition: service_started
-      cloudpub-init:
-        condition: service_completed_successfully
-    volumes:
-      - ./cloudpub-config/cloudpub-admin-panel:/home/cloudpub
-
-  cloudpub-mini-app:
-    image: cloudpub/cloudpub:latest-arm64
-    restart: unless-stopped
-    network_mode: host
-    env_file:
-      - .env
-    environment:
-      - TOKEN=${CLOUDPUB_TOKEN}
-      - HTTP=localhost:${MINI_APP_PORT:-3001}
-    command: run
-    depends_on:
-      mini-app:
-        condition: service_started
-      cloudpub-init:
-        condition: service_completed_successfully
-    volumes:
-      - ./cloudpub-config/cloudpub-mini-app:/home/cloudpub
 
 volumes:
   postgres_data:
